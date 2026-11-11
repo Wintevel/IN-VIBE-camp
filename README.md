@@ -7,12 +7,12 @@
 ## 팀과 역할
 | 역할 | 담당 | 범위 |
 |---|---|---|
-| 프론트엔드 | 한재준 | `frontend/` (React) |
+| 프론트엔드 | 한재준 | `frontend/` (React Native, Expo) |
 | 백엔드 | 팀원 | `supabase/` (DB·인증·스토리지) |
 
 ## 구조
 ```
-frontend/   Vite + React 웹앱 (모바일 화면 기준)
+frontend/   React Native(Expo) 모바일 앱
 supabase/   마이그레이션 SQL, Supabase 설정
 docs/       테이블·API 초안 (docs/api.md) — 프론트·백엔드 공통 계약
 CLAUDE.md   Claude 작업 규칙 (영역 경계). frontend/, supabase/ 에도 각각 있음
@@ -23,7 +23,7 @@ CLAUDE.md   Claude 작업 규칙 (영역 경계). frontend/, supabase/ 에도 �
 cd frontend
 cp .env.example .env     # Supabase URL / anon key 는 백엔드 담당에게 받기
 npm install
-npm run dev              # http://localhost:5173
+npx expo start           # 폰의 Expo Go 앱으로 QR 스캔
 ```
 Node 20 이상을 권합니다.
 
