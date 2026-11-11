@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { code, dist, isCrew, reward } from '../lib/format'
+import { code, dist, isCrew, isPartner, reward } from '../lib/format'
 import { colors, radius, text } from '../theme'
 import { HeartIcon } from './Icons'
 import Stamp from './Stamp'
@@ -12,7 +12,7 @@ export default function ReportCard({ report: r, mine, onPress, onHeart }) {
     <Pressable onPress={onPress} accessibilityRole="button" style={[styles.card, r.i_am_participating && !done && styles.accepted, done && { opacity: 0.55 }]}>
       <Text style={[text.code, styles.code]}>{code(r.id)}</Text>
       <View style={styles.tags}>
-        <Stamp>주민 제보</Stamp>
+        {isPartner(r) ? <Stamp type="partner">제휴 의뢰</Stamp> : <Stamp>주민 제보</Stamp>}
         {isCrew(r) ? <Stamp type="partner">크루 의뢰 {r.current_members}/{r.required_members}</Stamp> : null}
         {r.status === 'in_progress' ? <Stamp type="hot">진행 중</Stamp> : null}
         {done ? <Stamp type="done">완료</Stamp> : null}
@@ -20,7 +20,7 @@ export default function ReportCard({ report: r, mine, onPress, onHeart }) {
       <View style={styles.body}>
         <View style={{ flex: 1, gap: 8 }}>
           <Text style={text.cardTitle}>{r.title}</Text>
-          <Text style={text.small}>{[r.place_label, dist(r.distance_m), r.dong].filter(Boolean).join('  ')}</Text>
+          <Text style={text.small}>{[r.partner_name, r.place_label, dist(r.distance_m), r.dong].filter(Boolean).join('  ')}</Text>
         </View>
         <View style={styles.reward}>
           <Text style={text.point}>{rw.value}</Text>

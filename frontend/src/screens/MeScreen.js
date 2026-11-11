@@ -56,6 +56,13 @@ export default function MeScreen({ navigation }) {
         ))}
       </View>
 
+      {p.rewards?.length > 0 ? (
+        <>
+          <SectionTitle>받은 제휴 보상</SectionTitle>
+          <List rows={p.rewards.map((w, i) => ({ label: w.label, value: w.from, key: i }))} />
+        </>
+      ) : null}
+
       <SectionTitle>진행 중인 내 의뢰</SectionTitle>
       <View style={{ gap: 14 }}>
         {mine.map((r) => (

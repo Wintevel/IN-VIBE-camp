@@ -23,6 +23,20 @@ const DAY = 24 * 3600 * 1000
 const POINTS_PER_HEART = 5
 const pointsOf = (r) => r.likes.length * POINTS_PER_HEART
 
+// 제휴 의뢰 예시 1건. 서버가 없어 제휴처가 올릴 경로가 없으므로 앱이 하나를 넣어 둡니다.
+// 인증이 가능하도록 처음 받은 내 위치에서 약 60m 떨어진 곳에 둡니다. 보상 금액은 예시값입니다.
+const PARTNER = {
+  title: '망가진 공원 벤치 사진 찍기',
+  description: '공원에서 부서지거나 망가진 벤치를 찾아 사진으로 알려 주세요. 확인되면 충주사랑상품권을 드려요.',
+  place_type: 'park',
+  proof_mode: 'single', // 치우는 의뢰가 아니라 사진 한 장으로 인증
+  proof_label: '벤치 사진',
+  partner_name: '충주시 제휴',
+  reward_label: '충주사랑상품권 5,000원',
+  reward_value: '5,000원',
+  reward_unit: '상품권',
+}
+
 let cache = null
 const listeners = new Set()
 
@@ -124,6 +138,13 @@ function view(r, me, from) {
   const [label, xp] = PLACE[r.place_type] || PLACE.etc
   return {
     id: r.id,
+    kind: r.kind || 'report',
+    partner_name: r.partner_name || null,
+    proof_mode: r.proof_mode || 'before_after',
+    proof_label: r.proof_label || null,
+    reward_label: r.reward_label || null,
+    reward_value: r.reward_value || null,
+    reward_unit: r.reward_unit || null,
     title: r.title,
     description: r.description,
     place_type: r.place_type,
@@ -152,6 +173,10 @@ function view(r, me, from) {
 
 export async function getNearbyReports({ lat, lng, radiusM = 1500 }) {
   const db = await load()
+  if (!db.partnerSeeded) {
+    db.partnerSeeded = true
+    db.reports.push({ ...PARTNER, id: db.nextId++, kind: 'partner', lat: lat + 0.0004, lng: lng + 0.0004, address: '내 위치 근처', dong: '', photo_path: null, status: 'open', likes: [], members: [], required_members: 1, deadline_at: null, created_at: new Date().toISOString(), reporter_id: 'partner', reporter_nickname: PARTNER.partner_name })
+  }
   sweep(db)
   await save()
   return db.reports
@@ -227,6 +252,7 @@ export async function getMyProfile() {
     streak_weeks: streak(me.completed),
     active_this_week: me.completed.some((c) => kstWeek(c.at) === kstWeek(Date.now())),
     completed_count: me.completed.length,
+    rewards: me.rewards || [],
   }
 }
 
@@ -279,6 +305,7 @@ export async function submitProof(userId, id, before, after) {
   const was = levelOf(me.xp)
   me.xp += xp
   me.points += points
+  if (r.reward_label) (me.rewards = me.rewards || []).push({ label: r.reward_label, from: r.partner_name, at: new Date().toISOString() })
   // 크루원이면 크루 점수에도 더합니다. 크루 의뢰(2명 이상)는 2배.
   const crew = db.crews.find((c) => c.members.includes(me.id))
   if (crew) crew.score += xp * (r.required_members > 1 ? 2 : 1)
@@ -289,7 +316,7 @@ export async function submitProof(userId, id, before, after) {
   r.after_path = await keepPhoto(after.uri)
   r.completed_at = new Date().toISOString()
   await save()
-  return { xp_gained: xp, points_gained: points, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points, streak_weeks: streak(me.completed) }
+  return { xp_gained: xp, points_gained: points, reward_label: r.reward_label || null, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points, streak_weeks: streak(me.completed) }
 }
 
 // ── 크루 ──────────────────────────────────────────────

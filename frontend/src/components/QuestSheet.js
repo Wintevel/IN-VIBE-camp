@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
-import { code, dist, isCrew, remain, reward } from '../lib/format'
+import { code, dist, isCrew, isPartner, remain, reward } from '../lib/format'
 import { navigationRef } from '../navigation/ref'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
@@ -20,22 +20,27 @@ export default function QuestSheet() {
   const joined = !!r.i_am_participating
   const started = r.status === 'in_progress'
   const p = app.photos[r.id] || {}
-  const rw = reward(r)
+  const single = r.proof_mode === 'single' // 사진 한 장으로 인증하는 의뢰
+  const label1 = r.proof_label || '사진'
+  const ready = single ? !!p.before : !!(p.before && p.after)
+  const steps = single
+    ? [`현장에서 ${label1}을 앱 카메라로 찍어요`, '사진을 올리면 위치와 함께 접수돼요', '확인되면 보상이 지급돼요']
+    : ['현장에서 치우기 전 사진을 앱 카메라로 찍어요', '치운 뒤 같은 각도로 한 장 더 찍어요', '두 장을 올리면 보상이 지급돼요']
   const img = photoUrl(r.photo_path)
 
   const kv = [
     ['장소', [r.place_label, r.address].filter(Boolean).join(' · ')],
     ['거리', dist(r.distance_m)],
-    ['보상', `${rw.value} ${rw.unit}`],
+    ['보상', [r.reward_label, r.reward_points > 0 ? `${r.reward_points} POINT` : null, `${r.reward_xp ?? 0} XP`].filter(Boolean).join(' + ')],
     isCrew(r) ? ['인원', `${r.current_members}/${r.required_members}명`] : null,
     joined && started && r.deadline_at ? ['인증 마감', remain(r.deadline_at)] : null,
-    ['제보한 이웃', r.reporter_nickname],
+    [isPartner(r) ? '의뢰한 곳' : '제보한 이웃', r.reporter_nickname],
   ].filter((x) => x && x[1])
 
   let label = '의뢰 수락하기'
   let disabled = false
   if (done) [label, disabled] = ['완료된 의뢰예요', true]
-  else if (joined && started) [label, disabled] = ['완료 인증하기', !(p.before && p.after)]
+  else if (joined && started) [label, disabled] = ['완료 인증하기', !ready]
   else if (joined) [label, disabled] = [`인원을 기다리는 중 (${r.current_members}/${r.required_members})`, true]
   else if (started) [label, disabled] = ['다른 이웃이 진행 중이에요', true]
 
@@ -53,7 +58,7 @@ export default function QuestSheet() {
   }
   const capture = (slot) => {
     app.hideSheet()
-    navigationRef.navigate('Capture', { kind: 'quest', reportId: r.id, slot, title: slot === 'before' ? '치우기 전 사진' : '치운 뒤 사진' })
+    navigationRef.navigate('Capture', { kind: 'quest', reportId: r.id, slot, title: single ? label1 : slot === 'before' ? '치우기 전 사진' : '치운 뒤 사진' })
   }
 
   return (
@@ -78,7 +83,7 @@ export default function QuestSheet() {
       }
     >
       <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-        <Stamp>주민 제보</Stamp>
+        {isPartner(r) ? <Stamp type="partner">제휴 의뢰</Stamp> : <Stamp>주민 제보</Stamp>}
         {isCrew(r) ? <Stamp type="partner">크루 의뢰</Stamp> : null}
         <Stamp>{code(r.id)}</Stamp>
       </View>
@@ -96,7 +101,7 @@ export default function QuestSheet() {
       {!done ? (
         <View style={{ gap: 10 }}>
           <Text style={text.section}>완료 인증 방법</Text>
-          {['현장에서 치우기 전 사진을 앱 카메라로 찍어요', '치운 뒤 같은 각도로 한 장 더 찍어요', '두 장을 올리면 보상이 지급돼요'].map((s, i) => (
+          {steps.map((s, i) => (
             <View key={s} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
               <View style={styles.step}>
                 <Text style={[text.tab, { color: colors.sheetSub }]}>{i + 1}</Text>
@@ -108,8 +113,8 @@ export default function QuestSheet() {
       ) : null}
       {joined && started && !done ? (
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <PhotoSlot shot={p.before} label="전 사진" onPress={() => capture('before')} />
-          <PhotoSlot shot={p.after} label="후 사진" onPress={() => capture('after')} />
+          <PhotoSlot shot={p.before} label={single ? label1 : '전 사진'} onPress={() => capture('before')} />
+          {single ? null : <PhotoSlot shot={p.after} label="후 사진" onPress={() => capture('after')} />}
         </View>
       ) : null}
     </BottomSheet>

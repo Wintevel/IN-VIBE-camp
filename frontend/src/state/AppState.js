@@ -154,9 +154,9 @@ export function AppStateProvider({ children }) {
       submitProof: (id) =>
         run(async () => {
           const p = photos[id] || {}
-          const d = await api.submitProof(userId, id, p.before, p.after)
+          const d = await api.submitProof(userId, id, p.before, p.after || p.before)
           setPhotos((x) => ({ ...x, [id]: undefined }))
-          const gain = [d.points_gained ? `+${d.points_gained}점` : null, d.xp_gained ? `+${d.xp_gained}XP` : null].filter(Boolean).join(' · ')
+          const gain = [d.reward_label, d.points_gained ? `+${d.points_gained}점` : null, d.xp_gained ? `+${d.xp_gained}XP` : null].filter(Boolean).join(' · ')
           showToast(`${d.leveled_up ? `레벨 업! Lv.${d.level} · ` : '완료했어요. '}${gain}`)
           await refresh()
           return d
