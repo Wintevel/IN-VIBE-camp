@@ -31,6 +31,16 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
+    },
+    "experiments": {
+      "baseUrl": "/IN-VIBE-camp_TeamChjChj_JubQuest"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "backgroundColor": "#111317",
+      "lang": "ko"
     }
   }
 }

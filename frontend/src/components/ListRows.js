@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { colors, radius, text } from '../theme'
+import { colors, font, radius, text } from '../theme'
 
 export function Card({ children, style }) {
   return <View style={[styles.card, style]}>{children}</View>
@@ -9,7 +9,7 @@ export function ListRow({ label, value, onPress, danger }) {
   const Row = onPress ? Pressable : View
   return (
     <Row onPress={onPress} style={styles.row} accessibilityRole={onPress ? 'button' : undefined}>
-      <Text style={[{ fontFamily: 'NotoSansKR_400Regular', fontSize: 14, color: danger ? colors.red : colors.fg }]}>{label}</Text>
+      <Text style={[{ ...font.body, fontSize: 14, color: danger ? colors.red : colors.fg }]}>{label}</Text>
       {value ? <Text style={text.small}>{value}</Text> : null}
     </Row>
   )

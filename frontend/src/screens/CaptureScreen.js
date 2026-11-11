@@ -10,13 +10,18 @@ import { colors, radius, text } from '../theme'
 // 앱 안 카메라로만 촬영합니다(갤러리 선택 없음). 촬영 순간의 위치·시각을 함께 남기고,
 // 서버가 의뢰 위치와의 거리·시각·사진 해시를 검증합니다(docs/api.md 악용 방지 규칙).
 export default function CaptureScreen({ navigation, route }) {
-  const { kind, questId, slot, title } = route.params
+  const { kind, reportId, slot, title } = route.params
   const app = useApp()
   const insets = useSafeAreaInsets()
   const camera = useRef(null)
   const [camPerm, requestCam] = useCameraPermissions()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  // 의뢰 인증 촬영이면 돌아갈 때 의뢰 시트를 다시 엽니다.
+  const close = () => {
+    navigation.goBack()
+    if (kind === 'quest') app.reopenSheet()
+  }
 
   if (!camPerm) return <View style={styles.root} />
   if (!camPerm.granted) {
@@ -25,7 +30,7 @@ export default function CaptureScreen({ navigation, route }) {
         <Text style={[text.sheetTitle, { color: colors.fg, textAlign: 'center' }]}>카메라 권한이 필요해요</Text>
         <Text style={[text.small, { textAlign: 'center', marginVertical: 12 }]}>인증 사진은 앱 카메라로 찍은 것만 쓸 수 있어요.</Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Button type="ghost" onPress={() => navigation.goBack()}>
+          <Button type="ghost" onPress={close}>
             닫기
           </Button>
           <Button onPress={requestCam}>권한 허용</Button>
@@ -51,9 +56,9 @@ export default function CaptureScreen({ navigation, route }) {
         mocked: !!pos.mocked, // Android 모의 위치 감지(안내용, 서버 검증이 최종)
       }
       if (shot.mocked) throw new Error('모의 위치가 켜져 있으면 인증할 수 없어요.')
-      if (kind === 'quest') app.setPhoto(questId, slot, shot)
+      if (kind === 'quest') app.setPhoto(reportId, slot, shot)
       else app.setDraftPhoto(shot)
-      navigation.goBack()
+      close()
     } catch (e) {
       setError(e.message || '촬영에 실패했어요. 다시 시도해 주세요.')
       setBusy(false)
@@ -64,7 +69,7 @@ export default function CaptureScreen({ navigation, route }) {
     <View style={styles.root}>
       <CameraView ref={camera} style={StyleSheet.absoluteFill} facing="back" />
       <View style={[styles.top, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" style={styles.chip}>
+        <Pressable onPress={close} accessibilityRole="button" style={styles.chip}>
           <Text style={[text.chip, { color: colors.fg }]}>닫기</Text>
         </Pressable>
         <Text style={[text.button, { color: colors.fg }]}>{title}</Text>
