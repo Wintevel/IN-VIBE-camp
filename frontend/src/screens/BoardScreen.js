@@ -6,12 +6,13 @@ import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
 import { Empty, Loading, refresher } from '../components/States'
 import Ticker from '../components/Ticker'
-import { isCrew } from '../lib/format'
+import { isCrew, isPartner } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, radius, text } from '../theme'
 
 const FILTERS = [
   ['all', '전체'],
+  ['partner', '제휴 의뢰'],
   ['near', '500m 이내'],
   ['crew', '크루 의뢰'],
   ['mine', '내가 수락한'],
@@ -20,6 +21,7 @@ const FILTERS = [
 
 const match = {
   all: (r) => r.status !== 'completed',
+  partner: (r) => r.status !== 'completed' && isPartner(r),
   near: (r) => r.status !== 'completed' && r.distance_m <= 500,
   crew: (r) => r.status !== 'completed' && isCrew(r),
   mine: (r) => r.status !== 'completed' && r.i_am_participating,

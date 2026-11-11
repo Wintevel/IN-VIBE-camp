@@ -12,5 +12,7 @@ export function remain(deadline) {
   return h > 0 ? `${h}시간 ${m}분 남음` : `${m}분 남음`
 }
 
-// 보상 표시: 포인트가 붙은 의뢰는 포인트, 아니면 경험치
-export const reward = (r) => (r.reward_points > 0 ? { value: r.reward_points, unit: 'POINT' } : { value: r.reward_xp ?? 0, unit: 'XP' })
+export const isPartner = (r) => r.kind === 'partner'
+
+// 보상 표시: 제휴 의뢰는 제휴처 보상, 포인트가 붙은 의뢰는 포인트, 아니면 경험치
+export const reward = (r) => (r.reward_value ? { value: r.reward_value, unit: r.reward_unit } : r.reward_points > 0 ? { value: r.reward_points, unit: 'POINT' } : { value: r.reward_xp ?? 0, unit: 'XP' })

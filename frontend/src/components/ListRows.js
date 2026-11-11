@@ -19,7 +19,7 @@ export function List({ rows }) {
   return (
     <Card style={{ padding: 0, overflow: 'hidden' }}>
       {rows.map((r, i) => (
-        <View key={r.label} style={i > 0 && styles.sep}>
+        <View key={r.key ?? r.label} style={i > 0 && styles.sep}>
           <ListRow {...r} />
         </View>
       ))}
