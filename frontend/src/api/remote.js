@@ -58,3 +58,12 @@ export async function submitProof(userId, reportId, before, after) {
   const [b, a] = await Promise.all([uploadPhoto(userId, `${reportId}-before`, before.uri), uploadPhoto(userId, `${reportId}-after`, after.uri)])
   return rpc('submit_proof', { p_report_id: reportId, p_before_path: b, p_after_path: a })
 }
+
+// 크루: 백엔드에 아직 없습니다. 생기면 여기만 채우면 됩니다(응답 모양은 local.js 의 crewView 참고).
+const notReady = async () => {
+  throw new Error(errorText({ message: 'CREW_NOT_READY' }))
+}
+export const getCrews = async () => []
+export const createCrew = notReady
+export const joinCrew = notReady
+export const leaveCrew = notReady

@@ -27,7 +27,7 @@ export default function ReportCard({ report: r, mine, onPress, onHeart }) {
           <Text style={[text.stamp, { color: colors.sub }]}>{rw.unit}</Text>
         </View>
       </View>
-      <Pressable onPress={onHeart} disabled={mine} accessibilityRole="button" accessibilityLabel="하트" accessibilityState={{ selected: !!r.liked_by_me, disabled: mine }} style={[styles.heart, r.liked_by_me && styles.heartOn]}>
+      <Pressable onPress={onHeart} accessibilityRole="button" accessibilityLabel="하트" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.heart, r.liked_by_me && styles.heartOn]}>
         <HeartIcon filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sub} />
         <Text style={[text.chip, { color: r.liked_by_me ? colors.red : colors.sub }]}>{r.like_count ?? 0}</Text>
       </Pressable>

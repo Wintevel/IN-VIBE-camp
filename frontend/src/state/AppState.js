@@ -16,6 +16,7 @@ export function AppStateProvider({ children }) {
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [crews, setCrews] = useState([])
   const [photos, setPhotos] = useState({}) // { [reportId]: { before, after } }
   const [draftPhoto, setDraftPhoto] = useState(null)
   const [sheet, setSheet] = useState({ id: null, visible: false })
@@ -55,6 +56,7 @@ export function AppStateProvider({ children }) {
   const loadProfile = useCallback(async () => {
     try {
       setProfile(await api.getMyProfile())
+      setCrews((await api.getCrews()) || [])
     } catch {
       // 프로필은 다음 새로고침에서 다시 시도
     }
@@ -83,6 +85,7 @@ export function AppStateProvider({ children }) {
     else {
       setReports([])
       setProfile(null)
+      setCrews([])
     }
   }, [userId, refresh])
 
@@ -111,6 +114,9 @@ export function AppStateProvider({ children }) {
       loading,
       loadError,
       profile,
+      crews,
+      myCrew: crews.find((c) => c.is_mine) || null,
+      localMode: api.isLocal,
       photos,
       draftPhoto,
       setDraftPhoto,
@@ -128,7 +134,7 @@ export function AppStateProvider({ children }) {
         run(async () => {
           const d = await api.toggleLike(id)
           patch(id, { liked_by_me: d.liked, like_count: d.like_count, is_promoted: d.is_promoted })
-          if (d.just_promoted) refresh() // 포인트가 붙었으니 목록을 새로 받습니다(문구로는 알리지 않음)
+          refresh() // 하트에 따라 포인트가 달라지므로 목록을 새로 받습니다(문구로는 알리지 않음)
         }),
       accept: (id) =>
         run(async () => {
@@ -161,6 +167,27 @@ export function AppStateProvider({ children }) {
           await refresh()
           return id ?? true
         }),
+      createCrew: (input) =>
+        run(async () => {
+          await api.createCrew(input)
+          await loadProfile()
+          showToast(`${input.name} 크루를 만들었어요`)
+          return true
+        }),
+      joinCrew: (crew) =>
+        run(async () => {
+          await api.joinCrew(crew.id)
+          await loadProfile()
+          showToast(`${crew.name} 크루에 가입했어요`)
+          return true
+        }),
+      leaveCrew: () =>
+        run(async () => {
+          await api.leaveCrew()
+          await loadProfile()
+          showToast('크루에서 나왔어요')
+          return true
+        }),
       saveNickname: (nickname) =>
         run(async () => {
           await api.setNickname(nickname)
@@ -169,7 +196,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, userId, coords, located, reports, loading, loadError, profile, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, userId, coords, located, reports, loading, loadError, profile, crews, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

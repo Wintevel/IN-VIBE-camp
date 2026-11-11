@@ -22,7 +22,7 @@ export default function MeScreen({ navigation }) {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[text.cardTitle, { fontSize: 20 }]}>{p.nickname}</Text>
-          <Text style={[text.small, { marginTop: 4 }]}>{p.streak_weeks > 0 ? `${p.streak_weeks}주 연속 활동 중` : '이번 주 첫 활동을 시작해 보세요'}</Text>
+          <Text style={[text.small, { marginTop: 4 }]}>{[app.myCrew ? app.myCrew.name : '크루 없음', p.streak_weeks > 0 ? `${p.streak_weeks}주 연속 활동 중` : null].filter(Boolean).join(' · ')}</Text>
         </View>
         <Text onPress={() => navigation.navigate('Settings')} style={[text.chip, styles.settings]} accessibilityRole="button">
           설정
