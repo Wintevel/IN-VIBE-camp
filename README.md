@@ -14,7 +14,8 @@
 ```
 frontend/   Vite + React 웹앱 (모바일 화면 기준)
 supabase/   마이그레이션 SQL, Supabase 설정
-docs/       테이블·API 초안 (docs/api.md)
+docs/       테이블·API 초안 (docs/api.md) — 프론트·백엔드 공통 계약
+CLAUDE.md   Claude 작업 규칙 (영역 경계). frontend/, supabase/ 에도 각각 있음
 ```
 
 ## 실행 방법
@@ -31,4 +32,5 @@ Node 20 이상을 권합니다.
 - 브랜치 이름: `feature/기능`, `fix/내용`, `docs/내용` (프론트는 `feature/fe-...`, 백엔드는 `feature/be-...` 처럼 앞에 구분을 붙여도 좋습니다)
 - 커밋 메시지는 한 줄로 무엇을 했는지 적습니다. 예: `제보 목록 화면 추가`
 - PR 은 상대 역할 한 명이 확인한 뒤 합칩니다. API·테이블을 바꾸면 `docs/api.md` 도 같이 고칩니다.
+- 각자 Claude 와 작업하며, 자기 폴더만 수정합니다(프론트 `frontend/`, 백엔드 `supabase/`). 상대 쪽에 필요한 변경은 `docs/api.md` 나 PR 설명으로 요청합니다. 자세한 규칙은 `CLAUDE.md`.
 - `.env`, 키, 비밀번호는 커밋하지 않습니다. (`service_role` 키는 특히 주의)
