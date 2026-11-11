@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import BoardBackground from '../components/BoardBackground'
@@ -6,10 +7,16 @@ import Stamp from '../components/Stamp'
 import { useApp } from '../state/AppState'
 import { colors, text } from '../theme'
 
-// 로그인 수단(카카오·이메일)은 시안 가정값입니다. 확정 후 Supabase Auth 로 연결합니다.
+// 지금 서버는 익명 계정으로 시작합니다(프로필은 서버가 자동 생성). 카카오·이메일 연결은 로그인 방식 확정 후 붙입니다.
 export default function LoginScreen() {
   const { signIn } = useApp()
   const insets = useSafeAreaInsets()
+  const [busy, setBusy] = useState(false)
+  const start = async () => {
+    setBusy(true)
+    await signIn()
+    setBusy(false)
+  }
   return (
     <BoardBackground>
       <View style={[styles.wrap, { paddingTop: insets.top + 80, paddingBottom: insets.bottom + 24 }]}>
@@ -18,15 +25,13 @@ export default function LoginScreen() {
             <Stamp type="partner">JUBQUEST</Stamp>
           </View>
           <Text style={[text.h1, { fontSize: 40, lineHeight: 46 }]}>줍퀘스트</Text>
-          <Text style={[text.regular, { color: colors.sub }]}>동네를 치우고 포인트를 받아요.{'\n'}치운 구역이 지도에 칠해져요.</Text>
+          <Text style={[text.regular, { color: colors.sub }]}>동네 쓰레기를 제보하고, 이웃의 의뢰를 해결해요.</Text>
         </View>
-        <View style={{ gap: 8 }}>
-          <Button style={{ flex: 0, backgroundColor: '#FEE500' }} onPress={signIn}>
-            <Text style={[text.button, { color: '#191919' }]}>카카오로 시작하기</Text>
+        <View style={{ gap: 10 }}>
+          <Button style={{ flex: 0 }} disabled={busy} onPress={start}>
+            {busy ? '시작하는 중…' : '시작하기'}
           </Button>
-          <Button type="ghost" style={{ flex: 0 }} onPress={signIn}>
-            이메일로 시작하기
-          </Button>
+          <Text style={[text.caption, { textAlign: 'center' }]}>가입 없이 바로 시작해요. 닉네임은 설정에서 바꿀 수 있어요.</Text>
         </View>
       </View>
     </BoardBackground>

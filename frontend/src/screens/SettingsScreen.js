@@ -1,28 +1,45 @@
-import { Text } from 'react-native'
-import { List } from '../components/ListRows'
+import { useState } from 'react'
+import { StyleSheet, Text, TextInput, View } from 'react-native'
+import Button from '../components/Button'
+import { List, SectionTitle } from '../components/ListRows'
 import Screen from '../components/Screen'
-import { AREA } from '../data/mock'
 import { useApp } from '../state/AppState'
-import { text } from '../theme'
+import { colors, font, radius, text } from '../theme'
 
-// 설정 항목은 시안 가정값입니다. 확정 후 profiles 업데이트·알림 설정과 연결합니다.
 export default function SettingsScreen({ navigation }) {
   const app = useApp()
+  const [nickname, setNickname] = useState(app.profile?.nickname || '')
+  const [busy, setBusy] = useState(false)
+  const changed = nickname.trim().length > 0 && nickname.trim() !== app.profile?.nickname
+  const save = async () => {
+    setBusy(true)
+    await app.saveNickname(nickname.trim())
+    setBusy(false)
+  }
   return (
     <Screen>
       <Text style={text.h1}>설정</Text>
+      <SectionTitle>닉네임</SectionTitle>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <TextInput value={nickname} onChangeText={setNickname} placeholder="닉네임" placeholderTextColor={colors.disabled} style={styles.input} maxLength={12} accessibilityLabel="닉네임" />
+        <Button style={{ flex: 0, paddingHorizontal: 20 }} disabled={!changed || busy} onPress={save}>
+          저장
+        </Button>
+      </View>
       <List
         rows={[
-          { label: '내 동네', value: AREA.name, onPress: () => app.showToast('동네 변경은 곧 열려요') },
-          { label: '알림', value: '켜짐', onPress: () => app.showToast('알림 설정은 곧 열려요') },
-          { label: '크루 탈퇴', value: app.crew ?? '가입 안 함', onPress: app.crew ? () => { app.leaveCrew(); app.showToast('크루에서 나왔어요') } : undefined },
-        ]}
-      />
-      <List
-        rows={[
+          { label: '내 위치 다시 받기', value: app.located ? '받음' : '못 받음', onPress: () => app.refresh({ relocate: true }) },
           { label: '로그아웃', danger: true, onPress: () => app.signOut() },
         ]}
       />
+      <Text style={text.caption}>지금은 가입 없는 계정이라 로그아웃하면 기록을 다시 불러올 수 없어요.</Text>
+      <Button type="ghost" style={{ flex: 0 }} onPress={() => navigation.goBack()}>
+        돌아가기
+      </Button>
     </Screen>
   )
 }
+
+const styles = StyleSheet.create({
+  input: { flex: 1, backgroundColor: colors.panel, borderRadius: radius.cardSm, borderWidth: 1, borderColor: colors.line, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 16, paddingVertical: 14 },
+})

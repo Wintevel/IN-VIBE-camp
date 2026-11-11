@@ -1,14 +1,13 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { DarkTheme, NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { Text } from 'react-native'
+import { Text, View } from 'react-native'
 import { TabIcon } from '../components/Icons'
+import { navigationRef } from './ref'
 import { useApp } from '../state/AppState'
 import { colors, text } from '../theme'
 import BoardScreen from '../screens/BoardScreen'
 import CaptureScreen from '../screens/CaptureScreen'
-import CrewJoinScreen from '../screens/CrewJoinScreen'
-import CrewQuestCreateScreen from '../screens/CrewQuestCreateScreen'
 import CrewScreen from '../screens/CrewScreen'
 import LoginScreen from '../screens/LoginScreen'
 import MapScreen from '../screens/MapScreen'
@@ -49,9 +48,11 @@ function Tabs() {
 const stackScreen = { headerShown: false, contentStyle: { backgroundColor: colors.ink } }
 
 export default function RootNavigator() {
-  const { signedIn } = useApp()
+  const { session } = useApp()
+  if (session === undefined) return <View style={{ flex: 1, backgroundColor: colors.ink }} />
+  const signedIn = !!session
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer theme={theme} ref={navigationRef}>
       <Stack.Navigator screenOptions={stackScreen}>
         {signedIn ? (
           <>
@@ -59,8 +60,6 @@ export default function RootNavigator() {
             <Stack.Screen name="ReportCreate" component={ReportCreateScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Capture" component={CaptureScreen} options={{ presentation: 'fullScreenModal' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
-            <Stack.Screen name="CrewJoin" component={CrewJoinScreen} />
-            <Stack.Screen name="CrewQuestCreate" component={CrewQuestCreateScreen} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />
