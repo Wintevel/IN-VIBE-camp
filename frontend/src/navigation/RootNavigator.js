@@ -1,0 +1,71 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { DarkTheme, NavigationContainer } from '@react-navigation/native'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { Text } from 'react-native'
+import { TabIcon } from '../components/Icons'
+import { useApp } from '../state/AppState'
+import { colors, text } from '../theme'
+import BoardScreen from '../screens/BoardScreen'
+import CaptureScreen from '../screens/CaptureScreen'
+import CrewJoinScreen from '../screens/CrewJoinScreen'
+import CrewQuestCreateScreen from '../screens/CrewQuestCreateScreen'
+import CrewScreen from '../screens/CrewScreen'
+import LoginScreen from '../screens/LoginScreen'
+import MapScreen from '../screens/MapScreen'
+import MeScreen from '../screens/MeScreen'
+import ReportCreateScreen from '../screens/ReportCreateScreen'
+import SettingsScreen from '../screens/SettingsScreen'
+
+const Tab = createBottomTabNavigator()
+const Stack = createNativeStackNavigator()
+
+const theme = { ...DarkTheme, colors: { ...DarkTheme.colors, background: colors.ink, card: colors.ink, border: colors.line, text: colors.fg, primary: colors.blue } }
+
+const TABS = [
+  ['Board', BoardScreen, '의뢰판', 'board'],
+  ['Map', MapScreen, '지도', 'map'],
+  ['Crew', CrewScreen, '크루', 'crew'],
+  ['Me', MeScreen, '내 정보', 'me'],
+]
+
+function Tabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.fg,
+        tabBarInactiveTintColor: colors.disabled,
+        tabBarStyle: { backgroundColor: colors.ink, borderTopColor: colors.line },
+        tabBarLabel: ({ children, color }) => <Text style={[text.tab, { color }]}>{children}</Text>,
+      }}
+    >
+      {TABS.map(([name, component, title, icon]) => (
+        <Tab.Screen key={name} name={name} component={component} options={{ title, tabBarIcon: ({ color }) => <TabIcon name={icon} color={color} /> }} />
+      ))}
+    </Tab.Navigator>
+  )
+}
+
+const stackScreen = { headerShown: false, contentStyle: { backgroundColor: colors.ink } }
+
+export default function RootNavigator() {
+  const { signedIn } = useApp()
+  return (
+    <NavigationContainer theme={theme}>
+      <Stack.Navigator screenOptions={stackScreen}>
+        {signedIn ? (
+          <>
+            <Stack.Screen name="Main" component={Tabs} />
+            <Stack.Screen name="ReportCreate" component={ReportCreateScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="Capture" component={CaptureScreen} options={{ presentation: 'fullScreenModal' }} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="CrewJoin" component={CrewJoinScreen} />
+            <Stack.Screen name="CrewQuestCreate" component={CrewQuestCreateScreen} />
+          </>
+        ) : (
+          <Stack.Screen name="Login" component={LoginScreen} />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
+}
