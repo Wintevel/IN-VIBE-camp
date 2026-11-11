@@ -8,6 +8,11 @@ const ERRORS = {
   DEADLINE_PASSED: '인증 시간이 지났어요. 다시 수락해 주세요',
   NOT_ENOUGH_POINTS: '포인트가 부족해요',
   DAILY_LIMIT: '오늘은 3개까지 완료할 수 있어요. 내일 다시 도전해요',
+  ALREADY_IN_CREW: '이미 가입한 크루가 있어요. 먼저 탈퇴해 주세요',
+  CREW_NAME_TAKEN: '같은 이름의 크루가 이미 있어요',
+  CREW_NOT_FOUND: '크루를 찾지 못했어요',
+  NOT_IN_CREW: '가입한 크루가 없어요',
+  CREW_NOT_READY: '서버에 크루 기능이 아직 없어요',
   TOO_FAR: '의뢰 장소에서 100m 안에서 찍은 사진만 인증할 수 있어요',
 }
 

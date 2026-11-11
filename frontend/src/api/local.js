@@ -19,6 +19,9 @@ const XP_PER_LEVEL = 300
 const DAILY_LIMIT = 3
 const PROOF_RADIUS_M = 100
 const DAY = 24 * 3600 * 1000
+// 하트 1개당 포인트. 시안 예시값이고, 서버가 생기면 서버가 승격·포인트를 정합니다.
+const POINTS_PER_HEART = 5
+const pointsOf = (r) => r.likes.length * POINTS_PER_HEART
 
 let cache = null
 const listeners = new Set()
@@ -31,6 +34,7 @@ async function load() {
       cache = null
     }
     cache = cache || { user: null, reports: [], nextId: 1 }
+    cache.crews = cache.crews || []
   }
   return cache
 }
@@ -100,7 +104,7 @@ export async function signInAnonymously() {
 }
 // 로그아웃하면 이 기기의 기록을 지웁니다(서버가 없어 다시 불러올 곳이 없음).
 export async function signOut() {
-  cache = { user: null, reports: [], nextId: 1 }
+  cache = { user: null, reports: [], nextId: 1, crews: [] }
   await save()
   emit()
 }
@@ -135,7 +139,7 @@ function view(r, me, from) {
     required_members: r.required_members,
     current_members: r.members.length,
     reward_xp: xp,
-    reward_points: 0,
+    reward_points: pointsOf(r),
     deadline_at: r.deadline_at,
     created_at: r.created_at,
     reporter_id: r.reporter_id,
@@ -165,7 +169,6 @@ async function find(id) {
 
 export async function toggleLike(id) {
   const { r, me } = await find(id)
-  if (r.reporter_id === me.id) fail('CANNOT_LIKE_OWN_REPORT')
   const on = r.likes.includes(me.id)
   r.likes = on ? r.likes.filter((u) => u !== me.id) : [...r.likes, me.id]
   await save()
@@ -272,8 +275,13 @@ export async function submitProof(userId, id, before, after) {
   if (meters(before, r) > PROOF_RADIUS_M || meters(after, r) > PROOF_RADIUS_M) fail('TOO_FAR')
 
   const xp = (PLACE[r.place_type] || PLACE.etc)[1]
+  const points = pointsOf(r)
   const was = levelOf(me.xp)
   me.xp += xp
+  me.points += points
+  // 크루원이면 크루 점수에도 더합니다. 크루 의뢰(2명 이상)는 2배.
+  const crew = db.crews.find((c) => c.members.includes(me.id))
+  if (crew) crew.score += xp * (r.required_members > 1 ? 2 : 1)
   me.completed.push({ id, at: new Date().toISOString() })
   r.status = 'completed'
   r.deadline_at = null
@@ -281,5 +289,44 @@ export async function submitProof(userId, id, before, after) {
   r.after_path = await keepPhoto(after.uri)
   r.completed_at = new Date().toISOString()
   await save()
-  return { xp_gained: xp, points_gained: 0, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points, streak_weeks: streak(me.completed) }
+  return { xp_gained: xp, points_gained: points, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points, streak_weeks: streak(me.completed) }
+}
+
+// ── 크루 ──────────────────────────────────────────────
+// 한 사람은 크루 하나에만 가입합니다(docs/api.md 에서 아직 미정인 항목, 우선 이렇게 둠).
+const crewView = (c, me, rank) => ({ id: c.id, name: c.name, area: c.area, member_count: c.members.length, score: c.score, rank, is_mine: c.members.includes(me.id), is_owner: c.owner_id === me.id })
+
+export async function getCrews() {
+  const db = await load()
+  return [...db.crews].sort((a, b) => b.score - a.score || a.id - b.id).map((c, i) => crewView(c, db.user, i + 1))
+}
+
+export async function createCrew({ name, area }) {
+  const db = await load()
+  if (db.crews.some((c) => c.members.includes(db.user.id))) fail('ALREADY_IN_CREW')
+  if (db.crews.some((c) => c.name === name)) fail('CREW_NAME_TAKEN')
+  const id = (db.crews.reduce((m, c) => Math.max(m, c.id), 0) || 0) + 1
+  db.crews.push({ id, name, area, owner_id: db.user.id, members: [db.user.id], score: 0, created_at: new Date().toISOString() })
+  await save()
+  return id
+}
+
+export async function joinCrew(id) {
+  const db = await load()
+  if (db.crews.some((c) => c.members.includes(db.user.id))) fail('ALREADY_IN_CREW')
+  const c = db.crews.find((x) => x.id === id)
+  if (!c) fail('CREW_NOT_FOUND')
+  c.members.push(db.user.id)
+  await save()
+}
+
+// 마지막 크루원이 나가면 크루는 사라집니다.
+export async function leaveCrew() {
+  const db = await load()
+  const c = db.crews.find((x) => x.members.includes(db.user.id))
+  if (!c) fail('NOT_IN_CREW')
+  c.members = c.members.filter((u) => u !== db.user.id)
+  if (c.members.length === 0) db.crews = db.crews.filter((x) => x !== c)
+  else if (c.owner_id === db.user.id) c.owner_id = c.members[0]
+  await save()
 }

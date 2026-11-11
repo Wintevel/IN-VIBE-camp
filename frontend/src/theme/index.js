@@ -41,15 +41,15 @@ export const space = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24 }
 
 // 네이티브는 App 에서 불러온 ttf 이름을, 웹은 구글 폰트(가벼운 분할 로딩)의 family + weight 를 씁니다.
 const web = Platform.OS === 'web'
-const f = (native, family, weight) => (web ? { fontFamily: family, fontWeight: weight } : { fontFamily: native })
+const f = (native, family, weight) => (web ? { fontFamily: `${family}, "'Noto Sans KR'", 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif`, fontWeight: weight } : { fontFamily: native })
 export const font = {
-  display: f('BlackHanSans_400Regular', 'Black Han Sans', '400'),
-  body: f('NotoSansKR_400Regular', 'Noto Sans KR', '400'),
-  bodyMedium: f('NotoSansKR_500Medium', 'Noto Sans KR', '500'),
-  bodyBold: f('NotoSansKR_700Bold', 'Noto Sans KR', '700'),
-  bodyExtra: f('NotoSansKR_800ExtraBold', 'Noto Sans KR', '800'),
-  mono: f('JetBrainsMono_500Medium', 'JetBrains Mono', '500'),
-  monoBold: f('JetBrainsMono_700Bold', 'JetBrains Mono', '700'),
+  display: f('BlackHanSans_400Regular', "'Black Han Sans'", '400'),
+  body: f('NotoSansKR_400Regular', "'Noto Sans KR'", '400'),
+  bodyMedium: f('NotoSansKR_500Medium', "'Noto Sans KR'", '500'),
+  bodyBold: f('NotoSansKR_700Bold', "'Noto Sans KR'", '700'),
+  bodyExtra: f('NotoSansKR_800ExtraBold', "'Noto Sans KR'", '800'),
+  mono: f('JetBrainsMono_500Medium', "'JetBrains Mono'", '500'),
+  monoBold: f('JetBrainsMono_700Bold', "'JetBrains Mono'", '700'),
 }
 
 // 텍스트 스타일 (tokens.json 의 textStyle)
@@ -67,8 +67,8 @@ export const text = {
   small: { ...font.bodyMedium, fontSize: 13, lineHeight: 20, color: colors.sub },
   caption: { ...font.bodyMedium, fontSize: 12, lineHeight: 17, color: colors.sub },
   tab: { ...font.bodyBold, fontSize: 11, lineHeight: 13 },
-  ticker: { ...font.monoBold, fontSize: 12, letterSpacing: 0.3 },
-  stamp: { ...font.monoBold, fontSize: 11, letterSpacing: 0.6 },
+  ticker: { ...font.bodyBold, fontSize: 12, lineHeight: 16, letterSpacing: 0.2 },
+  stamp: { ...font.bodyBold, fontSize: 11, lineHeight: 15, letterSpacing: 0.3 },
   code: { ...font.mono, fontSize: 10 },
   monoPoint: { ...font.monoBold, fontSize: 15, color: colors.fg },
 }
