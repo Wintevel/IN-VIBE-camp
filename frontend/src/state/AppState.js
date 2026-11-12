@@ -17,6 +17,9 @@ export function AppStateProvider({ children }) {
   const [loadError, setLoadError] = useState(null)
   const [profile, setProfile] = useState(null)
   const [crews, setCrews] = useState([])
+  const [myCrew, setMyCrew] = useState(null)
+  const [shop, setShop] = useState([])
+  const [celebrate, setCelebrate] = useState(null) // 의뢰 완료 연출에 쓸 보상 정보
   const [photos, setPhotos] = useState({}) // { [reportId]: { before, after } }
   const [draftPhoto, setDraftPhoto] = useState(null)
   const [sheet, setSheet] = useState({ id: null, visible: false })
@@ -57,6 +60,8 @@ export function AppStateProvider({ children }) {
     try {
       setProfile(await api.getMyProfile())
       setCrews((await api.getCrews()) || [])
+      setMyCrew(await api.getMyCrew())
+      setShop((await api.getShopItems()) || [])
     } catch {
       // 프로필은 다음 새로고침에서 다시 시도
     }
@@ -86,6 +91,7 @@ export function AppStateProvider({ children }) {
       setReports([])
       setProfile(null)
       setCrews([])
+      setMyCrew(null)
     }
   }, [userId, refresh])
 
@@ -115,7 +121,10 @@ export function AppStateProvider({ children }) {
       loadError,
       profile,
       crews,
-      myCrew: crews.find((c) => c.is_mine) || null,
+      myCrew,
+      shop,
+      celebrate,
+      dismissCelebrate: () => setCelebrate(null),
       localMode: api.isLocal,
       photos,
       draftPhoto,
@@ -134,7 +143,8 @@ export function AppStateProvider({ children }) {
         run(async () => {
           const d = await api.toggleLike(id)
           patch(id, { liked_by_me: d.liked, like_count: d.like_count, is_promoted: d.is_promoted })
-          refresh() // 하트에 따라 포인트가 달라지므로 목록을 새로 받습니다(문구로는 알리지 않음)
+          if (d.points_gained) showToast(`하트를 눌러 +${d.points_gained}P 받았어요`)
+          refresh() // 하트에 따라 보상이 달라지므로 목록을 새로 받습니다
         }),
       accept: (id) =>
         run(async () => {
@@ -156,8 +166,7 @@ export function AppStateProvider({ children }) {
           const p = photos[id] || {}
           const d = await api.submitProof(userId, id, p.before, p.after || p.before)
           setPhotos((x) => ({ ...x, [id]: undefined }))
-          const gain = [d.reward_label, d.points_gained ? `+${d.points_gained}점` : null, d.xp_gained ? `+${d.xp_gained}XP` : null].filter(Boolean).join(' · ')
-          showToast(`${d.leveled_up ? `레벨 업! Lv.${d.level} · ` : '완료했어요. '}${gain}`)
+          setCelebrate(d)
           await refresh()
           return d
         }),
@@ -188,6 +197,13 @@ export function AppStateProvider({ children }) {
           showToast('크루에서 나왔어요')
           return true
         }),
+      redeem: (item) =>
+        run(async () => {
+          const d = await api.redeemItem(item.id)
+          await loadProfile()
+          showToast(`${item.name} 교환 완료 · 쿠폰 ${d.coupon_code}`)
+          return d
+        }),
       saveNickname: (nickname) =>
         run(async () => {
           await api.setNickname(nickname)
@@ -196,7 +212,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, userId, coords, located, reports, loading, loadError, profile, crews, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

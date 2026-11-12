@@ -30,12 +30,13 @@ async function lookup(shot) {
 }
 
 // 주민 제보 올리기. 사진은 앱 카메라 촬영만 허용하고 위치는 촬영 순간의 값을 씁니다.
-export default function ReportCreateScreen({ navigation }) {
+export default function ReportCreateScreen({ navigation, route }) {
+  const crew = !!route.params?.crew // 크루 탭에서 들어오면 크루 의뢰(최소 2명)
   const app = useApp()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [placeType, setPlaceType] = useState('drain')
-  const [members, setMembers] = useState(1)
+  const [members, setMembers] = useState(crew ? 2 : 1)
   const [busy, setBusy] = useState(false)
   const shot = app.draftPhoto
   const ready = title.trim().length > 0 && !!shot && !busy
@@ -47,7 +48,7 @@ export default function ReportCreateScreen({ navigation }) {
     setBusy(false)
     if (!ok) return
     app.setDraftPhoto(null)
-    app.showToast('제보를 올렸어요')
+    app.showToast(crew ? '크루 의뢰를 올렸어요' : '제보를 올렸어요')
     navigation.goBack()
   }
   const close = () => {
@@ -57,8 +58,8 @@ export default function ReportCreateScreen({ navigation }) {
 
   return (
     <Screen>
-      <Text style={text.h1}>제보하기</Text>
-      <Text style={text.small}>쓰레기가 있는 곳을 사진으로 알려 주세요.</Text>
+      <Text style={text.h1}>{crew ? '크루 의뢰 올리기' : '제보하기'}</Text>
+      <Text style={text.small}>{crew ? '여럿이 치워야 하는 곳을 사진으로 알려 주세요. 최소 2명부터예요.' : '쓰레기가 있는 곳을 사진으로 알려 주세요.'}</Text>
 
       <Pressable onPress={() => navigation.navigate('Capture', { kind: 'report', title: '제보 사진' })} accessibilityRole="button" accessibilityLabel={shot ? '사진 다시 찍기' : '사진 찍기'} style={[styles.photo, shot && styles.photoDone]}>
         {shot ? <Image source={{ uri: shot.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <Text style={[text.chip, { color: colors.sub }]}>사진 찍기 (앱 카메라만 가능)</Text>}
@@ -76,7 +77,7 @@ export default function ReportCreateScreen({ navigation }) {
 
       <Text style={text.section}>필요한 인원</Text>
       <View style={styles.stepper}>
-        <Pressable onPress={() => setMembers((n) => Math.max(1, n - 1))} accessibilityRole="button" accessibilityLabel="인원 줄이기" style={styles.stepBtn}>
+        <Pressable onPress={() => setMembers((n) => Math.max(crew ? 2 : 1, n - 1))} accessibilityRole="button" accessibilityLabel="인원 줄이기" style={styles.stepBtn}>
           <Text style={text.num}>−</Text>
         </Pressable>
         <Text style={[text.num, { minWidth: 56, textAlign: 'center' }]}>{members}명</Text>
@@ -91,7 +92,7 @@ export default function ReportCreateScreen({ navigation }) {
           취소
         </Button>
         <Button disabled={!ready} onPress={submit}>
-          {busy ? '올리는 중…' : '제보 올리기'}
+          {busy ? '올리는 중…' : crew ? '크루 의뢰 올리기' : '제보 올리기'}
         </Button>
       </View>
     </Screen>

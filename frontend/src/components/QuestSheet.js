@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
-import { code, dist, isCrew, isPartner, remain, reward } from '../lib/format'
+import { code, dist, isCrew, isPartner, remain } from '../lib/format'
 import { navigationRef } from '../navigation/ref'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
 import BottomSheet from './BottomSheet'
 import Button from './Button'
+import { CameraIcon } from './Icons'
+import { RewardTiles, rewardParts } from './Reward'
 import Stamp from './Stamp'
 
 // 의뢰 상세 시트. 어느 탭에서든 app.openSheet(id) 로 엽니다.
@@ -27,13 +29,13 @@ export default function QuestSheet() {
     ? [`현장에서 ${label1}을 앱 카메라로 찍어요`, '사진을 올리면 위치와 함께 접수돼요', '확인되면 보상이 지급돼요']
     : ['현장에서 치우기 전 사진을 앱 카메라로 찍어요', '치운 뒤 같은 각도로 한 장 더 찍어요', '두 장을 올리면 보상이 지급돼요']
   const img = photoUrl(r.photo_path)
+  const proving = joined && started && !done // 인증할 차례면 인증란을 제목 바로 아래에 둡니다
 
   const kv = [
     ['장소', [r.place_label, r.address].filter(Boolean).join(' · ')],
     ['거리', dist(r.distance_m)],
-    ['보상', [r.reward_label, r.reward_points > 0 ? `${r.reward_points} POINT` : null, `${r.reward_xp ?? 0} XP`].filter(Boolean).join(' + ')],
+    r.reward_label ? ['제휴 보상', r.reward_label] : null,
     isCrew(r) ? ['인원', `${r.current_members}/${r.required_members}명`] : null,
-    joined && started && r.deadline_at ? ['인증 마감', remain(r.deadline_at)] : null,
     [isPartner(r) ? '의뢰한 곳' : '제보한 이웃', r.reporter_nickname],
   ].filter((x) => x && x[1])
 
@@ -88,6 +90,20 @@ export default function QuestSheet() {
         <Stamp>{code(r.id)}</Stamp>
       </View>
       <Text style={text.sheetTitle}>{r.title}</Text>
+      {proving ? (
+        <View style={styles.proof}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={[text.section, { flex: 1 }]}>완료 인증</Text>
+            {r.deadline_at ? <Text style={[text.chip, { color: colors.tape }]}>{remain(r.deadline_at)}</Text> : null}
+          </View>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <PhotoSlot n={single ? null : 1} shot={p.before} label={single ? label1 : '치우기 전'} onPress={() => capture('before')} />
+            {single ? null : <PhotoSlot n={2} shot={p.after} label="치운 뒤" onPress={() => capture('after')} />}
+          </View>
+          <Text style={[text.caption, { color: colors.sheetSub }]}>{single ? '현장에서 앱 카메라로 찍어 주세요. 의뢰 위치 100m 안에서만 인증돼요.' : '현장에서 앱 카메라로 전·후를 같은 각도로 찍어 주세요. 의뢰 위치 100m 안에서만 인증돼요.'}</Text>
+        </View>
+      ) : null}
+      <RewardTiles parts={rewardParts(r)} />
       {r.description ? <Text style={[text.regular, { color: colors.sheetSub }]}>{r.description}</Text> : null}
       {img ? <Image source={{ uri: img }} style={styles.photo} resizeMode="cover" accessibilityLabel="제보 사진" /> : null}
       <View style={styles.kv}>
@@ -98,7 +114,7 @@ export default function QuestSheet() {
           </View>
         ))}
       </View>
-      {!done ? (
+      {!done && !proving ? (
         <View style={{ gap: 10 }}>
           <Text style={text.section}>완료 인증 방법</Text>
           {steps.map((s, i) => (
@@ -111,20 +127,17 @@ export default function QuestSheet() {
           ))}
         </View>
       ) : null}
-      {joined && started && !done ? (
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <PhotoSlot shot={p.before} label={single ? label1 : '전 사진'} onPress={() => capture('before')} />
-          {single ? null : <PhotoSlot shot={p.after} label="후 사진" onPress={() => capture('after')} />}
-        </View>
-      ) : null}
     </BottomSheet>
   )
 }
 
-function PhotoSlot({ shot, label, onPress }) {
+function PhotoSlot({ n, shot, label, onPress }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={shot ? `${label} 다시 찍기` : `${label} 찍기`} style={[styles.slot, shot && styles.slotDone]}>
-      {shot ? <Image source={{ uri: shot.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <Text style={[text.chip, { color: colors.sheetSub }]}>{label} 찍기</Text>}
+      {shot ? <Image source={{ uri: shot.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <CameraIcon size={26} color={colors.blue} />}
+      <View style={[styles.slotTag, shot && { backgroundColor: colors.blue }]}>
+        <Text style={[text.chip, { color: shot ? colors.onBlue : colors.sheetFg }]}>{[n, label, shot ? '다시 찍기' : '찍기'].filter(Boolean).join(' ')}</Text>
+      </View>
     </Pressable>
   )
 }
@@ -134,6 +147,8 @@ const styles = StyleSheet.create({
   kv: { backgroundColor: colors.sheetWeak, borderRadius: radius.cardSm, paddingHorizontal: 16 },
   kvRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 12 },
   step: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.sheetWeak, alignItems: 'center', justifyContent: 'center' },
-  slot: { flex: 1, aspectRatio: 4 / 3, borderRadius: radius.md, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.sheetLine, backgroundColor: colors.sheetWeak, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  proof: { gap: 10, padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.blue, backgroundColor: colors.blueWeak },
+  slotTag: { position: 'absolute', left: 6, bottom: 6, backgroundColor: 'rgba(17,19,23,0.78)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  slot: { flex: 1, aspectRatio: 4 / 3, maxHeight: 150, borderRadius: radius.md, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.blue, backgroundColor: colors.sheetBg, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   slotDone: { borderStyle: 'solid', borderColor: colors.blue },
 })

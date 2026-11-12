@@ -7,5 +7,5 @@ import * as remote from './remote'
 export const isLocal = !hasSupabase
 const impl = hasSupabase ? remote : local
 
-export const { getSession, onAuthChange, signInAnonymously, signOut, getNearbyReports, toggleLike, acceptReport, cancelParticipation, getMyProfile, setNickname, photoUrl, createReport, submitProof, getCrews, createCrew, joinCrew, leaveCrew } = impl
+export const { getSession, onAuthChange, signInAnonymously, signOut, getNearbyReports, toggleLike, acceptReport, cancelParticipation, getMyProfile, setNickname, photoUrl, createReport, submitProof, getCrews, getMyCrew, getShopItems, redeemItem, createCrew, joinCrew, leaveCrew } = impl
 export { errorText } from './errors'
