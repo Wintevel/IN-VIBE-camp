@@ -1,4 +1,5 @@
 import Svg, { Circle, Path, Rect } from 'react-native-svg'
+import { colors } from '../theme'
 
 const base = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }
 
@@ -43,6 +44,65 @@ export function HeartIcon({ filled, color, size = 18 }) {
         stroke={color}
         fill={filled ? color : 'none'}
       />
+    </Svg>
+  )
+}
+
+// 보상 아이콘: 포인트(노란 동전) · 내 경험치(파란 마름모 번개) · 크루 활동 경험치(보라 방패) · 제휴 보상(선물)
+export function PointIcon({ size = 18 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Circle cx="12" cy="12" r="11" fill={colors.tape} />
+      <Circle cx="12" cy="12" r="8" fill="none" stroke={colors.tapeInk} strokeOpacity="0.25" strokeWidth="1.5" />
+      <Path d="M9.6 17V7.2h3.1a2.9 2.9 0 0 1 0 5.8H9.6" fill="none" stroke={colors.tapeInk} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+export function XpIcon({ size = 18 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M12 1 23 12 12 23 1 12Z" fill={colors.blue} />
+      <Path d="M13.2 5.5 8 13h3.4l-.8 5.5L16 11h-3.5l.7-5.5Z" fill="#fff" />
+    </Svg>
+  )
+}
+
+export function CrewXpIcon({ size = 18 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M12 1.5 21 5v6.5c0 5-3.6 9-9 11-5.4-2-9-6-9-11V5l9-3.5Z" fill={colors.purple} />
+      <Path d="m7.8 12 4.2-4 4.2 4M7.8 16.5l4.2-4 4.2 4" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+export function GiftIcon({ size = 18, color = colors.tape }) {
+  const p = { ...base, stroke: color }
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Rect x="3" y="8" width="18" height="5" rx="1.5" {...p} />
+      <Path d="M5 13v8h14v-8M12 8v13M12 8S10.5 3 8 3a2.5 2.5 0 0 0 0 5h4Zm0 0s1.5-5 4-5a2.5 2.5 0 0 1 0 5h-4Z" {...p} />
+    </Svg>
+  )
+}
+
+export function CameraIcon({ size = 22, color = colors.sub }) {
+  const p = { ...base, stroke: color }
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" {...p} />
+      <Circle cx="12" cy="13.5" r="3.5" {...p} />
+    </Svg>
+  )
+}
+
+export function PinIcon({ size = 22, color = colors.disabled }) {
+  const p = { ...base, stroke: color }
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21Z" {...p} />
+      <Circle cx="12" cy="9.5" r="2.5" {...p} />
     </Svg>
   )
 }

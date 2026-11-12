@@ -22,15 +22,19 @@ const { data } = await supabase.from('reports').select('*')
 ```
 App.js                 폰트 로드 + 상태·내비게이션·의뢰 시트 조립
 src/theme/             디자인 토큰(색·글꼴·텍스트 스타일)
-src/components/        공통 UI (ReportCard, QuestSheet, BottomSheet, MapView, Toast ...)
-src/screens/           화면 (시작, 의뢰판, 지도, 크루, 내 정보, 설정, 제보하기, 촬영)
+src/components/        공통 UI (ReportCard, QuestSheet, MyQuests, DailyLimits, Reward, Motion, ClearOverlay ...)
+src/screens/           화면 (시작, 의뢰판, 지도, 크루, 내 정보, 포인트 상점, 설정, 제보하기, 촬영)
 src/navigation/        시작 여부에 따른 스택 + 하단 탭 4개
 src/state/AppState.js  앱 상태. 데이터는 전부 src/api 에서 받음(예시 데이터 없음)
 src/api/               index.js 가 구현을 고름: remote.js(Supabase) / local.js(기기 저장소)
 ```
 
 ## 데이터가 저장되는 곳
-- `.env` 에 `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` 가 **없으면** 기기 저장소 모드입니다. 제보·수락·인증·레벨이 이 기기 안에서 실제로 동작하지만 다른 사람과 공유되지 않습니다. 하트는 내 제보에도 누를 수 있고 하트 1개당 5점(시안 예시값)이 의뢰 포인트로 붙습니다. 크루는 만들기·가입·탈퇴·랭킹이 되지만 이 기기에서 만든 크루만 보입니다. 서버가 생기면 승격·포인트·크루 순위는 서버가 정합니다.
+- `.env` 에 `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` 가 **없으면** 기기 저장소 모드입니다. 제보·수락·인증·레벨이 이 기기 안에서 실제로 동작하지만 다른 사람과 공유되지 않습니다. 서버가 생기면 승격·포인트·크루 순위는 서버가 정합니다.
+- 포인트 규칙(2026-11-12): 의뢰를 올린 사람은 포인트가 없고 해결한 사람만 받습니다. 하트를 누른 사람은 소량을 받습니다. 기기 저장소 모드의 금액은 임시값입니다(해결 보상 = 하트 수 × 5, 하트 누르면 +1, 상점 상품·가격, 크루 레벨 500 경험치).
+- 하루 제한은 두 가지이고 화면에서도 따로 보여줍니다: 의뢰 해결 3개, 하트 10개(KST 0시 기준).
+- 크루: 만들기·가입·탈퇴·랭킹, 크루 의뢰(최소 2명), 크루원이 의뢰를 해결하면 자동 알림이 올라오는 활동 방, 크루원별 기여도. 이 기기에서 만든 크루만 보입니다.
+- 내 정보의 포인트 교환 상점은 예시 상품이며 실제 쿠폰 발급은 연결되어 있지 않습니다.
 - 두 값이 **있으면** Supabase 를 씁니다. `remote.js` 는 백엔드 API 가이드(`get_nearby_reports`, `toggle_like`, `accept_report`, `submit_proof` 등)에 맞춰 썼지만 실제 서버로는 아직 확인하지 못했습니다.
 - 기기 저장소 모드에는 제휴 의뢰 예시 1건(충주사랑상품권 보상, 금액은 예시값)이 내 위치 근처에 들어 있습니다. 실제 상품권 지급은 연결되어 있지 않습니다.
 - 기기 저장소 모드의 규칙: 하루 완료 3개(KST 0시 기준), 인증 사진은 의뢰 위치 100m 안, 수락 후 24시간 안에 인증, 경험치 300마다 1레벨.

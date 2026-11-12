@@ -13,6 +13,7 @@ import LoginScreen from '../screens/LoginScreen'
 import MapScreen from '../screens/MapScreen'
 import MeScreen from '../screens/MeScreen'
 import ReportCreateScreen from '../screens/ReportCreateScreen'
+import ShopScreen from '../screens/ShopScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 
 const Tab = createBottomTabNavigator()
@@ -60,6 +61,7 @@ export default function RootNavigator() {
             <Stack.Screen name="ReportCreate" component={ReportCreateScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Capture" component={CaptureScreen} options={{ presentation: 'fullScreenModal' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Shop" component={ShopScreen} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />

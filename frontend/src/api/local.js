@@ -4,7 +4,8 @@ import { errorText } from './errors'
 
 // 기기 저장소 구현. 서버가 준비되기 전까지 앱 기능을 이 기기 안에서 실제로 동작시킵니다.
 // 응답 모양은 백엔드 API 가이드와 같게 맞췄고, 규칙은 docs/api.md 를 따릅니다
-// (하루 3개 상한·KST 0시 기준, 인증 사진은 의뢰 위치 100m 이내, 포인트는 서버가 승격한 의뢰에만).
+// (하루 완료 3개·하트 10개 상한, KST 0시 기준, 인증 사진은 의뢰 위치 100m 이내).
+// 포인트 규칙(2026-11-12 확정): 의뢰를 올린 사람은 포인트가 없고 해결한 사람만 받습니다. 하트를 누른 사람은 소량을 받습니다.
 // 한계: 데이터가 이 기기에만 있어 다른 사람과 공유되지 않고, 하트·승격·포인트 판정은 서버가 있어야 의미가 있습니다.
 
 const KEY = 'jubquest:v1'
@@ -19,9 +20,20 @@ const XP_PER_LEVEL = 300
 const DAILY_LIMIT = 3
 const PROOF_RADIUS_M = 100
 const DAY = 24 * 3600 * 1000
-// 하트 1개당 포인트. 시안 예시값이고, 서버가 생기면 서버가 승격·포인트를 정합니다.
-const POINTS_PER_HEART = 5
+const HEART_DAILY_LIMIT = 10
+// 아래 세 값은 임시값입니다. 서버가 생기면 서버가 정합니다.
+const POINTS_PER_HEART = 5 // 하트 1개마다 해결 보상에 붙는 포인트
+const HEART_GIVER_POINTS = 1 // 하트를 누른 사람이 받는 포인트
+const CREW_XP_PER_LEVEL = 500
 const pointsOf = (r) => r.likes.length * POINTS_PER_HEART
+
+// 포인트 교환 상점(예시 상품). 실제 쿠폰 발급은 연결되어 있지 않습니다.
+const SHOP = [
+  { id: 1, name: '종량제 봉투 10L 5장', cost: 50 },
+  { id: 2, name: '편의점 1,000원 쿠폰', cost: 100 },
+  { id: 3, name: '카페 아메리카노', cost: 300 },
+  { id: 4, name: '충주사랑상품권 5,000원', cost: 500 },
+]
 
 // 제휴 의뢰 예시 1건. 서버가 없어 제휴처가 올릴 경로가 없으므로 앱이 하나를 넣어 둡니다.
 // 인증이 가능하도록 처음 받은 내 위치에서 약 60m 떨어진 곳에 둡니다. 보상 금액은 예시값입니다.
@@ -161,6 +173,7 @@ function view(r, me, from) {
     current_members: r.members.length,
     reward_xp: xp,
     reward_points: pointsOf(r),
+    reward_crew_xp: r.required_members > 1 ? xp * 2 : 0, // 크루 의뢰는 크루 활동 경험치가 2배
     deadline_at: r.deadline_at,
     created_at: r.created_at,
     reporter_id: r.reporter_id,
@@ -195,9 +208,23 @@ async function find(id) {
 export async function toggleLike(id) {
   const { r, me } = await find(id)
   const on = r.likes.includes(me.id)
-  r.likes = on ? r.likes.filter((u) => u !== me.id) : [...r.likes, me.id]
+  let gained = 0
+  if (on) r.likes = r.likes.filter((u) => u !== me.id)
+  else {
+    // 하루 10개까지. 취소해도 오늘 쓴 횟수는 돌아오지 않습니다.
+    if (heartsToday(me) >= HEART_DAILY_LIMIT) fail('HEART_DAILY_LIMIT')
+    r.likes = [...r.likes, me.id]
+    ;(me.hearts = me.hearts || []).push({ id, at: new Date().toISOString() })
+    // 같은 의뢰에는 처음 누를 때만 포인트를 줍니다.
+    me.heartPaid = me.heartPaid || []
+    if (!me.heartPaid.includes(id)) {
+      me.heartPaid.push(id)
+      me.points += HEART_GIVER_POINTS
+      gained = HEART_GIVER_POINTS
+    }
+  }
   await save()
-  return { liked: !on, like_count: r.likes.length, is_promoted: false, just_promoted: false }
+  return { liked: !on, like_count: r.likes.length, is_promoted: false, just_promoted: false, points_gained: gained, hearts_left: HEART_DAILY_LIMIT - heartsToday(me) }
 }
 
 export async function acceptReport(id) {
@@ -225,6 +252,8 @@ export async function cancelParticipation(id) {
   await save()
 }
 
+const heartsToday = (me) => (me.hearts || []).filter((h) => kstDay(h.at) === kstDay(Date.now())).length
+const donesToday = (me) => me.completed.filter((c) => kstDay(c.at) === kstDay(Date.now())).length
 const levelOf = (xp) => Math.floor(xp / XP_PER_LEVEL) + 1
 
 function streak(completed) {
@@ -253,6 +282,11 @@ export async function getMyProfile() {
     active_this_week: me.completed.some((c) => kstWeek(c.at) === kstWeek(Date.now())),
     completed_count: me.completed.length,
     rewards: me.rewards || [],
+    coupons: me.coupons || [],
+    completes_today: donesToday(me),
+    completes_limit: DAILY_LIMIT,
+    hearts_today: heartsToday(me),
+    hearts_limit: HEART_DAILY_LIMIT,
   }
 }
 
@@ -288,6 +322,8 @@ export async function createReport(userId, { title, placeType, description, requ
     reporter_id: userId,
     reporter_nickname: db.user.nickname,
   })
+  const myCrew = db.crews.find((c) => c.members.includes(userId))
+  if (myCrew && requiredMembers > 1) feed(myCrew, { type: 'quest', user: db.user.nickname, title })
   await save()
   return id
 }
@@ -297,7 +333,7 @@ export async function submitProof(userId, id, before, after) {
   if (!r.members.includes(me.id)) fail('NOT_PARTICIPATING')
   if (r.status !== 'in_progress') fail('REPORT_NOT_IN_PROGRESS')
   if (r.deadline_at && new Date(r.deadline_at).getTime() < Date.now()) fail('DEADLINE_PASSED')
-  if (me.completed.filter((c) => kstDay(c.at) === kstDay(Date.now())).length >= DAILY_LIMIT) fail('DAILY_LIMIT')
+  if (donesToday(me) >= DAILY_LIMIT) fail('DAILY_LIMIT')
   if (meters(before, r) > PROOF_RADIUS_M || meters(after, r) > PROOF_RADIUS_M) fail('TOO_FAR')
 
   const xp = (PLACE[r.place_type] || PLACE.etc)[1]
@@ -306,9 +342,15 @@ export async function submitProof(userId, id, before, after) {
   me.xp += xp
   me.points += points
   if (r.reward_label) (me.rewards = me.rewards || []).push({ label: r.reward_label, from: r.partner_name, at: new Date().toISOString() })
-  // 크루원이면 크루 점수에도 더합니다. 크루 의뢰(2명 이상)는 2배.
+  // 크루원이면 크루 활동 경험치가 쌓이고(크루 의뢰는 2배), 크루 방에 자동 알림이 올라갑니다.
   const crew = db.crews.find((c) => c.members.includes(me.id))
-  if (crew) crew.score += xp * (r.required_members > 1 ? 2 : 1)
+  const crewXp = crew ? xp * (r.required_members > 1 ? 2 : 1) : 0
+  if (crew) {
+    crew.score += crewXp
+    crew.contrib = crew.contrib || {}
+    crew.contrib[me.id] = (crew.contrib[me.id] || 0) + crewXp
+    feed(crew, { type: 'complete', user: me.nickname, title: r.title, crew_xp: crewXp, points, is_crew_quest: r.required_members > 1 })
+  }
   me.completed.push({ id, at: new Date().toISOString() })
   r.status = 'completed'
   r.deadline_at = null
@@ -316,16 +358,50 @@ export async function submitProof(userId, id, before, after) {
   r.after_path = await keepPhoto(after.uri)
   r.completed_at = new Date().toISOString()
   await save()
-  return { xp_gained: xp, points_gained: points, reward_label: r.reward_label || null, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points, streak_weeks: streak(me.completed) }
+  return { xp_gained: xp, points_gained: points, crew_xp_gained: crewXp, title: r.title, reward_label: r.reward_label || null, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points, streak_weeks: streak(me.completed) }
 }
 
 // ── 크루 ──────────────────────────────────────────────
 // 한 사람은 크루 하나에만 가입합니다(docs/api.md 에서 아직 미정인 항목, 우선 이렇게 둠).
-const crewView = (c, me, rank) => ({ id: c.id, name: c.name, area: c.area, member_count: c.members.length, score: c.score, rank, is_mine: c.members.includes(me.id), is_owner: c.owner_id === me.id })
+// 크루 방(feed)은 사람이 쓰는 채팅이 아니라 활동이 자동으로 올라오는 알림 기록입니다.
+function feed(crew, event) {
+  crew.feed = crew.feed || []
+  crew.feed.push({ id: `${Date.now()}-${crew.feed.length}`, at: new Date().toISOString(), ...event })
+  if (crew.feed.length > 100) crew.feed = crew.feed.slice(-100)
+}
+
+const crewView = (c, me, rank) => ({
+  id: c.id,
+  name: c.name,
+  area: c.area,
+  member_count: c.members.length,
+  score: c.score,
+  level: Math.floor(c.score / CREW_XP_PER_LEVEL) + 1,
+  xp_in_level: c.score % CREW_XP_PER_LEVEL,
+  xp_for_next_level: CREW_XP_PER_LEVEL,
+  rank,
+  is_mine: c.members.includes(me.id),
+  is_owner: c.owner_id === me.id,
+})
 
 export async function getCrews() {
   const db = await load()
   return [...db.crews].sort((a, b) => b.score - a.score || a.id - b.id).map((c, i) => crewView(c, db.user, i + 1))
+}
+
+// 내 크루 상세: 크루원별 기여도와 활동 알림
+export async function getMyCrew() {
+  const db = await load()
+  const me = db.user
+  const ranked = [...db.crews].sort((a, b) => b.score - a.score || a.id - b.id)
+  const c = ranked.find((x) => x.members.includes(me.id))
+  if (!c) return null
+  c.names = c.names || {}
+  c.names[me.id] = me.nickname
+  const members = c.members
+    .map((id) => ({ id, nickname: c.names[id] || '크루원', contribution: (c.contrib || {})[id] || 0, is_me: id === me.id, is_owner: id === c.owner_id }))
+    .sort((a, b) => b.contribution - a.contribution)
+  return { ...crewView(c, me, ranked.indexOf(c) + 1), members, feed: [...(c.feed || [])].reverse() }
 }
 
 export async function createCrew({ name, area }) {
@@ -333,7 +409,9 @@ export async function createCrew({ name, area }) {
   if (db.crews.some((c) => c.members.includes(db.user.id))) fail('ALREADY_IN_CREW')
   if (db.crews.some((c) => c.name === name)) fail('CREW_NAME_TAKEN')
   const id = (db.crews.reduce((m, c) => Math.max(m, c.id), 0) || 0) + 1
-  db.crews.push({ id, name, area, owner_id: db.user.id, members: [db.user.id], score: 0, created_at: new Date().toISOString() })
+  const crew = { id, name, area, owner_id: db.user.id, members: [db.user.id], score: 0, contrib: {}, names: { [db.user.id]: db.user.nickname }, feed: [], created_at: new Date().toISOString() }
+  feed(crew, { type: 'create', user: db.user.nickname })
+  db.crews.push(crew)
   await save()
   return id
 }
@@ -344,6 +422,8 @@ export async function joinCrew(id) {
   const c = db.crews.find((x) => x.id === id)
   if (!c) fail('CREW_NOT_FOUND')
   c.members.push(db.user.id)
+  c.names = { ...(c.names || {}), [db.user.id]: db.user.nickname }
+  feed(c, { type: 'join', user: db.user.nickname })
   await save()
 }
 
@@ -354,6 +434,25 @@ export async function leaveCrew() {
   if (!c) fail('NOT_IN_CREW')
   c.members = c.members.filter((u) => u !== db.user.id)
   if (c.members.length === 0) db.crews = db.crews.filter((x) => x !== c)
-  else if (c.owner_id === db.user.id) c.owner_id = c.members[0]
+  else {
+    if (c.owner_id === db.user.id) c.owner_id = c.members[0]
+    feed(c, { type: 'leave', user: db.user.nickname })
+  }
   await save()
+}
+
+// ── 포인트 교환 상점 ──────────────────────────────────
+export async function getShopItems() {
+  return SHOP
+}
+
+export async function redeemItem(itemId) {
+  const db = await load()
+  const item = SHOP.find((x) => x.id === itemId)
+  if (!item || db.user.points < item.cost) fail('NOT_ENOUGH_POINTS')
+  db.user.points -= item.cost
+  const code = `JQ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+  ;(db.user.coupons = db.user.coupons || []).unshift({ name: item.name, code, at: new Date().toISOString() })
+  await save()
+  return { coupon_code: code, item: item.name, points: db.user.points }
 }
