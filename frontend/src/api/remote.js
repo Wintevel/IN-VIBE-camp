@@ -58,3 +58,21 @@ export async function submitProof(userId, reportId, before, after) {
   const [b, a] = await Promise.all([uploadPhoto(userId, `${reportId}-before`, before.uri), uploadPhoto(userId, `${reportId}-after`, after.uri)])
   return rpc('submit_proof', { p_report_id: reportId, p_before_path: b, p_after_path: a })
 }
+
+// 크루: 백엔드에 아직 없습니다. 생기면 여기만 채우면 됩니다(응답 모양은 local.js 의 crewView 참고).
+const notReady = async () => {
+  throw new Error(errorText({ message: 'CREW_NOT_READY' }))
+}
+export const getCrews = async () => []
+export const getMyCrew = async () => null
+export const createCrew = notReady
+export const joinCrew = notReady
+export const leaveCrew = notReady
+
+// 포인트 교환 상점. 컬럼 이름은 백엔드 확정 후 맞춥니다(이름·가격 후보를 순서대로 읽음).
+export async function getShopItems() {
+  const { data, error } = await supabase.from('reward_items').select('*').eq('active', true)
+  if (error) throw new Error(errorText(error))
+  return (data || []).map((x) => ({ id: x.id, name: x.name ?? x.title, cost: x.cost ?? x.price ?? x.points ?? 0 }))
+}
+export const redeemItem = (itemId) => rpc('redeem_item', { p_item_id: itemId })

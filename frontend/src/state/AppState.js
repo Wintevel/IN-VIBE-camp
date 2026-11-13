@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Location from 'expo-location'
 import * as api from '../api'
 
@@ -7,31 +8,55 @@ const Ctx = createContext(null)
 
 // 위치를 못 받을 때 쓰는 기준점(인하대 주변).
 const FALLBACK = { lat: 37.452, lng: 126.656 }
+const SESSION_WAIT_MS = 5000
+const TUTORIAL_KEY = 'jipgepyo:tutorial-seen'
+const HEART_UNDO_MS = 4000 // 하트를 누른 뒤 되돌릴 수 있는 시간
 
 export function AppStateProvider({ children }) {
   const [session, setSession] = useState(undefined) // undefined: 확인 중, null: 로그아웃
+  const [tutorialSeen, setTutorialSeen] = useState(undefined) // undefined: 확인 중
   const [coords, setCoords] = useState(null)
   const [located, setLocated] = useState(false) // 실제 위치를 받았는지
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [crews, setCrews] = useState([])
+  const [myCrew, setMyCrew] = useState(null)
+  const [shop, setShop] = useState([])
+  const [cosmetics, setCosmetics] = useState([])
+  const [celebrate, setCelebrate] = useState(null) // 의뢰 완료 연출에 쓸 보상 정보
   const [photos, setPhotos] = useState({}) // { [reportId]: { before, after } }
   const [draftPhoto, setDraftPhoto] = useState(null)
   const [sheet, setSheet] = useState({ id: null, visible: false })
   const [toast, setToast] = useState(null)
   const coordsRef = useRef(null)
 
-  const showToast = useCallback((message) => {
-    const id = Date.now()
-    setToast({ id, message })
-    setTimeout(() => setToast((t) => (t && t.id === id ? null : t)), 2600)
+  const pendingHeart = useRef(null) // 되돌리기 시간 안에 있는 하트 { id, timer, commit }
+
+  // action: { label, onPress } 를 주면 안내 안에 버튼이 붙습니다.
+  const showToast = useCallback((message, { action = null, ms = 2600 } = {}) => {
+    const id = Date.now() + Math.random()
+    setToast({ id, message, action })
+    setTimeout(() => setToast((t) => (t && t.id === id ? null : t)), ms)
   }, [])
 
   useEffect(() => {
+    // 로그인 확인이 끝나지 않으면 빈 화면에 멈추므로, 몇 초 안에 답이 없으면 로그인 화면을 보여 줍니다.
+    const giveUp = setTimeout(() => setSession((s) => (s === undefined ? null : s)), SESSION_WAIT_MS)
     api.getSession().then(setSession).catch(() => setSession(null))
     const sub = api.onAuthChange(setSession)
-    return () => sub.unsubscribe()
+    return () => {
+      clearTimeout(giveUp)
+      sub.unsubscribe()
+    }
+  }, [])
+
+  // 처음 안내를 봤는지는 기기에 저장합니다(계정과 무관).
+  useEffect(() => {
+    AsyncStorage.getItem(TUTORIAL_KEY)
+      .then((v) => setTutorialSeen(v === '1'))
+      .catch(() => setTutorialSeen(true))
   }, [])
 
   const locate = useCallback(async () => {
@@ -55,6 +80,10 @@ export function AppStateProvider({ children }) {
   const loadProfile = useCallback(async () => {
     try {
       setProfile(await api.getMyProfile())
+      setCrews((await api.getCrews()) || [])
+      setMyCrew(await api.getMyCrew())
+      setShop((await api.getShopItems()) || [])
+      if (api.cosmeticsApi) setCosmetics(await api.cosmeticsApi.list())
     } catch {
       // 프로필은 다음 새로고침에서 다시 시도
     }
@@ -83,8 +112,18 @@ export function AppStateProvider({ children }) {
     else {
       setReports([])
       setProfile(null)
+      setCrews([])
+      setMyCrew(null)
     }
   }, [userId, refresh])
+
+  // 공개를 기다리는 내 제보가 있으면 공개 시각에 맞춰 목록을 새로 받습니다.
+  useEffect(() => {
+    const next = reports.map((r) => (r.pending_until ? new Date(r.pending_until).getTime() : 0)).filter(Boolean).sort((a, b) => a - b)[0]
+    if (!next) return
+    const t = setTimeout(() => refresh(), Math.max(1000, next - Date.now() + 500))
+    return () => clearTimeout(t)
+  }, [reports, refresh])
 
   const patch = (id, fields) => setReports((rs) => rs.map((r) => (r.id === id ? { ...r, ...fields } : r)))
 
@@ -104,6 +143,12 @@ export function AppStateProvider({ children }) {
   const value = useMemo(
     () => ({
       session,
+      tutorialSeen,
+      finishTutorial: () => {
+        setTutorialSeen(true)
+        AsyncStorage.setItem(TUTORIAL_KEY, '1').catch(() => {})
+      },
+      replayTutorial: () => setTutorialSeen(false),
       userId,
       coords,
       located,
@@ -111,6 +156,13 @@ export function AppStateProvider({ children }) {
       loading,
       loadError,
       profile,
+      crews,
+      myCrew,
+      shop,
+      cosmetics,
+      celebrate,
+      dismissCelebrate: () => setCelebrate(null),
+      localMode: api.isLocal,
       photos,
       draftPhoto,
       setDraftPhoto,
@@ -123,13 +175,46 @@ export function AppStateProvider({ children }) {
       reopenSheet: () => setSheet((s) => (s.id ? { ...s, visible: true } : s)),
       signIn: () => run(api.signInAnonymously),
       signOut: () => api.signOut(),
+      resetLocal: api.resetLocal ? () => api.resetLocal() : null,
       setPhoto: (id, slot, shot) => setPhotos((p) => ({ ...p, [id]: { ...p[id], [slot]: shot } })),
-      toggleHeart: (id) =>
-        run(async () => {
-          const d = await api.toggleLike(id)
-          patch(id, { liked_by_me: d.liked, like_count: d.like_count, is_promoted: d.is_promoted })
-          if (d.just_promoted) refresh() // 포인트가 붙었으니 목록을 새로 받습니다(문구로는 알리지 않음)
-        }),
+      // 하트는 취소할 수 없습니다. 누른 뒤 몇 초 동안만 되돌릴 수 있고, 그 시간이 지나야 서버에 보내 확정합니다.
+      // 되돌린 하트는 서버에 가지 않으므로 포인트·하트 수·하루 횟수에 아무 영향이 없습니다.
+      toggleHeart: (id) => {
+        const r = reports.find((x) => x.id === id)
+        if (!r) return
+        if (r.liked_by_me) return showToast(api.errorText({ message: 'HEART_FINAL' }))
+        if (profile && profile.hearts_today >= profile.hearts_limit) return showToast(api.errorText({ message: 'HEART_DAILY_LIMIT' }))
+        pendingHeart.current?.commit() // 앞서 누른 하트가 대기 중이면 먼저 확정
+        const before = { liked_by_me: false, like_count: r.like_count ?? 0 }
+        patch(id, { liked_by_me: true, like_count: before.like_count + 1 })
+        const commit = () => {
+          const p = pendingHeart.current
+          if (!p || p.id !== id) return
+          clearTimeout(p.timer)
+          pendingHeart.current = null
+          run(async () => {
+            try {
+              const d = await api.toggleLike(id)
+              patch(id, { liked_by_me: d.liked, like_count: d.like_count, is_promoted: d.is_promoted })
+              if (d.points_gained) showToast(`하트를 눌러 +${d.points_gained}P 받았어요`)
+              refresh() // 하트에 따라 보상이 달라지므로 목록을 새로 받습니다
+            } catch (e) {
+              patch(id, before)
+              throw e
+            }
+          })
+        }
+        const undo = () => {
+          const p = pendingHeart.current
+          if (!p || p.id !== id) return
+          clearTimeout(p.timer)
+          pendingHeart.current = null
+          patch(id, before)
+          showToast('하트를 되돌렸어요')
+        }
+        pendingHeart.current = { id, commit, timer: setTimeout(commit, HEART_UNDO_MS) }
+        showToast('하트를 눌렀어요. 곧 확정돼요', { action: { label: '되돌리기', onPress: undo }, ms: HEART_UNDO_MS })
+      },
       accept: (id) =>
         run(async () => {
           const d = await api.acceptReport(id)
@@ -148,10 +233,9 @@ export function AppStateProvider({ children }) {
       submitProof: (id) =>
         run(async () => {
           const p = photos[id] || {}
-          const d = await api.submitProof(userId, id, p.before, p.after)
+          const d = await api.submitProof(userId, id, p.before, p.after || p.before)
           setPhotos((x) => ({ ...x, [id]: undefined }))
-          const gain = [d.points_gained ? `+${d.points_gained}점` : null, d.xp_gained ? `+${d.xp_gained}XP` : null].filter(Boolean).join(' · ')
-          showToast(`${d.leveled_up ? `레벨 업! Lv.${d.level} · ` : '완료했어요. '}${gain}`)
+          setCelebrate(d)
           await refresh()
           return d
         }),
@@ -161,6 +245,43 @@ export function AppStateProvider({ children }) {
           await refresh()
           return id ?? true
         }),
+      createCrew: (input) =>
+        run(async () => {
+          await api.createCrew(input)
+          await loadProfile()
+          showToast(`${input.name} 크루를 만들었어요`)
+          return true
+        }),
+      joinCrew: (crew) =>
+        run(async () => {
+          await api.joinCrew(crew.id)
+          await loadProfile()
+          showToast(`${crew.name} 크루에 가입했어요`)
+          return true
+        }),
+      leaveCrew: () =>
+        run(async () => {
+          await api.leaveCrew()
+          await loadProfile()
+          showToast('크루에서 나왔어요')
+          return true
+        }),
+      redeem: (item) =>
+        run(async () => {
+          const d = await api.redeemItem(item.id)
+          await loadProfile()
+          showToast(`${item.name} 교환 완료 · 쿠폰 ${d.coupon_code}`)
+          return d
+        }),
+      // 꾸미기: 내 것이면 착용, 아니면 포인트로 사서 바로 착용합니다.
+      wearCosmetic: (item) =>
+        run(async () => {
+          if (item.owned) await api.cosmeticsApi.equip(item.id)
+          else await api.cosmeticsApi.buy(item.id)
+          await loadProfile()
+          showToast(item.owned ? `${item.name}(으)로 바꿨어요` : `${item.name} 구매 완료`)
+          return true
+        }),
       saveNickname: (nickname) =>
         run(async () => {
           await api.setNickname(nickname)
@@ -169,7 +290,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, userId, coords, located, reports, loading, loadError, profile, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, tutorialSeen, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

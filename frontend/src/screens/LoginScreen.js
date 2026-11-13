@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import BoardBackground from '../components/BoardBackground'
 import Button from '../components/Button'
+import Logo from '../components/Logo'
 import Stamp from '../components/Stamp'
 import { useApp } from '../state/AppState'
 import { colors, text } from '../theme'
@@ -21,10 +22,11 @@ export default function LoginScreen() {
     <BoardBackground>
       <View style={[styles.wrap, { paddingTop: insets.top + 80, paddingBottom: insets.bottom + 24 }]}>
         <View style={{ gap: 14 }}>
+          <Logo size={76} />
           <View style={{ alignSelf: 'flex-start' }}>
-            <Stamp type="partner">JUBQUEST</Stamp>
+            <Stamp type="partner">동네 의뢰판</Stamp>
           </View>
-          <Text style={[text.h1, { fontSize: 40, lineHeight: 46 }]}>줍퀘스트</Text>
+          <Text style={[text.h1, { fontSize: 40, lineHeight: 46 }]}>집게표</Text>
           <Text style={[text.regular, { color: colors.sub }]}>동네 쓰레기를 제보하고, 이웃의 의뢰를 해결해요.</Text>
         </View>
         <View style={{ gap: 10 }}>

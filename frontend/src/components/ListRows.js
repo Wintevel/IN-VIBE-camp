@@ -9,7 +9,7 @@ export function ListRow({ label, value, onPress, danger }) {
   const Row = onPress ? Pressable : View
   return (
     <Row onPress={onPress} style={styles.row} accessibilityRole={onPress ? 'button' : undefined}>
-      <Text style={[{ ...font.body, fontSize: 14, color: danger ? colors.red : colors.fg }]}>{label}</Text>
+      <Text style={[{ ...font.bodyMedium, fontSize: 14, lineHeight: 20, color: danger ? colors.red : colors.fg }]}>{label}</Text>
       {value ? <Text style={text.small}>{value}</Text> : null}
     </Row>
   )
@@ -19,7 +19,7 @@ export function List({ rows }) {
   return (
     <Card style={{ padding: 0, overflow: 'hidden' }}>
       {rows.map((r, i) => (
-        <View key={r.label} style={i > 0 && styles.sep}>
+        <View key={r.key ?? r.label} style={i > 0 && styles.sep}>
           <ListRow {...r} />
         </View>
       ))}

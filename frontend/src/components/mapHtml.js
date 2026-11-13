@@ -9,7 +9,7 @@ export function buildMapHtml({ center, me, markers }) {
 <style>html,body,#m{height:100%;margin:0;background:#15181D}
 .leaflet-tile-pane{filter:brightness(.62) invert(1) contrast(3) hue-rotate(200deg) saturate(.3) brightness(.7)}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:${colors.panel};color:${colors.fg}}
-.leaflet-popup-content{margin:10px 12px;font:700 13px system-ui,sans-serif}
+.leaflet-popup-content{margin:10px 12px;font:700 13px 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif}
 .leaflet-popup-content small{display:block;font-weight:500;color:${colors.sub};margin-top:2px}
 .leaflet-control-attribution{background:rgba(17,19,23,.7)!important;color:${colors.sub}!important;font-size:9px}
 .leaflet-control-attribution a{color:${colors.sub}!important}</style></head>
