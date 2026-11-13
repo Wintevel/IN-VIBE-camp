@@ -17,10 +17,8 @@ export default function CaptureScreen({ navigation, route }) {
   const [camPerm, requestCam] = useCameraPermissions()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
-  // 의뢰 인증 촬영이면 돌아갈 때 의뢰 시트를 다시 엽니다.
   const close = () => {
     navigation.goBack()
-    if (kind === 'quest') app.reopenSheet()
   }
 
   if (!camPerm) return <View style={styles.root} />
@@ -76,6 +74,7 @@ export default function CaptureScreen({ navigation, route }) {
         <View style={{ width: 52 }} />
       </View>
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 24 }]}>
+        <Text style={[text.chip, styles.warn]}>사람 얼굴과 차 번호판이 찍히지 않게 해 주세요</Text>
         {error ? <Text style={[text.small, { color: colors.red, textAlign: 'center' }]}>{error}</Text> : null}
         <Pressable onPress={shoot} disabled={busy} accessibilityRole="button" accessibilityLabel="촬영" style={styles.shutter}>
           {busy ? <ActivityIndicator color={colors.ink} /> : <View style={styles.shutterInner} />}
@@ -91,6 +90,7 @@ const styles = StyleSheet.create({
   top: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
   chip: { backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill },
   bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, alignItems: 'center', gap: 12, paddingHorizontal: 20 },
+  warn: { color: '#fff', backgroundColor: 'rgba(240,68,82,0.92)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8, overflow: 'hidden', textAlign: 'center' },
   shutter: { width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   shutterInner: { width: 54, height: 54, borderRadius: 27, backgroundColor: '#fff' },
 })

@@ -37,13 +37,20 @@ export default function BoardScreen({ navigation }) {
   const going = app.reports.filter((r) => r.status === 'in_progress').length
   const accepted = app.reports.filter((r) => r.i_am_participating && r.status !== 'completed')
   const done = app.reports.filter((r) => r.status === 'completed').length
+  const waiting = app.notices.filter((n) => !n.answer).length
 
   return (
     <View style={{ flex: 1 }}>
       <Screen refreshControl={refresher(app)} bottomPad={96}>
         <ScreenHeader title="의뢰판" sub={app.located ? '내 위치 · 반경 1.5km' : '위치를 못 받아 인하대 주변을 보여줘요 · 반경 1.5km'} action="새로고침" onAction={() => app.refresh({ relocate: true })} />
         <DailyLimits profile={app.profile} />
-        <MyQuests reports={accepted} photos={app.photos} onOpen={app.openSheet} />
+        {waiting > 0 ? (
+          <PressScale onPress={() => navigation.navigate('Notices')} accessibilityRole="button" style={styles.notice}>
+            <Text style={[text.section, { flex: 1 }]}>치워졌는지 확인해 주세요</Text>
+            <Text style={[text.num, { fontSize: 15, color: colors.tape }]}>{waiting}건</Text>
+          </PressScale>
+        ) : null}
+        <MyQuests reports={accepted} photos={app.photos} onOpen={(id) => (app.reports.find((x) => x.id === id)?.status === 'in_progress' ? navigation.navigate('Proof', { reportId: id }) : app.openSheet(id))} />
         {app.reports.length > 0 ? <Ticker>{`주변 의뢰 ${open}건 · 진행 중 ${going}건 · 완료 ${done}건`}</Ticker> : null}
         <FilterChips options={FILTERS} value={filter} onChange={setFilter} />
         <View key={filter} style={{ gap: 12 }}>
@@ -70,6 +77,7 @@ export default function BoardScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  notice: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.tape, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 14 },
   fabWrap: { position: 'absolute', right: 20, bottom: 16 },
   fab: { backgroundColor: colors.blue, paddingHorizontal: 18, paddingVertical: 14, borderRadius: radius.pill },
 })

@@ -25,6 +25,8 @@ export function AppStateProvider({ children }) {
   const [myCrew, setMyCrew] = useState(null)
   const [shop, setShop] = useState([])
   const [cosmetics, setCosmetics] = useState([])
+  const [notices, setNotices] = useState([])
+  const [dash, setDash] = useState(null) // 속도선 전환 연출 { id, then }
   const [celebrate, setCelebrate] = useState(null) // 의뢰 완료 연출에 쓸 보상 정보
   const [photos, setPhotos] = useState({}) // { [reportId]: { before, after } }
   const [draftPhoto, setDraftPhoto] = useState(null)
@@ -84,6 +86,7 @@ export function AppStateProvider({ children }) {
       setMyCrew(await api.getMyCrew())
       setShop((await api.getShopItems()) || [])
       if (api.cosmeticsApi) setCosmetics(await api.cosmeticsApi.list())
+      if (api.socialApi) setNotices(await api.socialApi.notices())
     } catch {
       // 프로필은 다음 새로고침에서 다시 시도
     }
@@ -160,6 +163,30 @@ export function AppStateProvider({ children }) {
       myCrew,
       shop,
       cosmetics,
+      notices,
+      social: !!api.socialApi,
+      dash,
+      // 화면을 가로지르는 속도선과 함께 다음 화면으로 넘어갑니다.
+      dashTo: (then) => setDash({ id: Date.now(), then }),
+      endDash: () => setDash(null),
+      mark: (id, kind) =>
+        run(async () => {
+          await api.socialApi.mark(id, kind)
+          await refresh()
+        }),
+      answerNotice: (id, answer) =>
+        run(async () => {
+          await api.socialApi.answer(id, answer)
+          await loadProfile()
+          showToast(answer === 'ok' ? '확인해 주셔서 고마워요' : '운영진이 다시 살펴볼게요')
+        }),
+      flag: (id, reason) =>
+        run(async () => {
+          await api.socialApi.flag(id, reason)
+          await refresh()
+          showToast('신고했어요. 운영진이 확인할게요')
+          return true
+        }),
       celebrate,
       dismissCelebrate: () => setCelebrate(null),
       localMode: api.isLocal,
@@ -290,7 +317,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, tutorialSeen, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, tutorialSeen, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, notices, dash, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

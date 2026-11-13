@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
-import { code, dist, isCrew, isPartner, remain, issueLabel } from '../lib/format'
+import { code, dist, isCrew, isPartner, remain, issueLabel, MARK_LABELS, FLAG_REASONS } from '../lib/format'
 import { navigationRef } from '../navigation/ref'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
 import BottomSheet from './BottomSheet'
 import Button from './Button'
-import { CameraIcon } from './Icons'
+import { HeartIcon } from './Icons'
 import { RewardTiles, rewardParts } from './Reward'
 import Stamp from './Stamp'
 
@@ -15,21 +15,21 @@ import Stamp from './Stamp'
 export default function QuestSheet() {
   const app = useApp()
   const [busy, setBusy] = useState(false)
+  const [flagging, setFlagging] = useState(false)
   const r = app.reports.find((x) => x.id === app.sheet.id)
   if (!r) return null
 
   const done = r.status === 'completed'
   const joined = !!r.i_am_participating
   const started = r.status === 'in_progress'
-  const p = app.photos[r.id] || {}
   const single = r.proof_mode === 'single' // 사진 한 장으로 인증하는 의뢰
   const label1 = r.proof_label || '사진'
-  const ready = single ? !!p.before : !!(p.before && p.after)
   const steps = single
     ? [`현장에서 ${label1}을 앱 카메라로 찍어요`, '사진을 올리면 위치와 함께 접수돼요', '확인되면 보상이 지급돼요']
     : ['현장에서 치우기 전 사진을 앱 카메라로 찍어요', '치운 뒤 같은 각도로 한 장 더 찍어요', '두 장을 올리면 보상이 지급돼요']
   const img = photoUrl(r.photo_path)
-  const proving = joined && started && !done // 인증할 차례면 인증란을 제목 바로 아래에 둡니다
+  const proving = joined && started && !done
+  const toProof = () => navigationRef.navigate('Proof', { reportId: r.id })
 
   const kv = [
     ['유형', issueLabel(r.issue_type)],
@@ -43,27 +43,34 @@ export default function QuestSheet() {
   let label = '의뢰 수락하기'
   let disabled = false
   if (done) [label, disabled] = ['완료된 의뢰예요', true]
-  else if (joined && started) [label, disabled] = ['완료 인증하기', !ready]
+  else if (joined && started) [label, disabled] = ['인증하러 가기', false]
   else if (joined) [label, disabled] = [`인원을 기다리는 중 (${r.current_members}/${r.required_members})`, true]
   else if (started) [label, disabled] = ['다른 이웃이 진행 중이에요', true]
   else if (r.pending_until) [label, disabled] = [`공개 준비 중 · ${remain(r.pending_until)}`, true]
   else if (r.is_mine && !isCrew(r)) [label, disabled] = ['내가 올린 제보는 직접 해결할 수 없어요', true]
 
   const go = async () => {
+    if (proving) {
+      app.hideSheet()
+      return toProof()
+    }
     setBusy(true)
-    if (joined && started) {
-      if (await app.submitProof(r.id)) app.hideSheet()
-    } else await app.accept(r.id)
+    const d = await app.accept(r.id)
     setBusy(false)
+    // 바로 시작되는 의뢰면 속도선과 함께 인증 화면으로 넘어갑니다.
+    if (d?.status === 'in_progress') {
+      app.hideSheet()
+      app.dashTo(toProof)
+    }
   }
   const cancel = async () => {
     setBusy(true)
     await app.cancel(r.id)
     setBusy(false)
   }
-  const capture = (slot) => {
-    app.hideSheet()
-    navigationRef.navigate('Capture', { kind: 'quest', reportId: r.id, slot, title: single ? label1 : slot === 'before' ? '치우기 전 사진' : '치운 뒤 사진' })
+  const sendFlag = async (reason) => {
+    setFlagging(false)
+    if (await app.flag(r.id, reason)) app.hideSheet()
   }
 
   return (
@@ -93,17 +100,22 @@ export default function QuestSheet() {
         <Stamp>{code(r.id)}</Stamp>
       </View>
       <Text style={text.sheetTitle}>{r.title}</Text>
-      {proving ? (
-        <View style={styles.proof}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={[text.section, { flex: 1 }]}>완료 인증</Text>
-            {r.deadline_at ? <Text style={[text.chip, { color: colors.tape }]}>{remain(r.deadline_at)}</Text> : null}
-          </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <PhotoSlot n={single ? null : 1} shot={p.before} label={single ? label1 : '치우기 전'} onPress={() => capture('before')} />
-            {single ? null : <PhotoSlot n={2} shot={p.after} label="치운 뒤" onPress={() => capture('after')} />}
-          </View>
-          <Text style={[text.caption, { color: colors.sheetSub }]}>{single ? '현장에서 앱 카메라로 찍어 주세요. 의뢰 위치 100m 안에서만 인증돼요.' : '현장에서 앱 카메라로 전·후를 같은 각도로 찍어 주세요. 의뢰 위치 100m 안에서만 인증돼요.'}</Text>
+      {app.social && !done ? (
+        <View style={styles.react}>
+          <Pressable onPress={() => app.toggleHeart(r.id)} accessibilityRole="button" accessibilityLabel="하트 누르기" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.chip, r.liked_by_me && { backgroundColor: colors.redSoft }]}>
+            <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sheetSub} />
+            <Text style={[text.chip, { color: r.liked_by_me ? colors.red : colors.sheetSub }]}>{r.like_count ?? 0}</Text>
+          </Pressable>
+          {MARK_LABELS.map(([k, name]) => {
+            const on = r.my_mark === k
+            return (
+              <Pressable key={k} onPress={() => app.mark(r.id, k)} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && { backgroundColor: colors.blueWeak, borderColor: colors.blue }]}>
+                <Text style={[text.chip, { color: on ? colors.blue : colors.sheetSub }]}>
+                  {name} {r.marks?.[k] || 0}
+                </Text>
+              </Pressable>
+            )
+          })}
         </View>
       ) : null}
       <RewardTiles parts={rewardParts(r)} />
@@ -130,18 +142,26 @@ export default function QuestSheet() {
           ))}
         </View>
       ) : null}
+      {app.social && !r.is_mine && !isPartner(r) ? (
+        flagging ? (
+          <View style={{ gap: 8 }}>
+            <Text style={text.section}>신고하는 이유</Text>
+            <View style={styles.react}>
+              {FLAG_REASONS.map(([k, name]) => (
+                <Pressable key={k} onPress={() => sendFlag(k)} accessibilityRole="button" style={styles.chip}>
+                  <Text style={[text.chip, { color: colors.sheetFg }]}>{name}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <Text style={[text.caption, { color: colors.sheetSub }]}>신고한 제보는 내 의뢰판에서 사라지고 운영진이 확인해요.</Text>
+          </View>
+        ) : (
+          <Text onPress={() => setFlagging(true)} accessibilityRole="button" style={[text.caption, { color: colors.sheetSub, textDecorationLine: 'underline', alignSelf: 'flex-start', paddingVertical: 4 }]}>
+            이 제보 신고하기
+          </Text>
+        )
+      ) : null}
     </BottomSheet>
-  )
-}
-
-function PhotoSlot({ n, shot, label, onPress }) {
-  return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={shot ? `${label} 다시 찍기` : `${label} 찍기`} style={[styles.slot, shot && styles.slotDone]}>
-      {shot ? <Image source={{ uri: shot.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <CameraIcon size={26} color={colors.blue} />}
-      <View style={[styles.slotTag, shot && { backgroundColor: colors.blue }]}>
-        <Text style={[text.chip, { color: shot ? colors.onBlue : colors.sheetFg }]}>{[n, label, shot ? '다시 찍기' : '찍기'].filter(Boolean).join(' ')}</Text>
-      </View>
-    </Pressable>
   )
 }
 
@@ -150,8 +170,6 @@ const styles = StyleSheet.create({
   kv: { backgroundColor: colors.sheetWeak, borderRadius: radius.cardSm, paddingHorizontal: 16 },
   kvRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 12 },
   step: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.sheetWeak, alignItems: 'center', justifyContent: 'center' },
-  proof: { gap: 10, padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.blue, backgroundColor: colors.blueWeak },
-  slotTag: { position: 'absolute', left: 6, bottom: 6, backgroundColor: 'rgba(17,19,23,0.78)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  slot: { flex: 1, aspectRatio: 4 / 3, maxHeight: 150, borderRadius: radius.md, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.blue, backgroundColor: colors.sheetBg, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  slotDone: { borderStyle: 'solid', borderColor: colors.blue },
+  react: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.sheetWeak, borderWidth: 1, borderColor: 'transparent' },
 })

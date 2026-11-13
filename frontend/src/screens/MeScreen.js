@@ -97,7 +97,12 @@ export default function MeScreen({ navigation }) {
         </>
       ) : null}
 
-      <List rows={[{ label: '도움말', value: '쓰는 법과 규칙', onPress: () => navigation.navigate('Help') }]} />
+      <List
+        rows={[
+          ...(app.social ? [{ label: '해결 확인', value: `${app.notices.filter((n) => !n.answer).length}건 대기`, onPress: () => navigation.navigate('Notices') }] : []),
+          { label: '도움말', value: '쓰는 법과 규칙', onPress: () => navigation.navigate('Help') },
+        ]}
+      />
 
       <SectionTitle>진행 중인 내 의뢰</SectionTitle>
       <View style={{ gap: 14 }}>
