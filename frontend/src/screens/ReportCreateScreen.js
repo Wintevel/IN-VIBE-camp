@@ -4,6 +4,7 @@ import * as Location from 'expo-location'
 import Button from '../components/Button'
 import FilterChips from '../components/FilterChips'
 import Screen from '../components/Screen'
+import { ISSUES } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
 
@@ -36,6 +37,7 @@ export default function ReportCreateScreen({ navigation, route }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [placeType, setPlaceType] = useState('drain')
+  const [issueType, setIssueType] = useState('litter')
   const [members, setMembers] = useState(crew ? 2 : 1)
   const [busy, setBusy] = useState(false)
   const shot = app.draftPhoto
@@ -44,11 +46,11 @@ export default function ReportCreateScreen({ navigation, route }) {
   const submit = async () => {
     setBusy(true)
     const where = await lookup(shot)
-    const ok = await app.createReport({ title: title.trim(), description: description.trim(), placeType, requiredMembers: members, shot, ...where })
+    const ok = await app.createReport({ title: title.trim(), description: description.trim(), placeType, issueType, requiredMembers: members, shot, ...where })
     setBusy(false)
     if (!ok) return
     app.setDraftPhoto(null)
-    app.showToast(crew ? '크루 의뢰를 올렸어요' : '제보를 올렸어요')
+    app.showToast(crew ? '크루 의뢰를 올렸어요. 3분 뒤에 공개돼요' : '제보를 올렸어요. 3분 뒤에 의뢰판에 올라가요')
     navigation.goBack()
   }
   const close = () => {
@@ -68,6 +70,9 @@ export default function ReportCreateScreen({ navigation, route }) {
 
       <Text style={text.section}>제목</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="예) 후문 빗물받이에 꽁초가 가득해요" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} />
+
+      <Text style={text.section}>어떤 문제인가요</Text>
+      <FilterChips options={ISSUES} value={issueType} onChange={setIssueType} />
 
       <Text style={text.section}>장소 종류</Text>
       <FilterChips options={PLACES} value={placeType} onChange={setPlaceType} />

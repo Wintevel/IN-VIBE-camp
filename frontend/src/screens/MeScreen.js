@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native'
+import AvatarFrame from '../components/AvatarFrame'
 import DailyLimits from '../components/DailyLimits'
 import { PointIcon, XpIcon } from '../components/Icons'
 import { Appear, Bar, CountUp, PressScale } from '../components/Motion'
@@ -6,6 +7,7 @@ import { Card, List, SectionTitle } from '../components/ListRows'
 import ReportCard from '../components/ReportCard'
 import Screen from '../components/Screen'
 import { Empty, Loading, refresher } from '../components/States'
+import { levelTitle } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
 
@@ -25,11 +27,10 @@ export default function MeScreen({ navigation }) {
   return (
     <Screen refreshControl={refresher(app)}>
       <View style={styles.me}>
-        <View style={styles.avatar}>
-          <Text style={[text.h1, { fontSize: 26, color: colors.tape }]}>{(p.nickname || '줍').slice(0, 1)}</Text>
-        </View>
+        <AvatarFrame frame={p.frame} size={64} letter={(p.nickname || '줍').slice(0, 1)} />
         <View style={{ flex: 1 }}>
-          <Text style={[text.cardTitle, { fontSize: 20 }]}>{p.nickname}</Text>
+          <Text style={[text.cardTitle, { fontSize: 20 }, p.name_color && { color: p.name_color }]}>{p.nickname}</Text>
+          <Text style={[text.chip, { color: colors.tape, marginTop: 2 }]}>{levelTitle(p.level)}</Text>
           <Text style={[text.small, { marginTop: 4 }]}>{[app.myCrew ? app.myCrew.name : '크루 없음', p.streak_weeks > 0 ? `${p.streak_weeks}주 연속 활동 중` : null].filter(Boolean).join(' · ')}</Text>
         </View>
         <Text onPress={() => navigation.navigate('Settings')} style={[text.chip, styles.settings]} accessibilityRole="button">
@@ -96,6 +97,8 @@ export default function MeScreen({ navigation }) {
         </>
       ) : null}
 
+      <List rows={[{ label: '도움말', value: '쓰는 법과 규칙', onPress: () => navigation.navigate('Help') }]} />
+
       <SectionTitle>진행 중인 내 의뢰</SectionTitle>
       <View style={{ gap: 14 }}>
         {mine.map((r) => (
@@ -108,7 +111,7 @@ export default function MeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  me: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  me: { flexDirection: 'row', gap: 18, paddingLeft: 6, paddingTop: 6, alignItems: 'center' },
   avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.panel2, borderWidth: 2, borderColor: colors.tape, alignItems: 'center', justifyContent: 'center' },
   settings: { color: colors.fg, backgroundColor: colors.panel2, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, overflow: 'hidden', ...font.bodyBold },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

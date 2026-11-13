@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
-import { code, dist, isCrew, isPartner, remain } from '../lib/format'
+import { code, dist, isCrew, isPartner, remain, issueLabel } from '../lib/format'
 import { navigationRef } from '../navigation/ref'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
@@ -32,6 +32,7 @@ export default function QuestSheet() {
   const proving = joined && started && !done // 인증할 차례면 인증란을 제목 바로 아래에 둡니다
 
   const kv = [
+    ['유형', issueLabel(r.issue_type)],
     ['장소', [r.place_label, r.address].filter(Boolean).join(' · ')],
     ['거리', dist(r.distance_m)],
     r.reward_label ? ['제휴 보상', r.reward_label] : null,
@@ -45,6 +46,8 @@ export default function QuestSheet() {
   else if (joined && started) [label, disabled] = ['완료 인증하기', !ready]
   else if (joined) [label, disabled] = [`인원을 기다리는 중 (${r.current_members}/${r.required_members})`, true]
   else if (started) [label, disabled] = ['다른 이웃이 진행 중이에요', true]
+  else if (r.pending_until) [label, disabled] = [`공개 준비 중 · ${remain(r.pending_until)}`, true]
+  else if (r.is_mine && !isCrew(r)) [label, disabled] = ['내가 올린 제보는 직접 해결할 수 없어요', true]
 
   const go = async () => {
     setBusy(true)

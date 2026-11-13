@@ -1,6 +1,6 @@
 # frontend
 
-줍퀘스트 모바일 앱 (React Native + Expo, JavaScript).
+집게표(구 줍퀘스트) 모바일 앱 (React Native + Expo, JavaScript).
 
 ```bash
 cp .env.example .env     # Supabase URL / anon key 입력

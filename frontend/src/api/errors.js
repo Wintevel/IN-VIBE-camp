@@ -14,7 +14,16 @@ const ERRORS = {
   NOT_IN_CREW: '가입한 크루가 없어요',
   CREW_NOT_READY: '서버에 크루 기능이 아직 없어요',
   HEART_DAILY_LIMIT: '오늘 하트 10개를 다 썼어요. 내일 다시 누를 수 있어요',
+  LEVEL_TOO_LOW: '레벨이 더 올라야 열려요',
+  COSMETIC_NOT_FOUND: '없는 꾸미기 품목이에요',
+  OWN_REPORT: '내가 올린 제보는 직접 해결할 수 없어요',
+  REPORT_PENDING: '아직 공개 전인 제보예요. 조금만 기다려 주세요',
   HEART_FINAL: '한 번 누른 하트는 취소할 수 없어요',
+  TOO_FAST: '치우기 전 사진을 찍고 1분은 지나야 해요. 치운 뒤에 다시 찍어 주세요',
+  NO_CHANGE: '두 사진이 거의 같아요. 치운 뒤의 모습을 찍어 주세요',
+  DUPLICATE_PHOTO: '같은 사진은 두 번 쓸 수 없어요',
+  PHOTOS_TOO_FAR_APART: '치우기 전과 후 사진은 같은 자리에서 찍어 주세요',
+  INVALID_TIME: '의뢰를 수락한 뒤에 찍은 사진만 쓸 수 있어요',
   TOO_FAR: '의뢰 장소에서 100m 안에서 찍은 사진만 인증할 수 있어요',
 }
 

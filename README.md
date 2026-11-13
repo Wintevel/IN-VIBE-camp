@@ -1,4 +1,4 @@
-# 줍퀘스트 (JubQuest)
+# 집게표 (구 줍퀘스트, JubQuest)
 
 동네 쓰레기·꽁초를 치우는 환경 미화 퀘스트 앱입니다. IN:VIBE Camp 팀 CHJCHJ 프로젝트.
 

@@ -9,12 +9,14 @@ import { colors, text } from '../theme'
 import BoardScreen from '../screens/BoardScreen'
 import CaptureScreen from '../screens/CaptureScreen'
 import CrewScreen from '../screens/CrewScreen'
+import HelpScreen from '../screens/HelpScreen'
 import LoginScreen from '../screens/LoginScreen'
 import MapScreen from '../screens/MapScreen'
 import MeScreen from '../screens/MeScreen'
 import ReportCreateScreen from '../screens/ReportCreateScreen'
 import ShopScreen from '../screens/ShopScreen'
 import SettingsScreen from '../screens/SettingsScreen'
+import TutorialScreen from '../screens/TutorialScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -49,19 +51,22 @@ function Tabs() {
 const stackScreen = { headerShown: false, contentStyle: { backgroundColor: colors.ink } }
 
 export default function RootNavigator() {
-  const { session } = useApp()
-  if (session === undefined) return <View style={{ flex: 1, backgroundColor: colors.ink }} />
+  const { session, tutorialSeen } = useApp()
+  if (session === undefined || tutorialSeen === undefined) return <View style={{ flex: 1, backgroundColor: colors.ink }} />
   const signedIn = !!session
   return (
     <NavigationContainer theme={theme} ref={navigationRef}>
       <Stack.Navigator screenOptions={stackScreen}>
-        {signedIn ? (
+        {signedIn && !tutorialSeen ? (
+          <Stack.Screen name="Tutorial" component={TutorialScreen} />
+        ) : signedIn ? (
           <>
             <Stack.Screen name="Main" component={Tabs} />
             <Stack.Screen name="ReportCreate" component={ReportCreateScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Capture" component={CaptureScreen} options={{ presentation: 'fullScreenModal' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
+            <Stack.Screen name="Help" component={HelpScreen} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />

@@ -19,6 +19,9 @@ const PLACE = {
 const XP_PER_LEVEL = 300
 const DAILY_LIMIT = 3
 const PROOF_RADIUS_M = 100
+const REPORT_DELAY_MS = 3 * 60 * 1000 // 제보는 올리고 3분 뒤에 의뢰판에 공개됩니다(연달아 올리고 바로 수락하는 것을 막음)
+const PROOF_APART_M = 100 // 전·후 사진 촬영 위치 사이 거리 상한
+const PROOF_MIN_GAP_MS = 60 * 1000 // 임시값: 치우기 전 사진을 찍고 최소 이만큼 지나야 치운 뒤 사진을 받습니다
 const DAY = 24 * 3600 * 1000
 const HEART_DAILY_LIMIT = 10
 // 아래 세 값은 임시값입니다. 서버가 생기면 서버가 정합니다.
@@ -34,6 +37,32 @@ const SHOP = [
   { id: 3, name: '카페 아메리카노', cost: 300 },
   { id: 4, name: '충주사랑상품권 5,000원', cost: 500 },
 ]
+
+// 프로필 꾸미기(예시 품목·가격). 포인트로 사는 것과 레벨로만 열리는 것을 나눕니다.
+// kind: frame = 프로필 테두리(style 은 components/AvatarFrame.js 의 모양 이름), name = 닉네임 색
+const COSMETICS = [
+  { id: 'frame-tape', kind: 'frame', name: '노란 테이프', style: 'plain', colors: ['#FFD43B'], cost: 0, level: 1 },
+  { id: 'frame-neon', kind: 'frame', name: '편의점 네온사인', style: 'neon', colors: ['#3182F6', '#7DF9FF', '#3182F6'], cost: 30, level: 1 },
+  { id: 'frame-aurora', kind: 'frame', name: '새벽 청소차 오로라', style: 'spin', colors: ['#3DD68C', '#7DF9FF', '#A97CFF', '#3DD68C'], cost: 60, level: 1 },
+  { id: 'frame-galaxy', kind: 'frame', name: '분리수거 은하수', style: 'stars', colors: ['#A97CFF', '#FF7EB6', '#3182F6', '#A97CFF'], cost: 120, level: 1 },
+  { id: 'frame-gold', kind: 'frame', name: '황금 집게', style: 'royal', colors: ['#FFF3B0', '#FFD43B', '#FF9F1A', '#FFD43B'], cost: 0, level: 3 },
+  { id: 'frame-legend', kind: 'frame', name: '전설의 줍줍러', style: 'legend', colors: ['#FF7EB6', '#FFD43B', '#3DD68C', '#7DF9FF', '#A97CFF', '#FF7EB6'], cost: 0, level: 6 },
+  { id: 'name-white', kind: 'name', name: '기본 닉네임 색', colors: ['#F2F4F6'], cost: 0, level: 1 },
+  { id: 'name-tape', kind: 'name', name: '노란 닉네임', colors: ['#FFD43B'], cost: 80, level: 1 },
+  { id: 'name-mint', kind: 'name', name: '민트 닉네임', colors: ['#7DF9FF'], cost: 0, level: 4 },
+]
+const DEFAULT_LOOK = { frame: 'frame-tape', name: 'name-white' }
+const item = (id) => COSMETICS.find((c) => c.id === id)
+// 저장된 착용 품목이 목록에서 빠졌으면 기본으로 돌아갑니다.
+const lookOf = (me) => {
+  const look = { ...DEFAULT_LOOK, ...(me.look || {}) }
+  for (const k of Object.keys(DEFAULT_LOOK)) if (!item(look[k])) look[k] = DEFAULT_LOOK[k]
+  return look
+}
+const frameOf = (me) => {
+  const c = item(lookOf(me).frame)
+  return { style: c.style, colors: c.colors }
+}
 
 // 제휴 의뢰 예시 1건. 서버가 없어 제휴처가 올릴 경로가 없으므로 앱이 하나를 넣어 둡니다.
 // 인증이 가능하도록 처음 받은 내 위치에서 약 60m 떨어진 곳에 둡니다. 보상 금액은 예시값입니다.
@@ -90,6 +119,32 @@ async function keepPhoto(uri) {
     return c.toDataURL('image/jpeg', 0.6)
   } catch {
     return uri
+  }
+}
+// 두 사진이 거의 같은 장면인지(치우지 않고 연달아 찍었는지) 봅니다. 32×32 로 줄여 밝기 차이 평균을 냅니다.
+// 웹에서만 계산할 수 있고, 폰과 서버 연결 뒤에는 서버가 판정해야 합니다(docs/backend-requests.md 3-6).
+async function sameScene(a, b) {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return false
+  try {
+    const px = async (uri) => {
+      const img = new Image()
+      await new Promise((ok, no) => {
+        img.onload = ok
+        img.onerror = no
+        img.src = uri
+      })
+      const c = document.createElement('canvas')
+      c.width = c.height = 32
+      const g = c.getContext('2d')
+      g.drawImage(img, 0, 0, 32, 32)
+      return g.getImageData(0, 0, 32, 32).data
+    }
+    const [x, y] = [await px(a), await px(b)]
+    let sum = 0
+    for (let i = 0; i < x.length; i += 4) sum += Math.abs(x[i] - y[i]) + Math.abs(x[i + 1] - y[i + 1]) + Math.abs(x[i + 2] - y[i + 2])
+    return sum / (32 * 32 * 3) < 4
+  } catch {
+    return false
   }
 }
 const fail = (code) => {
@@ -170,6 +225,10 @@ function view(r, me, from) {
     description: r.description,
     place_type: r.place_type,
     place_label: label,
+    issue_type: r.issue_type || null,
+    is_mine: r.reporter_id === me.id,
+    // 공개 전(올리고 3분 안)이면 공개될 시각. 공개 전 제보는 올린 사람에게만 보입니다.
+    pending_until: r.visible_at && new Date(r.visible_at).getTime() > Date.now() ? r.visible_at : null,
     lat: r.lat,
     lng: r.lng,
     address: r.address,
@@ -202,6 +261,7 @@ export async function getNearbyReports({ lat, lng, radiusM = 1500 }) {
   sweep(db)
   await save()
   return db.reports
+    .filter((r) => r.reporter_id === db.user.id || !r.visible_at || new Date(r.visible_at).getTime() <= Date.now())
     .map((r) => view(r, db.user, { lat, lng }))
     .filter((r) => r.distance_m <= radiusM)
     .sort((a, b) => a.distance_m - b.distance_m)
@@ -241,9 +301,13 @@ export async function toggleLike(id) {
 export async function acceptReport(id) {
   const { r, me } = await find(id)
   if (r.status !== 'open') fail('REPORT_NOT_OPEN')
+  if (r.visible_at && new Date(r.visible_at).getTime() > Date.now()) fail('REPORT_PENDING')
+  // 내가 올린 제보는 내가 해결할 수 없습니다. 여럿이 하는 크루 의뢰는 올린 사람도 함께합니다.
+  if (r.reporter_id === me.id && r.required_members <= 1) fail('OWN_REPORT')
   if (r.members.includes(me.id)) fail('ALREADY_JOINED')
   if (r.members.length >= r.required_members) fail('REPORT_FULL')
   r.members.push(me.id)
+  r.accepted_at = { ...(r.accepted_at || {}), [me.id]: new Date().toISOString() }
   if (r.members.length >= r.required_members) {
     r.status = 'in_progress'
     r.deadline_at = new Date(Date.now() + DAY).toISOString()
@@ -285,10 +349,12 @@ export async function getMyProfile() {
   // 내가 해결한 의뢰 기록(최근 순). 완료된 의뢰는 지우지 않고 기록으로 남깁니다.
   const cleaned = [...me.completed].reverse().map((c) => {
     const r = db.reports.find((x) => x.id === c.id)
-    return { id: c.id, at: c.at, title: r?.title || '지워진 의뢰', place_label: r ? (PLACE[r.place_type] || PLACE.etc)[0] : null }
+    return { id: c.id, at: c.at, issue_type: r?.issue_type || null, title: r?.title || '지워진 의뢰', place_label: r ? (PLACE[r.place_type] || PLACE.etc)[0] : null }
   })
   return {
     id: me.id,
+    frame: frameOf(me),
+    name_color: item(lookOf(me).name).colors[0],
     cleaned,
     nickname: me.nickname,
     xp: me.xp,
@@ -317,7 +383,7 @@ export async function setNickname(nickname) {
 // 사진은 촬영 결과 주소를 그대로 가리킵니다(웹은 data: 주소, 폰은 앱 캐시 파일).
 export const photoUrl = (path) => path || null
 
-export async function createReport(userId, { title, placeType, description, requiredMembers, shot, address, dong }) {
+export async function createReport(userId, { title, placeType, issueType, description, requiredMembers, shot, address, dong }) {
   const db = await load()
   const photo = await keepPhoto(shot.uri)
   const id = db.nextId++
@@ -326,6 +392,7 @@ export async function createReport(userId, { title, placeType, description, requ
     title,
     description,
     place_type: placeType,
+    issue_type: issueType || 'litter',
     lat: shot.lat,
     lng: shot.lng,
     address,
@@ -337,6 +404,7 @@ export async function createReport(userId, { title, placeType, description, requ
     required_members: Math.max(1, requiredMembers || 1),
     deadline_at: null,
     created_at: new Date().toISOString(),
+    visible_at: new Date(Date.now() + REPORT_DELAY_MS).toISOString(),
     reporter_id: userId,
     reporter_nickname: db.user.nickname,
   })
@@ -353,6 +421,18 @@ export async function submitProof(userId, id, before, after) {
   if (r.deadline_at && new Date(r.deadline_at).getTime() < Date.now()) fail('DEADLINE_PASSED')
   if (donesToday(me) >= DAILY_LIMIT) fail('DAILY_LIMIT')
   if (meters(before, r) > PROOF_RADIUS_M || meters(after, r) > PROOF_RADIUS_M) fail('TOO_FAR')
+  // 수락하기 전에 찍어 둔 사진은 받지 않습니다.
+  const acceptedAt = r.accepted_at?.[me.id]
+  if (acceptedAt && new Date(before.takenAt).getTime() < new Date(acceptedAt).getTime()) fail('INVALID_TIME')
+  // 전·후 사진 인증은 "찍고 바로 완료"를 막습니다: 같은 사진 금지, 같은 자리, 최소 시간 간격, 거의 같은 장면 금지.
+  if ((r.proof_mode || 'before_after') === 'before_after') {
+    if (before.uri === after.uri) fail('DUPLICATE_PHOTO')
+    if (meters(before, after) > PROOF_APART_M) fail('PHOTOS_TOO_FAR_APART')
+    const gap = new Date(after.takenAt).getTime() - new Date(before.takenAt).getTime()
+    if (!(gap >= 0)) fail('INVALID_TIME')
+    if (gap < PROOF_MIN_GAP_MS) fail('TOO_FAST')
+    if (await sameScene(before.uri, after.uri)) fail('NO_CHANGE')
+  }
 
   const xp = (PLACE[r.place_type] || PLACE.etc)[1]
   const points = pointsOf(r)
@@ -473,4 +553,47 @@ export async function redeemItem(itemId) {
   ;(db.user.coupons = db.user.coupons || []).unshift({ name: item.name, code, at: new Date().toISOString() })
   await save()
   return { coupon_code: code, item: item.name, points: db.user.points }
+}
+
+// ── 프로필 꾸미기 ──────────────────────────────────────
+export async function getCosmetics() {
+  const { user: me } = await load()
+  const owned = me.cosmetics || []
+  const look = lookOf(me)
+  const level = levelOf(me.xp)
+  return COSMETICS.map((c) => ({
+    ...c,
+    // 포인트로 사는 품목은 산 뒤에, 레벨 품목은 레벨이 되면 내 것이 됩니다.
+    owned: c.cost === 0 ? level >= c.level : owned.includes(c.id),
+    locked: level < c.level,
+    equipped: look[c.kind] === c.id,
+  }))
+}
+
+export async function buyCosmetic(id) {
+  const db = await load()
+  const me = db.user
+  const c = COSMETICS.find((x) => x.id === id)
+  if (!c) fail('COSMETIC_NOT_FOUND')
+  if (levelOf(me.xp) < c.level) fail('LEVEL_TOO_LOW')
+  me.cosmetics = me.cosmetics || []
+  if (c.cost > 0 && !me.cosmetics.includes(id)) {
+    if (me.points < c.cost) fail('NOT_ENOUGH_POINTS')
+    me.points -= c.cost
+    me.cosmetics.push(id)
+  }
+  me.look = { ...lookOf(me), [c.kind]: id } // 사면 바로 착용
+  await save()
+  return { points: me.points }
+}
+
+export async function equipCosmetic(id) {
+  const db = await load()
+  const me = db.user
+  const c = COSMETICS.find((x) => x.id === id)
+  if (!c) fail('COSMETIC_NOT_FOUND')
+  const mine = c.cost === 0 ? levelOf(me.xp) >= c.level : (me.cosmetics || []).includes(id)
+  if (!mine) fail('LEVEL_TOO_LOW')
+  me.look = { ...lookOf(me), [c.kind]: id }
+  await save()
 }
