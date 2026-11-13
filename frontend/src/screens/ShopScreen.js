@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import AvatarFrame from '../components/AvatarFrame'
 import Button from '../components/Button'
 import { GiftIcon, PointIcon } from '../components/Icons'
 import { Card, SectionTitle } from '../components/ListRows'
@@ -84,9 +85,15 @@ export default function ShopScreen({ navigation }) {
               const label = it.equipped ? '착용 중' : it.owned ? '착용' : it.locked ? `Lv.${it.level}` : wearing === it.id ? '구매 중…' : '구매'
               return (
                 <Card key={it.id} style={styles.item}>
-                  <View style={[styles.thumb, it.kind === 'frame' ? { borderWidth: 3, borderColor: it.color } : null]}>
-                    {it.kind === 'name' ? <Text style={[text.section, { color: it.color }]}>가</Text> : null}
-                  </View>
+                  {it.kind === 'frame' ? (
+                    <View style={styles.framePreview}>
+                      <AvatarFrame frame={it} size={40} letter="줍" />
+                    </View>
+                  ) : (
+                    <View style={styles.thumb}>
+                      <Text style={[text.section, { color: it.colors[0] }]}>가</Text>
+                    </View>
+                  )}
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={text.section}>{it.name}</Text>
                     {it.cost > 0 ? (
@@ -130,6 +137,7 @@ const styles = StyleSheet.create({
   wallet: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius.lg, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.tape, overflow: 'hidden' },
   slash: { position: 'absolute', right: 30, top: -30, bottom: -30, width: 60, backgroundColor: 'rgba(255,212,59,0.12)', transform: [{ skewX: '-18deg' }] },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  framePreview: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   thumb: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
   coupon: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.tape, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12 },
 })

@@ -27,5 +27,20 @@ export const ISSUES = [
 ]
 export const issueLabel = (key) => (ISSUES.find(([k]) => k === key) || [])[1] || null
 
-// 레벨 칭호. 백엔드 docs/api.md 의 라벨과 같게 둡니다.
-export const levelTitle = (level) => (level >= 10 ? '클린 히어로' : level >= 6 ? '동네 정화러' : level >= 3 ? '골목 지킴이' : '새싹 줍줍러')
+// 레벨 칭호. 업적 이름처럼 가볍게 붙입니다(프론트 표시용, 서버 값과 무관).
+const TITLES = [
+  [20, '줍다 보니 여기까지 옴'],
+  [15, '전설의 줍줍러'],
+  [12, '지구가 감사 인사 보냄'],
+  [10, '걸어 다니는 분리수거장'],
+  [9, '환경미화원님이 알아봄'],
+  [8, '골목길 고인물'],
+  [7, '쓰레기가 먼저 피해 감'],
+  [6, '이 구역의 청소 담당'],
+  [5, '빗물받이가 나를 부른다'],
+  [4, '꽁초와의 전쟁'],
+  [3, '집게를 든 자'],
+  [2, '허리 숙이기 장인'],
+  [1, '일단 주워 봄'],
+]
+export const levelTitle = (level) => (TITLES.find(([min]) => level >= min) || TITLES[TITLES.length - 1])[1]

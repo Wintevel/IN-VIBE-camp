@@ -19,6 +19,8 @@ const PLACE = {
 const XP_PER_LEVEL = 300
 const DAILY_LIMIT = 3
 const PROOF_RADIUS_M = 100
+const PROOF_APART_M = 100 // 전·후 사진 촬영 위치 사이 거리 상한
+const PROOF_MIN_GAP_MS = 60 * 1000 // 임시값: 치우기 전 사진을 찍고 최소 이만큼 지나야 치운 뒤 사진을 받습니다
 const DAY = 24 * 3600 * 1000
 const HEART_DAILY_LIMIT = 10
 // 아래 세 값은 임시값입니다. 서버가 생기면 서버가 정합니다.
@@ -36,20 +38,30 @@ const SHOP = [
 ]
 
 // 프로필 꾸미기(예시 품목·가격). 포인트로 사는 것과 레벨로만 열리는 것을 나눕니다.
-// kind: frame = 프로필 테두리 색, name = 닉네임 색
+// kind: frame = 프로필 테두리(style 은 components/AvatarFrame.js 의 모양 이름), name = 닉네임 색
 const COSMETICS = [
-  { id: 'frame-tape', kind: 'frame', name: '노란 테이프 테두리', color: '#FFD43B', cost: 0, level: 1 },
-  { id: 'frame-blue', kind: 'frame', name: '파란 테두리', color: '#3182F6', cost: 30, level: 1 },
-  { id: 'frame-green', kind: 'frame', name: '초록 테두리', color: '#3DD68C', cost: 60, level: 1 },
-  { id: 'frame-purple', kind: 'frame', name: '보라 테두리', color: '#A97CFF', cost: 120, level: 1 },
-  { id: 'frame-hero', kind: 'frame', name: '골목 지킴이 테두리', color: '#F04452', cost: 0, level: 3 },
-  { id: 'name-white', kind: 'name', name: '기본 닉네임 색', color: '#F2F4F6', cost: 0, level: 1 },
-  { id: 'name-tape', kind: 'name', name: '노란 닉네임', color: '#FFD43B', cost: 80, level: 1 },
-  { id: 'name-green', kind: 'name', name: '동네 정화러 닉네임', color: '#3DD68C', cost: 0, level: 6 },
+  { id: 'frame-tape', kind: 'frame', name: '노란 테이프', style: 'plain', colors: ['#FFD43B'], cost: 0, level: 1 },
+  { id: 'frame-neon', kind: 'frame', name: '편의점 네온사인', style: 'neon', colors: ['#3182F6', '#7DF9FF', '#3182F6'], cost: 30, level: 1 },
+  { id: 'frame-aurora', kind: 'frame', name: '새벽 청소차 오로라', style: 'spin', colors: ['#3DD68C', '#7DF9FF', '#A97CFF', '#3DD68C'], cost: 60, level: 1 },
+  { id: 'frame-galaxy', kind: 'frame', name: '분리수거 은하수', style: 'stars', colors: ['#A97CFF', '#FF7EB6', '#3182F6', '#A97CFF'], cost: 120, level: 1 },
+  { id: 'frame-gold', kind: 'frame', name: '황금 집게', style: 'royal', colors: ['#FFF3B0', '#FFD43B', '#FF9F1A', '#FFD43B'], cost: 0, level: 3 },
+  { id: 'frame-legend', kind: 'frame', name: '전설의 줍줍러', style: 'legend', colors: ['#FF7EB6', '#FFD43B', '#3DD68C', '#7DF9FF', '#A97CFF', '#FF7EB6'], cost: 0, level: 6 },
+  { id: 'name-white', kind: 'name', name: '기본 닉네임 색', colors: ['#F2F4F6'], cost: 0, level: 1 },
+  { id: 'name-tape', kind: 'name', name: '노란 닉네임', colors: ['#FFD43B'], cost: 80, level: 1 },
+  { id: 'name-mint', kind: 'name', name: '민트 닉네임', colors: ['#7DF9FF'], cost: 0, level: 4 },
 ]
 const DEFAULT_LOOK = { frame: 'frame-tape', name: 'name-white' }
-const lookOf = (me) => ({ ...DEFAULT_LOOK, ...(me.look || {}) })
-const colorOf = (id) => COSMETICS.find((c) => c.id === id)?.color || null
+const item = (id) => COSMETICS.find((c) => c.id === id)
+// 저장된 착용 품목이 목록에서 빠졌으면 기본으로 돌아갑니다.
+const lookOf = (me) => {
+  const look = { ...DEFAULT_LOOK, ...(me.look || {}) }
+  for (const k of Object.keys(DEFAULT_LOOK)) if (!item(look[k])) look[k] = DEFAULT_LOOK[k]
+  return look
+}
+const frameOf = (me) => {
+  const c = item(lookOf(me).frame)
+  return { style: c.style, colors: c.colors }
+}
 
 // 제휴 의뢰 예시 1건. 서버가 없어 제휴처가 올릴 경로가 없으므로 앱이 하나를 넣어 둡니다.
 // 인증이 가능하도록 처음 받은 내 위치에서 약 60m 떨어진 곳에 둡니다. 보상 금액은 예시값입니다.
@@ -106,6 +118,32 @@ async function keepPhoto(uri) {
     return c.toDataURL('image/jpeg', 0.6)
   } catch {
     return uri
+  }
+}
+// 두 사진이 거의 같은 장면인지(치우지 않고 연달아 찍었는지) 봅니다. 32×32 로 줄여 밝기 차이 평균을 냅니다.
+// 웹에서만 계산할 수 있고, 폰과 서버 연결 뒤에는 서버가 판정해야 합니다(docs/backend-requests.md 3-6).
+async function sameScene(a, b) {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return false
+  try {
+    const px = async (uri) => {
+      const img = new Image()
+      await new Promise((ok, no) => {
+        img.onload = ok
+        img.onerror = no
+        img.src = uri
+      })
+      const c = document.createElement('canvas')
+      c.width = c.height = 32
+      const g = c.getContext('2d')
+      g.drawImage(img, 0, 0, 32, 32)
+      return g.getImageData(0, 0, 32, 32).data
+    }
+    const [x, y] = [await px(a), await px(b)]
+    let sum = 0
+    for (let i = 0; i < x.length; i += 4) sum += Math.abs(x[i] - y[i]) + Math.abs(x[i + 1] - y[i + 1]) + Math.abs(x[i + 2] - y[i + 2])
+    return sum / (32 * 32 * 3) < 4
+  } catch {
+    return false
   }
 }
 const fail = (code) => {
@@ -261,6 +299,7 @@ export async function acceptReport(id) {
   if (r.members.includes(me.id)) fail('ALREADY_JOINED')
   if (r.members.length >= r.required_members) fail('REPORT_FULL')
   r.members.push(me.id)
+  r.accepted_at = { ...(r.accepted_at || {}), [me.id]: new Date().toISOString() }
   if (r.members.length >= r.required_members) {
     r.status = 'in_progress'
     r.deadline_at = new Date(Date.now() + DAY).toISOString()
@@ -306,8 +345,8 @@ export async function getMyProfile() {
   })
   return {
     id: me.id,
-    frame_color: colorOf(lookOf(me).frame),
-    name_color: colorOf(lookOf(me).name),
+    frame: frameOf(me),
+    name_color: item(lookOf(me).name).colors[0],
     cleaned,
     nickname: me.nickname,
     xp: me.xp,
@@ -373,6 +412,18 @@ export async function submitProof(userId, id, before, after) {
   if (r.deadline_at && new Date(r.deadline_at).getTime() < Date.now()) fail('DEADLINE_PASSED')
   if (donesToday(me) >= DAILY_LIMIT) fail('DAILY_LIMIT')
   if (meters(before, r) > PROOF_RADIUS_M || meters(after, r) > PROOF_RADIUS_M) fail('TOO_FAR')
+  // 수락하기 전에 찍어 둔 사진은 받지 않습니다.
+  const acceptedAt = r.accepted_at?.[me.id]
+  if (acceptedAt && new Date(before.takenAt).getTime() < new Date(acceptedAt).getTime()) fail('INVALID_TIME')
+  // 전·후 사진 인증은 "찍고 바로 완료"를 막습니다: 같은 사진 금지, 같은 자리, 최소 시간 간격, 거의 같은 장면 금지.
+  if ((r.proof_mode || 'before_after') === 'before_after') {
+    if (before.uri === after.uri) fail('DUPLICATE_PHOTO')
+    if (meters(before, after) > PROOF_APART_M) fail('PHOTOS_TOO_FAR_APART')
+    const gap = new Date(after.takenAt).getTime() - new Date(before.takenAt).getTime()
+    if (!(gap >= 0)) fail('INVALID_TIME')
+    if (gap < PROOF_MIN_GAP_MS) fail('TOO_FAST')
+    if (await sameScene(before.uri, after.uri)) fail('NO_CHANGE')
+  }
 
   const xp = (PLACE[r.place_type] || PLACE.etc)[1]
   const points = pointsOf(r)
