@@ -33,7 +33,7 @@
       }
     },
     "experiments": {
-      "baseUrl": "/IN-VIBE-camp_TeamChjChj_JubQuest"
+      "baseUrl": "/IN-VIBE-camp"
     },
     "web": {
       "bundler": "metro",
