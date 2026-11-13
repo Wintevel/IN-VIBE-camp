@@ -68,7 +68,7 @@ const save = async () => {
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify(cache))
   } catch {
-    throw new Error('기기 저장 공간이 부족해요. 완료된 의뢰가 많다면 설정에서 로그아웃해 기록을 비워 주세요')
+    throw new Error('기기 저장 공간이 부족해요. 완료된 의뢰가 많다면 설정에서 기록을 지워 주세요')
   }
 }
 
@@ -110,26 +110,35 @@ const kstWeek = (t) => Math.floor((new Date(t).getTime() + 9 * 3600 * 1000 - 4 *
 const sessionOf = (user) => (user ? { user: { id: user.id } } : null)
 
 export async function getSession() {
-  return sessionOf((await load()).user)
+  const db = await load()
+  return db.signedOut ? null : sessionOf(db.user)
 }
 export function onAuthChange(cb) {
   listeners.add(cb)
   return { unsubscribe: () => listeners.delete(cb) }
 }
-const emit = () => listeners.forEach((cb) => cb(sessionOf(cache.user)))
+const emit = () => listeners.forEach((cb) => cb(cache.signedOut ? null : sessionOf(cache.user)))
 
 export async function signInAnonymously() {
   const db = await load()
   if (!db.user) {
     const id = `local-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`
     db.user = { id, nickname: `줍줍이${Math.floor(1000 + Math.random() * 9000)}`, xp: 0, points: 0, completed: [], createdAt: new Date().toISOString() }
-    await save()
   }
+  db.signedOut = false
+  await save()
   emit()
   return sessionOf(db.user)
 }
-// 로그아웃하면 이 기기의 기록을 지웁니다(서버가 없어 다시 불러올 곳이 없음).
+// 로그아웃해도 이 기기의 기록은 남겨 둡니다. 다시 시작하면 같은 계정으로 이어집니다.
 export async function signOut() {
+  const db = await load()
+  db.signedOut = true
+  await save()
+  emit()
+}
+// 이 기기의 기록을 모두 지웁니다(서버가 없어 다시 불러올 수 없음).
+export async function resetLocal() {
   cache = { user: null, reports: [], nextId: 1, crews: [] }
   await save()
   emit()
@@ -209,9 +218,11 @@ export async function toggleLike(id) {
   const { r, me } = await find(id)
   const on = r.likes.includes(me.id)
   let gained = 0
-  if (on) r.likes = r.likes.filter((u) => u !== me.id)
-  else {
-    // 하루 10개까지. 취소해도 오늘 쓴 횟수는 돌아오지 않습니다.
+  // 한 번 누른 하트는 취소할 수 없습니다(눌렀다 떼기로 포인트·승격을 조작하지 못하게).
+  // 실수 대비 되돌리기는 화면이 이 함수를 부르기 전 몇 초 동안만 받습니다.
+  if (on) fail('HEART_FINAL')
+  {
+    // 하루 10개까지.
     if (heartsToday(me) >= HEART_DAILY_LIMIT) fail('HEART_DAILY_LIMIT')
     r.likes = [...r.likes, me.id]
     ;(me.hearts = me.hearts || []).push({ id, at: new Date().toISOString() })
@@ -269,9 +280,16 @@ function streak(completed) {
 }
 
 export async function getMyProfile() {
-  const { user: me } = await load()
+  const db = await load()
+  const me = db.user
+  // 내가 해결한 의뢰 기록(최근 순). 완료된 의뢰는 지우지 않고 기록으로 남깁니다.
+  const cleaned = [...me.completed].reverse().map((c) => {
+    const r = db.reports.find((x) => x.id === c.id)
+    return { id: c.id, at: c.at, title: r?.title || '지워진 의뢰', place_label: r ? (PLACE[r.place_type] || PLACE.etc)[0] : null }
+  })
   return {
     id: me.id,
+    cleaned,
     nickname: me.nickname,
     xp: me.xp,
     points: me.points,

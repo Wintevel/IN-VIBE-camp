@@ -8,4 +8,6 @@ export const isLocal = !hasSupabase
 const impl = hasSupabase ? remote : local
 
 export const { getSession, onAuthChange, signInAnonymously, signOut, getNearbyReports, toggleLike, acceptReport, cancelParticipation, getMyProfile, setNickname, photoUrl, createReport, submitProof, getCrews, getMyCrew, getShopItems, redeemItem, createCrew, joinCrew, leaveCrew } = impl
+// 기기 저장소 모드에서만 있는 기능: 이 기기의 기록 지우기
+export const resetLocal = isLocal ? local.resetLocal : null
 export { errorText } from './errors'

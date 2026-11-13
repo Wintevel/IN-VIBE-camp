@@ -14,6 +14,7 @@ const ERRORS = {
   NOT_IN_CREW: '가입한 크루가 없어요',
   CREW_NOT_READY: '서버에 크루 기능이 아직 없어요',
   HEART_DAILY_LIMIT: '오늘 하트 10개를 다 썼어요. 내일 다시 누를 수 있어요',
+  HEART_FINAL: '한 번 누른 하트는 취소할 수 없어요',
   TOO_FAR: '의뢰 장소에서 100m 안에서 찍은 사진만 인증할 수 있어요',
 }
 

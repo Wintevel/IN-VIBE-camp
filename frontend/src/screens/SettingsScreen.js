@@ -10,6 +10,7 @@ export default function SettingsScreen({ navigation }) {
   const app = useApp()
   const [nickname, setNickname] = useState(app.profile?.nickname || '')
   const [busy, setBusy] = useState(false)
+  const [confirmReset, setConfirmReset] = useState(false)
   const changed = nickname.trim().length > 0 && nickname.trim() !== app.profile?.nickname
   const save = async () => {
     setBusy(true)
@@ -29,10 +30,13 @@ export default function SettingsScreen({ navigation }) {
       <List
         rows={[
           { label: '내 위치 다시 받기', value: app.located ? '받음' : '못 받음', onPress: () => app.refresh({ relocate: true }) },
-          { label: '로그아웃', danger: true, onPress: () => app.signOut() },
+          { label: '로그아웃', onPress: () => app.signOut() },
+          ...(app.resetLocal
+            ? [{ label: confirmReset ? '한 번 더 누르면 모두 지워져요' : '이 기기의 기록 모두 지우기', danger: true, key: 'reset', onPress: () => (confirmReset ? app.resetLocal() : setConfirmReset(true)) }]
+            : []),
         ]}
       />
-      <Text style={text.caption}>지금은 가입 없는 계정이라 로그아웃하면 기록을 다시 불러올 수 없어요.</Text>
+      <Text style={text.caption}>로그아웃해도 기록은 이 기기에 남아 있어, 다시 시작하면 그대로 이어져요. 기록을 지우면 다시 불러올 수 없어요.</Text>
       <Button type="ghost" style={{ flex: 0 }} onPress={() => navigation.goBack()}>
         돌아가기
       </Button>
