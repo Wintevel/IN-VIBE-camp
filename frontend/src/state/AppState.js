@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Location from 'expo-location'
 import * as api from '../api'
 
@@ -8,10 +9,12 @@ const Ctx = createContext(null)
 // 위치를 못 받을 때 쓰는 기준점(인하대 주변).
 const FALLBACK = { lat: 37.452, lng: 126.656 }
 const SESSION_WAIT_MS = 5000
+const TUTORIAL_KEY = 'jipgepyo:tutorial-seen'
 const HEART_UNDO_MS = 4000 // 하트를 누른 뒤 되돌릴 수 있는 시간
 
 export function AppStateProvider({ children }) {
   const [session, setSession] = useState(undefined) // undefined: 확인 중, null: 로그아웃
+  const [tutorialSeen, setTutorialSeen] = useState(undefined) // undefined: 확인 중
   const [coords, setCoords] = useState(null)
   const [located, setLocated] = useState(false) // 실제 위치를 받았는지
   const [reports, setReports] = useState([])
@@ -47,6 +50,13 @@ export function AppStateProvider({ children }) {
       clearTimeout(giveUp)
       sub.unsubscribe()
     }
+  }, [])
+
+  // 처음 안내를 봤는지는 기기에 저장합니다(계정과 무관).
+  useEffect(() => {
+    AsyncStorage.getItem(TUTORIAL_KEY)
+      .then((v) => setTutorialSeen(v === '1'))
+      .catch(() => setTutorialSeen(true))
   }, [])
 
   const locate = useCallback(async () => {
@@ -107,6 +117,14 @@ export function AppStateProvider({ children }) {
     }
   }, [userId, refresh])
 
+  // 공개를 기다리는 내 제보가 있으면 공개 시각에 맞춰 목록을 새로 받습니다.
+  useEffect(() => {
+    const next = reports.map((r) => (r.pending_until ? new Date(r.pending_until).getTime() : 0)).filter(Boolean).sort((a, b) => a - b)[0]
+    if (!next) return
+    const t = setTimeout(() => refresh(), Math.max(1000, next - Date.now() + 500))
+    return () => clearTimeout(t)
+  }, [reports, refresh])
+
   const patch = (id, fields) => setReports((rs) => rs.map((r) => (r.id === id ? { ...r, ...fields } : r)))
 
   // 서버 호출을 감싸 실패하면 안내만 띄웁니다.
@@ -125,6 +143,12 @@ export function AppStateProvider({ children }) {
   const value = useMemo(
     () => ({
       session,
+      tutorialSeen,
+      finishTutorial: () => {
+        setTutorialSeen(true)
+        AsyncStorage.setItem(TUTORIAL_KEY, '1').catch(() => {})
+      },
+      replayTutorial: () => setTutorialSeen(false),
       userId,
       coords,
       located,
@@ -266,7 +290,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, tutorialSeen, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

@@ -19,6 +19,7 @@ const PLACE = {
 const XP_PER_LEVEL = 300
 const DAILY_LIMIT = 3
 const PROOF_RADIUS_M = 100
+const REPORT_DELAY_MS = 3 * 60 * 1000 // 제보는 올리고 3분 뒤에 의뢰판에 공개됩니다(연달아 올리고 바로 수락하는 것을 막음)
 const PROOF_APART_M = 100 // 전·후 사진 촬영 위치 사이 거리 상한
 const PROOF_MIN_GAP_MS = 60 * 1000 // 임시값: 치우기 전 사진을 찍고 최소 이만큼 지나야 치운 뒤 사진을 받습니다
 const DAY = 24 * 3600 * 1000
@@ -225,6 +226,9 @@ function view(r, me, from) {
     place_type: r.place_type,
     place_label: label,
     issue_type: r.issue_type || null,
+    is_mine: r.reporter_id === me.id,
+    // 공개 전(올리고 3분 안)이면 공개될 시각. 공개 전 제보는 올린 사람에게만 보입니다.
+    pending_until: r.visible_at && new Date(r.visible_at).getTime() > Date.now() ? r.visible_at : null,
     lat: r.lat,
     lng: r.lng,
     address: r.address,
@@ -257,6 +261,7 @@ export async function getNearbyReports({ lat, lng, radiusM = 1500 }) {
   sweep(db)
   await save()
   return db.reports
+    .filter((r) => r.reporter_id === db.user.id || !r.visible_at || new Date(r.visible_at).getTime() <= Date.now())
     .map((r) => view(r, db.user, { lat, lng }))
     .filter((r) => r.distance_m <= radiusM)
     .sort((a, b) => a.distance_m - b.distance_m)
@@ -296,6 +301,9 @@ export async function toggleLike(id) {
 export async function acceptReport(id) {
   const { r, me } = await find(id)
   if (r.status !== 'open') fail('REPORT_NOT_OPEN')
+  if (r.visible_at && new Date(r.visible_at).getTime() > Date.now()) fail('REPORT_PENDING')
+  // 내가 올린 제보는 내가 해결할 수 없습니다. 여럿이 하는 크루 의뢰는 올린 사람도 함께합니다.
+  if (r.reporter_id === me.id && r.required_members <= 1) fail('OWN_REPORT')
   if (r.members.includes(me.id)) fail('ALREADY_JOINED')
   if (r.members.length >= r.required_members) fail('REPORT_FULL')
   r.members.push(me.id)
@@ -396,6 +404,7 @@ export async function createReport(userId, { title, placeType, issueType, descri
     required_members: Math.max(1, requiredMembers || 1),
     deadline_at: null,
     created_at: new Date().toISOString(),
+    visible_at: new Date(Date.now() + REPORT_DELAY_MS).toISOString(),
     reporter_id: userId,
     reporter_nickname: db.user.nickname,
   })

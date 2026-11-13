@@ -12,7 +12,7 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
   const done = r.status === 'completed'
   const img = photoUrl(r.photo_path)
   return (
-    <PressScale onPress={onPress} accessibilityRole="button" to={0.975} style={[styles.card, r.i_am_participating && !done && styles.accepted, done && { opacity: 0.55 }]}>
+    <PressScale onPress={onPress} accessibilityRole="button" to={0.975} style={[styles.card, r.i_am_participating && !done && styles.accepted, (done || r.pending_until) && { opacity: 0.55 }]}>
       <View style={styles.thumb}>
         {img ? <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel="제보 사진" /> : isPartner(r) ? <GiftIcon size={30} /> : <PinIcon size={28} />}
         <View style={styles.codeTag}>
@@ -22,6 +22,7 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
       <View style={styles.main}>
         <View style={styles.tags}>
           {isPartner(r) ? <Stamp type="partner">제휴 의뢰</Stamp> : <Stamp>주민 제보</Stamp>}
+          {r.pending_until ? <Stamp type="hot">곧 공개</Stamp> : r.is_mine && !isPartner(r) ? <Stamp>내 제보</Stamp> : null}
           {isCrew(r) ? <Stamp type="partner">크루 {r.current_members}/{r.required_members}</Stamp> : null}
           {r.status === 'in_progress' ? <Stamp type="hot">진행 중</Stamp> : null}
           {done ? <Stamp type="done">완료</Stamp> : null}

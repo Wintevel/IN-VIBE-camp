@@ -16,6 +16,8 @@ const ERRORS = {
   HEART_DAILY_LIMIT: '오늘 하트 10개를 다 썼어요. 내일 다시 누를 수 있어요',
   LEVEL_TOO_LOW: '레벨이 더 올라야 열려요',
   COSMETIC_NOT_FOUND: '없는 꾸미기 품목이에요',
+  OWN_REPORT: '내가 올린 제보는 직접 해결할 수 없어요',
+  REPORT_PENDING: '아직 공개 전인 제보예요. 조금만 기다려 주세요',
   HEART_FINAL: '한 번 누른 하트는 취소할 수 없어요',
   TOO_FAST: '치우기 전 사진을 찍고 1분은 지나야 해요. 치운 뒤에 다시 찍어 주세요',
   NO_CHANGE: '두 사진이 거의 같아요. 치운 뒤의 모습을 찍어 주세요',

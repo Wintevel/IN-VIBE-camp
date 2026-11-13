@@ -50,7 +50,7 @@ export default function ReportCreateScreen({ navigation, route }) {
     setBusy(false)
     if (!ok) return
     app.setDraftPhoto(null)
-    app.showToast(crew ? '크루 의뢰를 올렸어요' : '제보를 올렸어요')
+    app.showToast(crew ? '크루 의뢰를 올렸어요. 3분 뒤에 공개돼요' : '제보를 올렸어요. 3분 뒤에 의뢰판에 올라가요')
     navigation.goBack()
   }
   const close = () => {

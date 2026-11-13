@@ -46,6 +46,8 @@ export default function QuestSheet() {
   else if (joined && started) [label, disabled] = ['완료 인증하기', !ready]
   else if (joined) [label, disabled] = [`인원을 기다리는 중 (${r.current_members}/${r.required_members})`, true]
   else if (started) [label, disabled] = ['다른 이웃이 진행 중이에요', true]
+  else if (r.pending_until) [label, disabled] = [`공개 준비 중 · ${remain(r.pending_until)}`, true]
+  else if (r.is_mine && !isCrew(r)) [label, disabled] = ['내가 올린 제보는 직접 해결할 수 없어요', true]
 
   const go = async () => {
     setBusy(true)

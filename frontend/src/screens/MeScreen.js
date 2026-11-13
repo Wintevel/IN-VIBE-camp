@@ -97,6 +97,8 @@ export default function MeScreen({ navigation }) {
         </>
       ) : null}
 
+      <List rows={[{ label: '도움말', value: '쓰는 법과 규칙', onPress: () => navigation.navigate('Help') }]} />
+
       <SectionTitle>진행 중인 내 의뢰</SectionTitle>
       <View style={{ gap: 14 }}>
         {mine.map((r) => (
