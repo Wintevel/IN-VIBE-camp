@@ -7,10 +7,11 @@
 |---|---|---|
 | `frontend/` | 프론트엔드(한재준) | `frontend/CLAUDE.md` |
 | `supabase/` | 백엔드(팀원) | `supabase/CLAUDE.md` |
+| `web/` | 미정 (제휴사 의뢰 웹페이지) | `web/CLAUDE.md` |
 | `docs/api.md` | 공동 (둘 다 합의) | 아래 "계약" |
 | 루트 파일(`README.md`, `.gitignore`, `CLAUDE.md`) | 공동 | 바꾸면 PR 설명에 이유를 적기 |
 
-- 프론트 작업자의 Claude는 `supabase/` 를 수정하지 않습니다. 백엔드 작업자의 Claude는 `frontend/` 를 수정하지 않습니다. 필요한 변경은 `docs/api.md` 에 요청으로 적거나 PR 설명에 남기고, 상대 담당이 처리합니다.
+- 프론트 작업자의 Claude는 `supabase/` 를 수정하지 않습니다. 백엔드 작업자의 Claude는 `frontend/` 를 수정하지 않습니다. `web/` 은 담당이 정해지기 전에는 만들지 않습니다. 필요한 변경은 `docs/api.md` 에 요청으로 적거나 PR 설명에 남기고, 상대 담당이 처리합니다.
 - 읽는 것은 자유입니다. 상대 영역을 읽고 이해한 뒤 자기 영역에서 맞춰 작업합니다.
 
 ## 계약: `docs/api.md`

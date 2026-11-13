@@ -14,6 +14,7 @@
 ```
 frontend/   React Native(Expo) 모바일 앱
 supabase/   마이그레이션 SQL, Supabase 설정
+web/        제휴사 의뢰 웹페이지 (담당·스택 미정, 자리만 있음)
 docs/       테이블·API 초안 (docs/api.md) — 프론트·백엔드 공통 계약
 CLAUDE.md   Claude 작업 규칙 (영역 경계). frontend/, supabase/ 에도 각각 있음
 ```
