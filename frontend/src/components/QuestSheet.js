@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
-import { code, dist, isCrew, isPartner, remain } from '../lib/format'
+import { code, dist, isCrew, isPartner, remain, issueLabel } from '../lib/format'
 import { navigationRef } from '../navigation/ref'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
@@ -32,6 +32,7 @@ export default function QuestSheet() {
   const proving = joined && started && !done // 인증할 차례면 인증란을 제목 바로 아래에 둡니다
 
   const kv = [
+    ['유형', issueLabel(r.issue_type)],
     ['장소', [r.place_label, r.address].filter(Boolean).join(' · ')],
     ['거리', dist(r.distance_m)],
     r.reward_label ? ['제휴 보상', r.reward_label] : null,

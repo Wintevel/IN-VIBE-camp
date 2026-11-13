@@ -19,6 +19,13 @@ export default function ShopScreen({ navigation }) {
   const points = app.profile?.points || 0
   const coupons = app.profile?.coupons || []
 
+  const [wearing, setWearing] = useState(null)
+  const wear = async (item) => {
+    setWearing(item.id)
+    await app.wearCosmetic(item)
+    setWearing(null)
+  }
+
   const redeem = async (item) => {
     if (picked !== item.id) return setPicked(item.id)
     setBusy(item.id)
@@ -30,7 +37,7 @@ export default function ShopScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="포인트 상점" sub="의뢰를 해결해 모은 포인트를 바꿔요" action="닫기" onAction={() => navigation.goBack()} />
+        <ScreenHeader title="포인트 상점" sub="모은 포인트로 상품을 바꾸거나 프로필을 꾸며요" action="닫기" onAction={() => navigation.goBack()} />
         <Appear from="left">
           <View style={styles.wallet}>
             <View style={styles.slash} />
@@ -69,6 +76,38 @@ export default function ShopScreen({ navigation }) {
         })}
         {app.shop.length === 0 ? <Empty title="준비된 상품이 없어요" /> : null}
 
+        {app.cosmetics.length > 0 ? (
+          <>
+            <SectionTitle>프로필 꾸미기</SectionTitle>
+            {app.cosmetics.map((it) => {
+              const can = it.owned || (!it.locked && points >= it.cost)
+              const label = it.equipped ? '착용 중' : it.owned ? '착용' : it.locked ? `Lv.${it.level}` : wearing === it.id ? '구매 중…' : '구매'
+              return (
+                <Card key={it.id} style={styles.item}>
+                  <View style={[styles.thumb, it.kind === 'frame' ? { borderWidth: 3, borderColor: it.color } : null]}>
+                    {it.kind === 'name' ? <Text style={[text.section, { color: it.color }]}>가</Text> : null}
+                  </View>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={text.section}>{it.name}</Text>
+                    {it.cost > 0 ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                        <PointIcon size={16} />
+                        <Text style={[text.num, { fontSize: 16, color: colors.tape }]}>{it.cost.toLocaleString()}</Text>
+                        {it.owned ? <Text style={text.caption}>보유</Text> : null}
+                      </View>
+                    ) : (
+                      <Text style={text.caption}>{it.level > 1 ? `레벨 ${it.level}이 되면 열려요 · 포인트로 살 수 없어요` : '기본'}</Text>
+                    )}
+                  </View>
+                  <Button type={it.equipped ? 'weak' : 'primary'} disabled={it.equipped || !can || wearing === it.id} compact onPress={() => wear(it)}>
+                    {label}
+                  </Button>
+                </Card>
+              )
+            })}
+          </>
+        ) : null}
+
         <SectionTitle>내 쿠폰</SectionTitle>
         {coupons.length === 0 ? <Text style={text.small}>교환한 쿠폰이 여기에 모여요.</Text> : null}
         {coupons.map((c) => (
@@ -80,7 +119,7 @@ export default function ShopScreen({ navigation }) {
             <Text style={[text.monoPoint, { color: colors.tapeInk }]}>{c.code}</Text>
           </View>
         ))}
-        {app.localMode ? <Text style={text.caption}>상품과 가격은 예시예요. 실제 쿠폰 발급은 아직 연결되어 있지 않아요.</Text> : null}
+        {app.localMode ? <Text style={text.caption}>상품·꾸미기 품목과 가격은 예시예요. 실제 쿠폰 발급은 아직 연결되어 있지 않아요.</Text> : null}
       </Screen>
       <Toast />
     </View>

@@ -1,6 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
-import { code, dist, isCrew, isPartner } from '../lib/format'
+import { code, dist, isCrew, isPartner, issueLabel } from '../lib/format'
 import { colors, radius, text } from '../theme'
 import { GiftIcon, HeartIcon, PinIcon } from './Icons'
 import { PressScale } from './Motion'
@@ -30,7 +30,7 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
           {r.title}
         </Text>
         <Text style={text.small} numberOfLines={1}>
-          {[r.partner_name, r.place_label, dist(r.distance_m), r.dong].filter(Boolean).join(' · ')}
+          {[r.partner_name, issueLabel(r.issue_type), r.place_label, dist(r.distance_m), r.dong].filter(Boolean).join(' · ')}
         </Text>
         <View style={styles.bottom}>
           <RewardPills report={r} style={{ flex: 1 }} />

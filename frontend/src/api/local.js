@@ -35,6 +35,22 @@ const SHOP = [
   { id: 4, name: '충주사랑상품권 5,000원', cost: 500 },
 ]
 
+// 프로필 꾸미기(예시 품목·가격). 포인트로 사는 것과 레벨로만 열리는 것을 나눕니다.
+// kind: frame = 프로필 테두리 색, name = 닉네임 색
+const COSMETICS = [
+  { id: 'frame-tape', kind: 'frame', name: '노란 테이프 테두리', color: '#FFD43B', cost: 0, level: 1 },
+  { id: 'frame-blue', kind: 'frame', name: '파란 테두리', color: '#3182F6', cost: 30, level: 1 },
+  { id: 'frame-green', kind: 'frame', name: '초록 테두리', color: '#3DD68C', cost: 60, level: 1 },
+  { id: 'frame-purple', kind: 'frame', name: '보라 테두리', color: '#A97CFF', cost: 120, level: 1 },
+  { id: 'frame-hero', kind: 'frame', name: '골목 지킴이 테두리', color: '#F04452', cost: 0, level: 3 },
+  { id: 'name-white', kind: 'name', name: '기본 닉네임 색', color: '#F2F4F6', cost: 0, level: 1 },
+  { id: 'name-tape', kind: 'name', name: '노란 닉네임', color: '#FFD43B', cost: 80, level: 1 },
+  { id: 'name-green', kind: 'name', name: '동네 정화러 닉네임', color: '#3DD68C', cost: 0, level: 6 },
+]
+const DEFAULT_LOOK = { frame: 'frame-tape', name: 'name-white' }
+const lookOf = (me) => ({ ...DEFAULT_LOOK, ...(me.look || {}) })
+const colorOf = (id) => COSMETICS.find((c) => c.id === id)?.color || null
+
 // 제휴 의뢰 예시 1건. 서버가 없어 제휴처가 올릴 경로가 없으므로 앱이 하나를 넣어 둡니다.
 // 인증이 가능하도록 처음 받은 내 위치에서 약 60m 떨어진 곳에 둡니다. 보상 금액은 예시값입니다.
 const PARTNER = {
@@ -170,6 +186,7 @@ function view(r, me, from) {
     description: r.description,
     place_type: r.place_type,
     place_label: label,
+    issue_type: r.issue_type || null,
     lat: r.lat,
     lng: r.lng,
     address: r.address,
@@ -285,10 +302,12 @@ export async function getMyProfile() {
   // 내가 해결한 의뢰 기록(최근 순). 완료된 의뢰는 지우지 않고 기록으로 남깁니다.
   const cleaned = [...me.completed].reverse().map((c) => {
     const r = db.reports.find((x) => x.id === c.id)
-    return { id: c.id, at: c.at, title: r?.title || '지워진 의뢰', place_label: r ? (PLACE[r.place_type] || PLACE.etc)[0] : null }
+    return { id: c.id, at: c.at, issue_type: r?.issue_type || null, title: r?.title || '지워진 의뢰', place_label: r ? (PLACE[r.place_type] || PLACE.etc)[0] : null }
   })
   return {
     id: me.id,
+    frame_color: colorOf(lookOf(me).frame),
+    name_color: colorOf(lookOf(me).name),
     cleaned,
     nickname: me.nickname,
     xp: me.xp,
@@ -317,7 +336,7 @@ export async function setNickname(nickname) {
 // 사진은 촬영 결과 주소를 그대로 가리킵니다(웹은 data: 주소, 폰은 앱 캐시 파일).
 export const photoUrl = (path) => path || null
 
-export async function createReport(userId, { title, placeType, description, requiredMembers, shot, address, dong }) {
+export async function createReport(userId, { title, placeType, issueType, description, requiredMembers, shot, address, dong }) {
   const db = await load()
   const photo = await keepPhoto(shot.uri)
   const id = db.nextId++
@@ -326,6 +345,7 @@ export async function createReport(userId, { title, placeType, description, requ
     title,
     description,
     place_type: placeType,
+    issue_type: issueType || 'litter',
     lat: shot.lat,
     lng: shot.lng,
     address,
@@ -473,4 +493,47 @@ export async function redeemItem(itemId) {
   ;(db.user.coupons = db.user.coupons || []).unshift({ name: item.name, code, at: new Date().toISOString() })
   await save()
   return { coupon_code: code, item: item.name, points: db.user.points }
+}
+
+// ── 프로필 꾸미기 ──────────────────────────────────────
+export async function getCosmetics() {
+  const { user: me } = await load()
+  const owned = me.cosmetics || []
+  const look = lookOf(me)
+  const level = levelOf(me.xp)
+  return COSMETICS.map((c) => ({
+    ...c,
+    // 포인트로 사는 품목은 산 뒤에, 레벨 품목은 레벨이 되면 내 것이 됩니다.
+    owned: c.cost === 0 ? level >= c.level : owned.includes(c.id),
+    locked: level < c.level,
+    equipped: look[c.kind] === c.id,
+  }))
+}
+
+export async function buyCosmetic(id) {
+  const db = await load()
+  const me = db.user
+  const c = COSMETICS.find((x) => x.id === id)
+  if (!c) fail('COSMETIC_NOT_FOUND')
+  if (levelOf(me.xp) < c.level) fail('LEVEL_TOO_LOW')
+  me.cosmetics = me.cosmetics || []
+  if (c.cost > 0 && !me.cosmetics.includes(id)) {
+    if (me.points < c.cost) fail('NOT_ENOUGH_POINTS')
+    me.points -= c.cost
+    me.cosmetics.push(id)
+  }
+  me.look = { ...lookOf(me), [c.kind]: id } // 사면 바로 착용
+  await save()
+  return { points: me.points }
+}
+
+export async function equipCosmetic(id) {
+  const db = await load()
+  const me = db.user
+  const c = COSMETICS.find((x) => x.id === id)
+  if (!c) fail('COSMETIC_NOT_FOUND')
+  const mine = c.cost === 0 ? levelOf(me.xp) >= c.level : (me.cosmetics || []).includes(id)
+  if (!mine) fail('LEVEL_TOO_LOW')
+  me.look = { ...lookOf(me), [c.kind]: id }
+  await save()
 }

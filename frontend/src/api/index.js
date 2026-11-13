@@ -10,4 +10,6 @@ const impl = hasSupabase ? remote : local
 export const { getSession, onAuthChange, signInAnonymously, signOut, getNearbyReports, toggleLike, acceptReport, cancelParticipation, getMyProfile, setNickname, photoUrl, createReport, submitProof, getCrews, getMyCrew, getShopItems, redeemItem, createCrew, joinCrew, leaveCrew } = impl
 // 기기 저장소 모드에서만 있는 기능: 이 기기의 기록 지우기
 export const resetLocal = isLocal ? local.resetLocal : null
+// 프로필 꾸미기도 서버에 아직 없어 기기 저장소 모드에서만 동작합니다(docs/backend-requests.md 요청).
+export const cosmeticsApi = isLocal ? { list: local.getCosmetics, buy: local.buyCosmetic, equip: local.equipCosmetic } : null
 export { errorText } from './errors'

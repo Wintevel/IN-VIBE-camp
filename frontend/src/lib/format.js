@@ -16,3 +16,16 @@ export const isPartner = (r) => r.kind === 'partner'
 
 // 보상 표시: 제휴 의뢰는 제휴처 보상, 포인트가 붙은 의뢰는 포인트, 아니면 경험치
 export const reward = (r) => (r.reward_value ? { value: r.reward_value, unit: r.reward_unit } : r.reward_points > 0 ? { value: r.reward_points, unit: 'POINT' } : { value: r.reward_xp ?? 0, unit: 'XP' })
+
+// 제보 유형. 환경 미화 범위 안에서만 나눕니다. 값은 서버와 같아야 합니다.
+export const ISSUES = [
+  ['litter', '쓰레기'],
+  ['dumping', '무단 투기'],
+  ['bin', '넘친 쓰레기통'],
+  ['drain', '빗물받이 막힘'],
+  ['graffiti', '낙서'],
+]
+export const issueLabel = (key) => (ISSUES.find(([k]) => k === key) || [])[1] || null
+
+// 레벨 칭호. 백엔드 docs/api.md 의 라벨과 같게 둡니다.
+export const levelTitle = (level) => (level >= 10 ? '클린 히어로' : level >= 6 ? '동네 정화러' : level >= 3 ? '골목 지킴이' : '새싹 줍줍러')

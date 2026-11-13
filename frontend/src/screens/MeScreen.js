@@ -6,6 +6,7 @@ import { Card, List, SectionTitle } from '../components/ListRows'
 import ReportCard from '../components/ReportCard'
 import Screen from '../components/Screen'
 import { Empty, Loading, refresher } from '../components/States'
+import { levelTitle } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
 
@@ -25,11 +26,11 @@ export default function MeScreen({ navigation }) {
   return (
     <Screen refreshControl={refresher(app)}>
       <View style={styles.me}>
-        <View style={styles.avatar}>
-          <Text style={[text.h1, { fontSize: 26, color: colors.tape }]}>{(p.nickname || '줍').slice(0, 1)}</Text>
+        <View style={[styles.avatar, p.frame_color && { borderColor: p.frame_color }]}>
+          <Text style={[text.h1, { fontSize: 26, color: p.frame_color || colors.tape }]}>{(p.nickname || '줍').slice(0, 1)}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[text.cardTitle, { fontSize: 20 }]}>{p.nickname}</Text>
+          <Text style={[text.cardTitle, { fontSize: 20 }, p.name_color && { color: p.name_color }]}>{p.nickname}</Text>
           <Text style={[text.small, { marginTop: 4 }]}>{[app.myCrew ? app.myCrew.name : '크루 없음', p.streak_weeks > 0 ? `${p.streak_weeks}주 연속 활동 중` : null].filter(Boolean).join(' · ')}</Text>
         </View>
         <Text onPress={() => navigation.navigate('Settings')} style={[text.chip, styles.settings]} accessibilityRole="button">
@@ -43,7 +44,7 @@ export default function MeScreen({ navigation }) {
             <XpIcon size={18} />
             <Text style={text.small}>레벨</Text>
           </View>
-          <Text style={text.num}>Lv.{p.level}</Text>
+          <Text style={text.num}>Lv.{p.level} · {levelTitle(p.level)}</Text>
         </View>
         <Bar ratio={progress} color={colors.blue} track={colors.panel2} />
         <View style={styles.row}>

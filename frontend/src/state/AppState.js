@@ -21,6 +21,7 @@ export function AppStateProvider({ children }) {
   const [crews, setCrews] = useState([])
   const [myCrew, setMyCrew] = useState(null)
   const [shop, setShop] = useState([])
+  const [cosmetics, setCosmetics] = useState([])
   const [celebrate, setCelebrate] = useState(null) // 의뢰 완료 연출에 쓸 보상 정보
   const [photos, setPhotos] = useState({}) // { [reportId]: { before, after } }
   const [draftPhoto, setDraftPhoto] = useState(null)
@@ -72,6 +73,7 @@ export function AppStateProvider({ children }) {
       setCrews((await api.getCrews()) || [])
       setMyCrew(await api.getMyCrew())
       setShop((await api.getShopItems()) || [])
+      if (api.cosmeticsApi) setCosmetics(await api.cosmeticsApi.list())
     } catch {
       // 프로필은 다음 새로고침에서 다시 시도
     }
@@ -133,6 +135,7 @@ export function AppStateProvider({ children }) {
       crews,
       myCrew,
       shop,
+      cosmetics,
       celebrate,
       dismissCelebrate: () => setCelebrate(null),
       localMode: api.isLocal,
@@ -246,6 +249,15 @@ export function AppStateProvider({ children }) {
           showToast(`${item.name} 교환 완료 · 쿠폰 ${d.coupon_code}`)
           return d
         }),
+      // 꾸미기: 내 것이면 착용, 아니면 포인트로 사서 바로 착용합니다.
+      wearCosmetic: (item) =>
+        run(async () => {
+          if (item.owned) await api.cosmeticsApi.equip(item.id)
+          else await api.cosmeticsApi.buy(item.id)
+          await loadProfile()
+          showToast(item.owned ? `${item.name}(으)로 바꿨어요` : `${item.name} 구매 완료`)
+          return true
+        }),
       saveNickname: (nickname) =>
         run(async () => {
           await api.setNickname(nickname)
@@ -254,7 +266,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
