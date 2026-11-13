@@ -9,6 +9,11 @@ import { Empty, Loading, refresher } from '../components/States'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
 
+const day = (t) => {
+  const d = new Date(t)
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`
+}
+
 export default function MeScreen({ navigation }) {
   const app = useApp()
   const p = app.profile
@@ -81,6 +86,13 @@ export default function MeScreen({ navigation }) {
         <>
           <SectionTitle>받은 제휴 보상</SectionTitle>
           <List rows={p.rewards.map((w, i) => ({ label: w.label, value: w.from, key: i }))} />
+        </>
+      ) : null}
+
+      {p.cleaned?.length > 0 ? (
+        <>
+          <SectionTitle>내가 치운 곳</SectionTitle>
+          <List rows={p.cleaned.slice(0, 10).map((c) => ({ label: c.title, value: [c.place_label, day(c.at)].filter(Boolean).join(' · '), key: `${c.id}-${c.at}` }))} />
         </>
       ) : null}
 

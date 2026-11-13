@@ -62,7 +62,7 @@
 | 로그인 | `supabase.auth.signInWith...` | 방식 미정? (카카오·구글·이메일) |
 | 제보 목록 | `from('reports').select().eq('status','open')` | 위치 기반 정렬은 RPC `reports_nearby(lat,lng,radius)` ? |
 | 제보 올리기 | 사진은 Storage `report-photos` 업로드 후 `from('reports').insert(...)` | |
-| 하트 | `from('report_hearts').insert({report_id})` | 한 사람 1회. 취소는 delete |
+| 하트 | `from('report_hearts').insert({report_id})` | 한 사람 1회. 취소 없음(2026-11-13 프론트 반영: 앱이 누른 뒤 4초 동안만 되돌리기를 받고 그 뒤에 insert 합니다. 서버도 delete 를 막아 주세요 — 백엔드 요청) |
 | 승격(자동) | 하트 insert 시 트리거로 `heart_count` 증가, 서버 내부 기준 초과 시 `status='promoted'` 처리와 포인트 적립(`point_ledger`) | 기준값 ? 앱에는 노출하지 않음. 프론트는 제보 목록에서 `status` 를 "주민 제보" 라벨로만 보여줌 |
 | 의뢰 목록 | `from('quests').select().eq('status','open')` | 근처순 RPC `quests_nearby` ? |
 | 의뢰 수락 | `from('quest_claims').insert(...)` | 동시 수락 허용 여부 ? |
