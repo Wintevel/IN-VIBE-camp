@@ -41,7 +41,7 @@ src/api/               index.js 가 구현을 고름: remote.js(Supabase) / loca
 
 ## 웹 미리보기와 배포
 - PC 브라우저: `npx expo start --web`
-- `main` 에 `frontend/` 변경이 합쳐지면 `.github/workflows/deploy-web.yml` 이 웹으로 빌드해 GitHub Pages 에 올립니다. 주소는 `https://wintevel.github.io/IN-VIBE-camp_TeamChjChj_JubQuest/` 입니다. 저장소 Settings > Pages 의 Source 가 "GitHub Actions" 여야 합니다.
+- `main` 에 `frontend/` 변경이 합쳐지면 `.github/workflows/deploy-web.yml` 이 웹으로 빌드해 GitHub Pages 에 올립니다. 주소는 `https://wintevel.github.io/IN-VIBE-camp/` 입니다. 저장소 Settings > Pages 의 Source 가 "GitHub Actions" 여야 합니다.
 - 웹은 미리보기용입니다. 실제 인증(카메라·위치 신뢰도)은 폰 앱 기준입니다.
 
 ## 지도
