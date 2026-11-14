@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native'
+import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native'
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg'
 import { colors, text } from '../theme'
 import { ND, reduced } from './Motion'
@@ -35,7 +35,7 @@ function useLoop(duration, on) {
   return v
 }
 
-export default function AvatarFrame({ frame, size = 64, letter, letterColor }) {
+export default function AvatarFrame({ frame, size = 64, letter, letterColor, uri }) {
   const f = frame || { style: 'plain', colors: [colors.tape] }
   const part = PARTS[f.style] || PARTS.plain
   const cs = f.colors?.length ? f.colors : [colors.tape]
@@ -51,9 +51,13 @@ export default function AvatarFrame({ frame, size = 64, letter, letterColor }) {
   return (
     <View style={{ width: size, height: size }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <View style={[styles.fill, { backgroundColor: colors.panel2, borderRadius: size / 2 }]} />
-      <View style={styles.center}>
-        <Text style={[text.h1, { fontSize: size * 0.4, lineHeight: size * 0.5, color: letterColor || cs[0] }]}>{letter}</Text>
-      </View>
+      {uri ? (
+        <Image source={{ uri }} style={[styles.fill, { width: size, height: size, borderRadius: size / 2 }]} resizeMode="cover" />
+      ) : (
+        <View style={styles.center}>
+          <Text style={[text.h1, { fontSize: size * 0.4, lineHeight: size * 0.5, color: letterColor || cs[0] }]}>{letter}</Text>
+        </View>
+      )}
       <View style={{ position: 'absolute', left: -pad, top: -pad, width: box, height: box }} pointerEvents="none">
         {part.double ? (
           <Animated.View style={[styles.fill, { opacity: 0.55, transform: [{ rotate: turn.interpolate({ inputRange: [0, 1], outputRange: ['360deg', '0deg'] }) }] }]}>

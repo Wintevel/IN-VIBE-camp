@@ -19,6 +19,14 @@
         {
           "locationWhenInUsePermission": "의뢰 장소 근처인지 확인하기 위해 위치를 사용합니다."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "프로필 사진을 고르기 위해 사진 보관함을 사용합니다.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "ios": {

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
-import { code, dist, isCrew, isPartner, remain, issueLabel, MARK_LABELS, FLAG_REASONS } from '../lib/format'
+import { code, dist, isCrew, isPartner, remain, issueLabel, MARK_LABELS, FLAG_REASONS, placeText } from '../lib/format'
 import { navigationRef } from '../navigation/ref'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
@@ -33,7 +33,7 @@ export default function QuestSheet() {
 
   const kv = [
     ['유형', issueLabel(r.issue_type)],
-    ['장소', [r.place_label, r.address].filter(Boolean).join(' · ')],
+    ['장소', [r.place_label, r.spot, placeText(r.address)].filter(Boolean).join(' · ')],
     ['거리', dist(r.distance_m)],
     r.reward_label ? ['제휴 보상', r.reward_label] : null,
     isCrew(r) ? ['인원', `${r.current_members}/${r.required_members}명`] : null,

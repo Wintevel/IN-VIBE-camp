@@ -12,6 +12,9 @@ export function remain(deadline) {
   return h > 0 ? `${h}시간 ${m}분 남음` : `${m}분 남음`
 }
 
+// 예전 제보에 주소 대신 저장된 좌표 숫자("37.45000, 126.65000")는 보여 주지 않습니다.
+export const placeText = (address) => (!address || /^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(address) ? '' : address)
+
 export const isPartner = (r) => r.kind === 'partner'
 
 // 보상 표시: 제휴 의뢰는 제휴처 보상, 포인트가 붙은 의뢰는 포인트, 아니면 경험치
@@ -28,7 +31,7 @@ export const ISSUES = [
 export const issueLabel = (key) => (ISSUES.find(([k]) => k === key) || [])[1] || null
 
 // 레벨 칭호. 업적 이름처럼 가볍게 붙입니다(프론트 표시용, 서버 값과 무관).
-const TITLES = [
+export const TITLES = [
   [20, '줍다 보니 여기까지 옴'],
   [15, '전설의 줍줍러'],
   [12, '지구가 감사 인사 보냄'],

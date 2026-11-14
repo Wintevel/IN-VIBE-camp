@@ -103,7 +103,7 @@ const save = async () => {
 }
 
 // 웹은 사진이 data: 주소로 저장소(약 5MB)에 들어가므로 작게 줄여 둡니다.
-async function keepPhoto(uri) {
+async function keepPhoto(uri, max = 640) {
   if (Platform.OS !== 'web' || !uri?.startsWith('data:')) return uri
   try {
     const img = new Image()
@@ -112,7 +112,7 @@ async function keepPhoto(uri) {
       img.onerror = no
       img.src = uri
     })
-    const scale = Math.min(1, 640 / img.width)
+    const scale = Math.min(1, max / Math.max(img.width, img.height))
     const c = document.createElement('canvas')
     c.width = Math.round(img.width * scale)
     c.height = Math.round(img.height * scale)
@@ -236,6 +236,7 @@ function view(r, me, from) {
     lat: r.lat,
     lng: r.lng,
     address: r.address,
+    spot: r.spot || '',
     dong: r.dong,
     photo_path: r.photo_path,
     status: r.status,
@@ -361,6 +362,22 @@ export async function getMyProfile() {
     frame: frameOf(me),
     name_color: item(lookOf(me).name).colors[0],
     cleaned,
+    avatar_url: me.avatar || null,
+    title_key: me.title || null,
+    // 최근 8주 동안 주마다 해결한 수(오래된 주부터). 내 정보의 활동 그래프에 씁니다.
+    weekly: Array.from({ length: 8 }, (_, i) => {
+      const w = kstWeek(Date.now()) - (7 - i)
+      return me.completed.filter((c) => kstWeek(c.at) === w).length
+    }),
+    // 도전과제·도감 계산에 쓰는 누적 값
+    stats: {
+      completed: me.completed.length,
+      hearts: (me.hearts || []).length,
+      reports: db.reports.filter((r) => r.reporter_id === me.id).length,
+      rewards: (me.rewards || []).length,
+      places: tally(me.completed.map((c) => db.reports.find((x) => x.id === c.id)?.place_type)),
+      issues: tally(me.completed.map((c) => db.reports.find((x) => x.id === c.id)?.issue_type)),
+    },
     nickname: me.nickname,
     xp: me.xp,
     points: me.points,
@@ -379,6 +396,22 @@ export async function getMyProfile() {
   }
 }
 
+const tally = (keys) => keys.filter(Boolean).reduce((m, k) => ((m[k] = (m[k] || 0) + 1), m), {})
+
+// 프로필 사진. 웹은 작게 줄여 저장하고, 폰은 고른 사진의 파일 주소를 그대로 가리킵니다. null 이면 기본(닉네임 첫 글자).
+export async function setAvatar(uri) {
+  const db = await load()
+  db.user.avatar = uri ? await keepPhoto(uri, 256) : null
+  await save()
+}
+
+// 내가 고른 칭호. 'lv:3'(레벨 칭호) 또는 'ach:first'(도전과제 칭호). null 이면 지금 레벨 칭호.
+export async function setTitle(key) {
+  const db = await load()
+  db.user.title = key || null
+  await save()
+}
+
 export async function setNickname(nickname) {
   const db = await load()
   db.user.nickname = nickname
@@ -388,7 +421,7 @@ export async function setNickname(nickname) {
 // 사진은 촬영 결과 주소를 그대로 가리킵니다(웹은 data: 주소, 폰은 앱 캐시 파일).
 export const photoUrl = (path) => path || null
 
-export async function createReport(userId, { title, placeType, issueType, description, requiredMembers, shot, address, dong }) {
+export async function createReport(userId, { title, placeType, issueType, description, requiredMembers, shot, address, dong, spot }) {
   const db = await load()
   const photo = await keepPhoto(shot.uri)
   const id = db.nextId++
@@ -402,6 +435,7 @@ export async function createReport(userId, { title, placeType, issueType, descri
     lng: shot.lng,
     address,
     dong,
+    spot: spot || '',
     photo_path: photo,
     status: 'open',
     likes: [],

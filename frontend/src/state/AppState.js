@@ -165,6 +165,7 @@ export function AppStateProvider({ children }) {
       cosmetics,
       notices,
       social: !!api.socialApi,
+      canStyle: !!api.profileApi,
       dash,
       // 화면을 가로지르는 속도선과 함께 다음 화면으로 넘어갑니다.
       dashTo: (then) => setDash({ id: Date.now(), then }),
@@ -307,6 +308,20 @@ export function AppStateProvider({ children }) {
           else await api.cosmeticsApi.buy(item.id)
           await loadProfile()
           showToast(item.owned ? `${item.name}(으)로 바꿨어요` : `${item.name} 구매 완료`)
+          return true
+        }),
+      saveAvatar: (uri) =>
+        run(async () => {
+          await api.profileApi.setAvatar(uri)
+          await loadProfile()
+          showToast(uri ? '프로필 사진을 바꿨어요' : '기본 프로필로 돌아갔어요')
+          return true
+        }),
+      saveTitle: (key, label) =>
+        run(async () => {
+          await api.profileApi.setTitle(key)
+          await loadProfile()
+          showToast(`칭호를 "${label}"(으)로 바꿨어요`)
           return true
         }),
       saveNickname: (nickname) =>

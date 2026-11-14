@@ -17,9 +17,9 @@ const PLACES = [
   ['etc', '기타'],
 ]
 
-// 좌표 → 주소. 웹 등 지원하지 않는 환경에서는 좌표를 그대로 씁니다.
+// 좌표 → 주소. 웹 등 주소를 못 구하는 환경에서는 비워 둡니다(좌표 숫자는 사람이 읽을 수 없어 보여 주지 않음).
 async function lookup(shot) {
-  const fallback = { address: `${shot.lat.toFixed(5)}, ${shot.lng.toFixed(5)}`, dong: '' }
+  const fallback = { address: '', dong: '' }
   try {
     const [g] = await Location.reverseGeocodeAsync({ latitude: shot.lat, longitude: shot.lng })
     if (!g) return fallback
@@ -36,6 +36,7 @@ export default function ReportCreateScreen({ navigation, route }) {
   const app = useApp()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [spot, setSpot] = useState('')
   const [placeType, setPlaceType] = useState('drain')
   const [issueType, setIssueType] = useState('litter')
   const [members, setMembers] = useState(crew ? 2 : 1)
@@ -46,7 +47,7 @@ export default function ReportCreateScreen({ navigation, route }) {
   const submit = async () => {
     setBusy(true)
     const where = await lookup(shot)
-    const ok = await app.createReport({ title: title.trim(), description: description.trim(), placeType, issueType, requiredMembers: members, shot, ...where })
+    const ok = await app.createReport({ title: title.trim(), description: description.trim(), placeType, issueType, requiredMembers: members, shot, spot: spot.trim(), ...where })
     setBusy(false)
     if (!ok) return
     app.setDraftPhoto(null)
@@ -76,6 +77,9 @@ export default function ReportCreateScreen({ navigation, route }) {
 
       <Text style={text.section}>장소 종류</Text>
       <FilterChips options={PLACES} value={placeType} onChange={setPlaceType} />
+
+      <Text style={text.section}>어디쯤인가요 (선택)</Text>
+      <TextInput value={spot} onChangeText={setSpot} placeholder="예) ○○편의점 앞 전봇대 밑" placeholderTextColor={colors.disabled} style={styles.input} maxLength={30} accessibilityLabel="위치 설명" />
 
       <Text style={text.section}>설명 (선택)</Text>
       <TextInput value={description} onChangeText={setDescription} placeholder="상황을 간단히 적어 주세요" placeholderTextColor={colors.disabled} style={[styles.input, { minHeight: 88, textAlignVertical: 'top' }]} multiline maxLength={200} />

@@ -106,3 +106,14 @@ export function PinIcon({ size = 22, color = colors.disabled }) {
     </Svg>
   )
 }
+
+// 도전과제·도감: 리본 달린 별 메달(보라)
+export function BadgeIcon({ size = 18, color = colors.purple }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M8 13.5 6 22l6-3 6 3-2-8.5" fill={color} opacity={0.55} />
+      <Circle cx={12} cy={9.5} r={7.5} fill={color} />
+      <Path d="M12 5.2l1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z" fill={colors.ink} />
+    </Svg>
+  )
+}
