@@ -26,6 +26,17 @@ export default function App() {
   const [partner, setPartner] = useState(api.partner())
   const [tick, setTick] = useState(0)
   const refresh = () => setTick((t) => t + 1)
+  // 서버에 연결된 빌드는 로그인 상태와 업체 정보를 먼저 받아 옵니다.
+  const [ready, setReady] = useState(!api.remote)
+  const [down, setDown] = useState(null)
+  useEffect(() => {
+    if (!api.remote) return
+    api
+      .init()
+      .then(() => setPartner(api.partner()))
+      .catch((e) => setDown(e.message))
+      .finally(() => setReady(true))
+  }, [])
   const needLogin = route !== 'home' && !partner
 
   return (
@@ -48,8 +59,8 @@ export default function App() {
             <b>{partner.name}</b>
             <button
               className="link"
-              onClick={() => {
-                api.leave()
+              onClick={async () => {
+                await api.leave()
                 setPartner(null)
                 go('home')
               }}
@@ -64,12 +75,23 @@ export default function App() {
         )}
       </header>
 
-      <div className="demo" role="note">
-        시연용 화면입니다. 아직 서버에 연결되지 않아 입력한 내용은 이 브라우저에만 저장되고, 앱에는 올라가지 않습니다.
-      </div>
+      {api.remote ? null : (
+        <div className="demo" role="note">
+          시연용 화면입니다. 아직 서버에 연결되지 않아 입력한 내용은 이 브라우저에만 저장되고, 앱에는 올라가지 않습니다.
+        </div>
+      )}
+      {down ? (
+        <div className="demo" role="alert">
+          서버에서 정보를 받지 못했어요. {down}
+        </div>
+      ) : null}
 
       <main>
-        {needLogin ? (
+        {!ready ? (
+          <section className="card narrow center">
+            <p className="sub">불러오는 중…</p>
+          </section>
+        ) : needLogin ? (
           <Start onDone={setPartner} />
         ) : route === 'new' ? (
           <NewQuest partner={partner} onDone={() => (refresh(), go('quests'))} />
@@ -137,14 +159,77 @@ function Home() {
 function Start({ onDone }) {
   const [name, setName] = useState('')
   const [manager, setManager] = useState('')
+  const [signedIn, setSignedIn] = useState(api.signedIn())
+  const [mode, setMode] = useState('in')
+  const [email, setEmail] = useState('')
+  const [pw, setPw] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState(null)
+  const run = async (fn) => {
+    setBusy(true)
+    setMsg(null)
+    try {
+      await fn()
+    } catch (e) {
+      setMsg(e.message)
+    }
+    setBusy(false)
+  }
+
+  // 서버에 연결된 빌드: 먼저 이메일로 로그인합니다. 계정 하나가 업체 하나에 연결됩니다.
+  if (!signedIn)
+    return (
+      <section className="card narrow">
+        <h2>{mode === 'in' ? '로그인' : '가입하기'}</h2>
+        <p className="sub">업체 계정은 이메일로 만들어요. 계정 하나에 업체 하나가 연결됩니다.</p>
+        <div className="seg" role="radiogroup" aria-label="로그인 또는 가입">
+          {[
+            ['in', '로그인'],
+            ['up', '처음이에요'],
+          ].map(([k, label]) => (
+            <label key={k} className={mode === k ? 'on' : ''}>
+              <input type="radio" name="mode" checked={mode === k} onChange={() => setMode(k)} />
+              {label}
+            </label>
+          ))}
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            run(async () => {
+              const d = await api.signIn(email.trim(), pw, mode)
+              if (d === 'confirm') {
+                setMode('in')
+                setMsg('가입 확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요.')
+                return
+              }
+              if (api.partner()) onDone(api.partner())
+              else setSignedIn(true)
+            })
+          }}
+        >
+          <Field label="이메일">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
+          </Field>
+          <Field label="비밀번호" hint="6자 이상">
+            <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} minLength={6} autoComplete={mode === 'in' ? 'current-password' : 'new-password'} required />
+          </Field>
+          {msg ? <p className="err">{msg}</p> : null}
+          <button className="btn" disabled={busy}>
+            {busy ? '확인 중…' : mode === 'in' ? '로그인' : '가입하기'}
+          </button>
+        </form>
+      </section>
+    )
+
   return (
     <section className="card narrow">
       <h2>업체 정보를 알려 주세요</h2>
-      <p className="sub">지금은 시연용이라 이름만 받아요. 실제 서비스에서는 사업자 확인과 로그인이 들어갑니다.</p>
+      <p className="sub">{api.remote ? '등록하면 운영진에게 알림이 가요. 사업자 확인은 운영진이 따로 연락드려요.' : '지금은 시연용이라 이름만 받아요. 실제 서비스에서는 사업자 확인과 로그인이 들어갑니다.'}</p>
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          if (name.trim()) onDone(api.start(name, manager))
+          if (name.trim()) run(async () => onDone(await api.start(name, manager)))
         }}
       >
         <Field label="업체·기관 이름">
@@ -153,8 +238,9 @@ function Start({ onDone }) {
         <Field label="담당자 이름 (선택)">
           <input value={manager} onChange={(e) => setManager(e.target.value)} maxLength={20} />
         </Field>
-        <button className="btn" disabled={!name.trim()}>
-          시작하기
+        {msg ? <p className="err">{msg}</p> : null}
+        <button className="btn" disabled={!name.trim() || busy}>
+          {busy ? '등록 중…' : '시작하기'}
         </button>
       </form>
     </section>
@@ -185,11 +271,15 @@ function NewQuest({ partner, onDone }) {
     <div className="split">
       <form
         className="card"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
           if (errors.length) return
-          api.create({ ...q, reward_amount: Number(q.reward_amount), capacity: Number(q.capacity) })
-          onDone()
+          try {
+            await api.create({ ...q, reward_amount: Number(q.reward_amount), capacity: Number(q.capacity) })
+            onDone()
+          } catch (err) {
+            window.alert(err.message)
+          }
         }}
       >
         <h2>의뢰 만들기</h2>
@@ -330,8 +420,12 @@ function Quests({ onChange }) {
                   <p className="sub">운영진이 확인하고 있어요. 보통 영업일 기준 하루 안에 답을 드려요.</p>
                   <button
                     className="btn ghost small"
-                    onClick={() => {
-                      api.cancel(q.id)
+                    onClick={async () => {
+                      try {
+                        await api.cancel(q.id)
+                      } catch (err) {
+                        window.alert(err.message)
+                      }
                       onChange()
                     }}
                   >

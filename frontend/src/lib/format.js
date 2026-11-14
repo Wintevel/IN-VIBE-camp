@@ -1,4 +1,9 @@
-export const code = (id) => `Q-${String(id).padStart(4, '0')}`
+// 서버 모드의 id 는 q12(의뢰) / r3(아직 의뢰가 아닌 제보) 모양입니다.
+export const code = (id) => {
+  const s = String(id)
+  const m = /^([qr])(\d+)$/.exec(s)
+  return m ? `${m[1].toUpperCase()}-${m[2].padStart(4, '0')}` : `Q-${s.padStart(4, '0')}`
+}
 export const dist = (m) => (m == null ? '' : m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`)
 export const isCrew = (r) => (r.required_members || 1) > 1
 

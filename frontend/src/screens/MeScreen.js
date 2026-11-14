@@ -104,6 +104,20 @@ export default function MeScreen({ navigation }) {
         </Pressable>
       </View>
 
+      {app.guest ? (
+        <Pressable
+          onPress={() => app.signOut()}
+          accessibilityRole="button"
+          style={styles.guest}
+        >
+          <Text style={[text.small, { flex: 1, color: colors.fg }]}>
+            둘러보는 중이에요. 제보·하트·의뢰 해결은 로그인한 뒤에 할 수
+            있어요.
+          </Text>
+          <Text style={[text.chip, { color: colors.blue }]}>로그인</Text>
+        </Pressable>
+      ) : null}
+
       <Card style={{ gap: 8 }}>
         <View style={styles.row}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -396,6 +410,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.pill,
+  },
+  guest: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: radius.lg,
+    backgroundColor: colors.blueWeak,
   },
   wallet: {
     flexDirection: "row",

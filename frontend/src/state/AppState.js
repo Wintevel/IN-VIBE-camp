@@ -10,6 +10,7 @@ const Ctx = createContext(null)
 const FALLBACK = { lat: 37.452, lng: 126.656 }
 const SESSION_WAIT_MS = 5000
 const TUTORIAL_KEY = 'jipgepyo:tutorial-seen'
+const CONSENT_KEY = 'jipgepyo:consent' // 로그인 화면이 기기에 남기는 동의 기록
 const HEART_UNDO_MS = 4000 // 하트를 누른 뒤 되돌릴 수 있는 시간
 
 export function AppStateProvider({ children }) {
@@ -85,8 +86,8 @@ export function AppStateProvider({ children }) {
       setCrews((await api.getCrews()) || [])
       setMyCrew(await api.getMyCrew())
       setShop((await api.getShopItems()) || [])
-      if (api.cosmeticsApi) setCosmetics(await api.cosmeticsApi.list())
-      if (api.socialApi) setNotices(await api.socialApi.notices())
+      setCosmetics((await api.cosmeticsApi.list()) || [])
+      setNotices((await api.socialApi.notices()) || [])
     } catch {
       // 프로필은 다음 새로고침에서 다시 시도
     }
@@ -110,6 +111,17 @@ export function AppStateProvider({ children }) {
   )
 
   const userId = session?.user?.id
+  // 서버 모드의 둘러보기(익명) 계정. 읽기만 되고 쓰기는 서버가 막습니다.
+  const guest = !api.isLocal && !!session?.user?.is_anonymous
+  // 로그인한 계정의 가입 동의를 서버에 남깁니다. 서버는 필수 동의가 없으면 쓰기 기능을 막습니다.
+  useEffect(() => {
+    if (!api.authApi || !userId || guest) return
+    ;(async () => {
+      if ((await api.authApi.getConsent())?.ok) return // 이미 서버에 있음
+      const v = await AsyncStorage.getItem(CONSENT_KEY)
+      if (v) await api.authApi.saveConsent(JSON.parse(v).items || {})
+    })().catch(() => {})
+  }, [userId, guest])
   useEffect(() => {
     if (userId) refresh({ relocate: true })
     else {
@@ -153,6 +165,11 @@ export function AppStateProvider({ children }) {
       },
       replayTutorial: () => setTutorialSeen(false),
       userId,
+      guest,
+      emailAuth: !!api.authApi,
+      signInEmail: (email, password) => run(() => api.authApi.signIn(email, password)),
+      // 메일 확인이 켜진 서버에서는 가입 직후 로그인되지 않습니다. 그때는 'confirm' 을 돌려줍니다.
+      signUpEmail: (email, password) => run(async () => (await api.authApi.signUp(email, password)) || 'confirm'),
       coords,
       located,
       reports,
@@ -204,7 +221,11 @@ export function AppStateProvider({ children }) {
       signIn: () => run(api.signInAnonymously),
       signOut: () => api.signOut(),
       resetLocal: api.resetLocal ? () => api.resetLocal() : null,
-      setPhoto: (id, slot, shot) => setPhotos((p) => ({ ...p, [id]: { ...p[id], [slot]: shot } })),
+      setPhoto: (id, slot, shot) => {
+        setPhotos((p) => ({ ...p, [id]: { ...p[id], [slot]: shot } }))
+        // 서버는 사진이 올라온 시각으로 "찍고 바로 완료"를 판정하므로 찍자마자 올립니다.
+        if (api.uploadProofPhoto) run(() => api.uploadProofPhoto(userId, id, slot, shot))
+      },
       // 하트는 취소할 수 없습니다. 누른 뒤 몇 초 동안만 되돌릴 수 있고, 그 시간이 지나야 서버에 보내 확정합니다.
       // 되돌린 하트는 서버에 가지 않으므로 포인트·하트 수·하루 횟수에 아무 영향이 없습니다.
       toggleHeart: (id) => {
@@ -339,7 +360,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, tutorialSeen, userId, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, notices, dash, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, tutorialSeen, userId, guest, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, notices, dash, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

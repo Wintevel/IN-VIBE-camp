@@ -1,7 +1,13 @@
 // 제휴업체 웹의 데이터 계층입니다.
-// 지금은 서버가 없어 브라우저 저장소(localStorage)에만 저장합니다.
-// Supabase 가 준비되면 이 파일의 함수 안쪽만 바꾸면 화면은 그대로 씁니다.
-// 필요한 서버 작업은 docs/backend-requests.md 의 "제휴업체 웹" 항목을 보세요.
+// .env 에 VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY 가 있으면 서버(Supabase)에 연결하고,
+// 없으면 시연용으로 브라우저 저장소(localStorage)에만 저장합니다. 두 구현은 같은 함수와 같은 모양을 가집니다.
+// 서버 호출 이름은 docs/api.md 의 "제휴업체 웹"과 맞춥니다.
+import { createClient } from '@supabase/supabase-js'
+
+const SB_URL = import.meta.env.VITE_SUPABASE_URL
+const SB_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY // anon(publishable) key 만 넣습니다
+export const remote = !!(SB_URL && SB_KEY)
+const sb = remote ? createClient(SB_URL, SB_KEY) : null
 
 const KEY = 'jipgepyo:partner:v1'
 
@@ -49,7 +55,10 @@ function sample(db) {
   ]
 }
 
-export const api = {
+const local = {
+  remote: false,
+  init: async () => {},
+  signedIn: () => true,
   partner: () => read().partner,
   start(name, manager) {
     const db = read()
@@ -97,3 +106,96 @@ export const api = {
     }
   },
 }
+
+// ── 서버 연결 ─────────────────────────────────────────
+const ERRORS = {
+  NOT_PARTNER: '업체 등록이 필요해요',
+  INVALID_NAME: '업체 이름은 2~30자로 적어 주세요',
+  INVALID_INPUT: '입력한 내용을 다시 확인해 주세요',
+  CANNOT_CANCEL: '검토 중인 의뢰만 취소할 수 있어요',
+  LOGIN_REQUIRED: '로그인이 필요해요',
+  'Invalid login credentials': '이메일이나 비밀번호가 맞지 않아요',
+  'Email not confirmed': '메일로 보낸 확인 링크를 먼저 눌러 주세요',
+  'User already registered': '이미 가입한 이메일이에요. 로그인해 주세요',
+  'Password should be': '비밀번호는 6자 이상으로 정해 주세요',
+}
+const check = (error) => {
+  if (!error) return
+  const msg = error.message || ''
+  const k = Object.keys(ERRORS).find((x) => msg.includes(x))
+  throw new Error(k ? ERRORS[k] : /fetch|network/i.test(msg) ? '서버에 연결하지 못했어요' : msg || '문제가 생겼어요')
+}
+const rpc = async (name, args) => {
+  const { data, error } = await sb.rpc(name, args)
+  check(error)
+  return data
+}
+const NO_REPORT = { quests: 0, joined: 0, completed: 0, paid: 0, daily: [0, 0, 0, 0, 0, 0, 0], byPlace: [], rows: [], photos: [] }
+// 화면은 값을 바로 읽으므로, 서버에서 받은 값을 여기에 두고 바뀔 때마다 다시 받습니다.
+const cache = { signedIn: false, partner: null, quests: [], report: NO_REPORT }
+async function load() {
+  cache.partner = (await rpc('partner_me')) || null
+  if (!cache.partner) {
+    cache.quests = []
+    cache.report = NO_REPORT
+    return
+  }
+  const [quests, report] = await Promise.all([rpc('partner_quests'), rpc('partner_report')])
+  cache.quests = quests || []
+  cache.report = { ...NO_REPORT, ...(report || {}) }
+}
+
+const server = {
+  remote: true,
+  async init() {
+    const { data } = await sb.auth.getSession()
+    cache.signedIn = !!data.session
+    if (cache.signedIn) await load()
+  },
+  signedIn: () => cache.signedIn,
+  // mode: 'in' 로그인 | 'up' 가입. 메일 확인이 켜진 서버에서는 가입 직후 로그인되지 않아 'confirm' 을 돌려줍니다.
+  async signIn(email, password, mode = 'in') {
+    const { data, error } = mode === 'up' ? await sb.auth.signUp({ email, password }) : await sb.auth.signInWithPassword({ email, password })
+    check(error)
+    if (!data.session) return 'confirm'
+    cache.signedIn = true
+    await load()
+    return 'ok'
+  },
+  partner: () => cache.partner,
+  async start(name, manager) {
+    await rpc('partner_register', { p_name: name.trim(), p_manager: manager.trim() || null })
+    await load()
+    return cache.partner
+  },
+  async leave() {
+    await sb.auth.signOut()
+    Object.assign(cache, { signedIn: false, partner: null, quests: [], report: NO_REPORT })
+  },
+  reset() {},
+  quests: () => cache.quests,
+  async create(q) {
+    const made = await rpc('partner_create_quest', {
+      p_title: q.title,
+      p_description: q.description,
+      p_place_type: q.place_type,
+      p_place_name: q.place_name,
+      p_address: q.address,
+      p_proof_mode: q.proof_mode,
+      p_reward_type: q.reward_type,
+      p_reward_amount: q.reward_amount,
+      p_capacity: q.capacity,
+      p_starts_on: q.starts_on,
+      p_ends_on: q.ends_on,
+    })
+    await load()
+    return made
+  },
+  async cancel(id) {
+    await rpc('partner_cancel_quest', { p_quest_id: id })
+    await load()
+  },
+  report: () => cache.report,
+}
+
+export const api = remote ? server : local
