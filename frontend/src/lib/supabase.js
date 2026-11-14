@@ -9,7 +9,7 @@ const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 export const hasSupabase = !!(url && anonKey)
 
 // anon key 는 앱에 포함되는 공개 키입니다. 접근 제어는 Supabase RLS 정책으로 합니다.
-export const supabase = createClient(url ?? 'http://localhost', anonKey ?? 'missing', {
+export const supabase = createClient(url || 'http://localhost', anonKey || 'missing', {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
