@@ -62,3 +62,12 @@ insert into public.reports (author_id, title, description, category, lat, lng, a
    37.46490, 126.68020, '인천 미추홀구 주안역 3번 출구', 3, 15),
   (null, '학익동 버스정류장 뒤 쓰레기', '정류장 뒤편 공터에 봉지째 버려진 쓰레기가 있어요.', '버스정류장',
    37.44090, 126.66550, '인천 미추홀구 학익동 버스정류장', 1, 20);
+
+-- 2026-11-14: 시연용 표시와 장소 유형 (원격 DB 에는 마이그레이션 20261113194800 에서 같은 처리를 했습니다)
+update public.partners set is_demo = true;
+update public.crews set is_demo = true where owner_id is null;
+update public.reports set is_demo = true where author_id is null;
+update public.quests set is_demo = true where requester_id is null;
+update public.quests set category = '골목·거리' where title in ('인하대 후문 골목 담배꽁초 수거', '토요일 오전 크루 합동 줍깅');
+update public.quests set category = '공원' where title = '용현동 공원 산책로 줍깅';
+update public.reports set visible_at = null where author_id is null;  -- 시드 제보는 바로 공개
