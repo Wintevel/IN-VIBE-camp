@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import AvatarFrame from '../components/AvatarFrame'
 import Button from '../components/Button'
 import { GiftIcon, PointIcon } from '../components/Icons'
-import { Card, SectionTitle } from '../components/ListRows'
+import { Card, ListRow, SectionTitle } from '../components/ListRows'
 import { Appear, CountUp } from '../components/Motion'
 import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
@@ -20,12 +19,6 @@ export default function ShopScreen({ navigation }) {
   const points = app.profile?.points || 0
   const coupons = app.profile?.coupons || []
 
-  const [wearing, setWearing] = useState(null)
-  const wear = async (item) => {
-    setWearing(item.id)
-    await app.wearCosmetic(item)
-    setWearing(null)
-  }
 
   const redeem = async (item) => {
     if (picked !== item.id) return setPicked(item.id)
@@ -38,7 +31,7 @@ export default function ShopScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="포인트 상점" sub="모은 포인트로 상품을 바꾸거나 프로필을 꾸며요" action="닫기" onAction={() => navigation.goBack()} />
+        <ScreenHeader title="포인트 상점" sub="모은 포인트로 상품을 바꿔요" action="닫기" onAction={() => navigation.goBack()} />
         <Appear from="left">
           <View style={styles.wallet}>
             <View style={styles.slash} />
@@ -77,56 +70,13 @@ export default function ShopScreen({ navigation }) {
         })}
         {app.shop.length === 0 ? <Empty title="준비된 상품이 없어요" /> : null}
 
-        {app.cosmetics.length > 0 ? (
-          <>
-            <SectionTitle>프로필 꾸미기</SectionTitle>
-            {app.cosmetics.map((it) => {
-              const can = it.owned || (!it.locked && points >= it.cost)
-              const label = it.equipped ? '착용 중' : it.owned ? '착용' : it.locked ? `Lv.${it.level}` : wearing === it.id ? '구매 중…' : '구매'
-              return (
-                <Card key={it.id} style={styles.item}>
-                  {it.kind === 'frame' ? (
-                    <View style={styles.framePreview}>
-                      <AvatarFrame frame={it} size={40} letter="줍" />
-                    </View>
-                  ) : (
-                    <View style={styles.thumb}>
-                      <Text style={[text.section, { color: it.colors[0] }]}>가</Text>
-                    </View>
-                  )}
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={text.section}>{it.name}</Text>
-                    {it.cost > 0 ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                        <PointIcon size={16} />
-                        <Text style={[text.num, { fontSize: 16, color: colors.tape }]}>{it.cost.toLocaleString()}</Text>
-                        {it.owned ? <Text style={text.caption}>보유</Text> : null}
-                      </View>
-                    ) : (
-                      <Text style={text.caption}>{it.level > 1 ? `레벨 ${it.level}이 되면 열려요 · 포인트로 살 수 없어요` : '기본'}</Text>
-                    )}
-                  </View>
-                  <Button type={it.equipped ? 'weak' : 'primary'} disabled={it.equipped || !can || wearing === it.id} compact onPress={() => wear(it)}>
-                    {label}
-                  </Button>
-                </Card>
-              )
-            })}
-          </>
-        ) : null}
-
-        <SectionTitle>내 쿠폰</SectionTitle>
-        {coupons.length === 0 ? <Text style={text.small}>교환한 쿠폰이 여기에 모여요.</Text> : null}
-        {coupons.map((c) => (
-          <View key={c.code} style={styles.coupon}>
-            <View style={{ flex: 1 }}>
-              <Text style={[text.section, { color: colors.tapeInk }]}>{c.name}</Text>
-              <Text style={[text.caption, { color: colors.tapeInk, opacity: 0.7 }]}>{new Date(c.at).toLocaleDateString('ko-KR')}</Text>
-            </View>
-            <Text style={[text.monoPoint, { color: colors.tapeInk }]}>{c.code}</Text>
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
+          {app.canStyle ? <ListRow label="프로필 꾸미기" value="테두리·닉네임 색·칭호" onPress={() => navigation.navigate('Style')} /> : null}
+          <View style={app.canStyle && { borderTopWidth: 1, borderTopColor: colors.line }}>
+            <ListRow label="보관함" value={`쿠폰·제휴 보상 ${coupons.length + (app.profile?.rewards || []).length}개`} onPress={() => navigation.navigate('Vault')} />
           </View>
-        ))}
-        {app.localMode ? <Text style={text.caption}>상품·꾸미기 품목과 가격은 예시예요. 실제 쿠폰 발급은 아직 연결되어 있지 않아요.</Text> : null}
+        </Card>
+        {app.localMode ? <Text style={text.caption}>상품과 가격은 예시예요. 실제 쿠폰 발급은 아직 연결되어 있지 않아요.</Text> : null}
       </Screen>
       <Toast />
     </View>
@@ -137,7 +87,5 @@ const styles = StyleSheet.create({
   wallet: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius.lg, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.tape, overflow: 'hidden' },
   slash: { position: 'absolute', right: 30, top: -30, bottom: -30, width: 60, backgroundColor: 'rgba(255,212,59,0.12)', transform: [{ skewX: '-18deg' }] },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
-  framePreview: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   thumb: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
-  coupon: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.tape, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12 },
 })

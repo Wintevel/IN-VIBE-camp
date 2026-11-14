@@ -8,6 +8,7 @@ import { useApp } from '../state/AppState'
 import { colors, text } from '../theme'
 import BoardScreen from '../screens/BoardScreen'
 import CaptureScreen from '../screens/CaptureScreen'
+import CollectionScreen from '../screens/CollectionScreen'
 import CrewScreen from '../screens/CrewScreen'
 import HelpScreen from '../screens/HelpScreen'
 import LoginScreen from '../screens/LoginScreen'
@@ -17,6 +18,8 @@ import MeScreen from '../screens/MeScreen'
 import ProofScreen from '../screens/ProofScreen'
 import ReportCreateScreen from '../screens/ReportCreateScreen'
 import ShopScreen from '../screens/ShopScreen'
+import StyleScreen from '../screens/StyleScreen'
+import VaultScreen from '../screens/VaultScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 import TutorialScreen from '../screens/TutorialScreen'
 
@@ -68,6 +71,9 @@ export default function RootNavigator() {
             <Stack.Screen name="Capture" component={CaptureScreen} options={{ presentation: 'fullScreenModal' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
+            <Stack.Screen name="Style" component={StyleScreen} />
+            <Stack.Screen name="Collection" component={CollectionScreen} />
+            <Stack.Screen name="Vault" component={VaultScreen} />
             <Stack.Screen name="Help" component={HelpScreen} />
             <Stack.Screen name="Proof" component={ProofScreen} />
             <Stack.Screen name="Notices" component={NoticesScreen} />
