@@ -44,3 +44,18 @@ const TITLES = [
   [1, '일단 주워 봄'],
 ]
 export const levelTitle = (level) => (TITLES.find(([min]) => level >= min) || TITLES[TITLES.length - 1])[1]
+
+// 이웃 상태 버튼. 하트 옆에 나란히 둡니다(1인 1개, 바꿀 수 있음).
+export const MARK_LABELS = [
+  ['still', '아직 있어요'],
+  ['gone', '치워졌어요'],
+  ['worse', '더 늘었어요'],
+]
+// 신고 사유
+export const FLAG_REASONS = [
+  ['photo', '부적절한 사진'],
+  ['fake', '장난·허위 제보'],
+  ['privacy', '얼굴·번호판 노출'],
+  ['danger', '위험한 장소'],
+  ['etc', '기타'],
+]

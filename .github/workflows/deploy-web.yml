@@ -3,7 +3,7 @@ name: 웹 미리보기 배포 (GitHub Pages)
 on:
   push:
     branches: [main]
-    paths: ['frontend/**', '.github/workflows/deploy-web.yml']
+    paths: ['frontend/**', 'web/**', '.github/workflows/deploy-web.yml']
   workflow_dispatch:
 
 permissions:
@@ -32,6 +32,9 @@ jobs:
       - run: npx expo export --platform web
       # 새로고침·직접 주소 진입 대비, 그리고 _expo 폴더가 Jekyll 에 걸러지지 않게 함
       - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
+      # 제휴업체용 웹(web/)을 같은 사이트의 /partner/ 아래에 함께 올립니다
+      - run: npm ci && npm run build && cp -r dist ../frontend/dist/partner
+        working-directory: web
       - uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/dist

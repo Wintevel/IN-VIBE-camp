@@ -51,6 +51,7 @@ const COSMETICS = [
   { id: 'name-tape', kind: 'name', name: '노란 닉네임', colors: ['#FFD43B'], cost: 80, level: 1 },
   { id: 'name-mint', kind: 'name', name: '민트 닉네임', colors: ['#7DF9FF'], cost: 0, level: 4 },
 ]
+const MARKS = ['still', 'gone', 'worse']
 const DEFAULT_LOOK = { frame: 'frame-tape', name: 'name-white' }
 const item = (id) => COSMETICS.find((c) => c.id === id)
 // 저장된 착용 품목이 목록에서 빠졌으면 기본으로 돌아갑니다.
@@ -227,6 +228,9 @@ function view(r, me, from) {
     place_label: label,
     issue_type: r.issue_type || null,
     is_mine: r.reporter_id === me.id,
+    // 이웃이 누르는 상태 버튼(1인 1개, 바꿀 수 있음): still 아직 있어요 · gone 치워졌어요 · worse 더 늘었어요
+    marks: MARKS.reduce((o, k) => ({ ...o, [k]: Object.values(r.marks || {}).filter((v) => v === k).length }), {}),
+    my_mark: (r.marks || {})[me.id] || null,
     // 공개 전(올리고 3분 안)이면 공개될 시각. 공개 전 제보는 올린 사람에게만 보입니다.
     pending_until: r.visible_at && new Date(r.visible_at).getTime() > Date.now() ? r.visible_at : null,
     lat: r.lat,
@@ -261,6 +265,7 @@ export async function getNearbyReports({ lat, lng, radiusM = 1500 }) {
   sweep(db)
   await save()
   return db.reports
+    .filter((r) => !(db.user.flags || []).some((f) => f.report_id === r.id)) // 내가 신고한 제보는 내 목록에서 숨깁니다
     .filter((r) => r.reporter_id === db.user.id || !r.visible_at || new Date(r.visible_at).getTime() <= Date.now())
     .map((r) => view(r, db.user, { lat, lng }))
     .filter((r) => r.distance_m <= radiusM)
@@ -455,6 +460,10 @@ export async function submitProof(userId, id, before, after) {
   r.before_path = await keepPhoto(before.uri)
   r.after_path = await keepPhoto(after.uri)
   r.completed_at = new Date().toISOString()
+  // 해결되면 제보한 사람과 하트를 누른 사람에게 알려 사진을 보고 확인하게 합니다(해결한 본인은 제외).
+  const watchers = [...new Set([r.reporter_id, ...r.likes])].filter((u) => u && u !== me.id && u !== 'partner')
+  db.notices = db.notices || []
+  for (const u of watchers) db.notices.push({ id: db.nextId++, to: u, report_id: r.id, title: r.title, solver: me.nickname, before_path: r.before_path, after_path: r.after_path, single: r.proof_mode === 'single', at: r.completed_at, answer: null })
   await save()
   return { xp_gained: xp, points_gained: points, crew_xp_gained: crewXp, title: r.title, reward_label: r.reward_label || null, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points, streak_weeks: streak(me.completed) }
 }
@@ -595,5 +604,40 @@ export async function equipCosmetic(id) {
   const mine = c.cost === 0 ? levelOf(me.xp) >= c.level : (me.cosmetics || []).includes(id)
   if (!mine) fail('LEVEL_TOO_LOW')
   me.look = { ...lookOf(me), [c.kind]: id }
+  await save()
+}
+
+// ── 상태 버튼 · 해결 확인 알림 · 신고 ───────────────────
+export async function setMark(id, mark) {
+  const { r, me } = await find(id)
+  if (!MARKS.includes(mark)) fail('REPORT_NOT_OPEN')
+  r.marks = r.marks || {}
+  if (r.marks[me.id] === mark) delete r.marks[me.id] // 같은 걸 다시 누르면 해제
+  else r.marks[me.id] = mark
+  await save()
+}
+
+// 내가 제보했거나 하트를 누른 의뢰가 해결됐다는 알림. 사진을 보고 "치워졌어요 / 아직이에요"로 답합니다.
+export async function getNotices() {
+  const db = await load()
+  return (db.notices || []).filter((n) => n.to === db.user.id).reverse()
+}
+
+export async function answerNotice(noticeId, answer) {
+  const db = await load()
+  const n = (db.notices || []).find((x) => x.id === noticeId && x.to === db.user.id)
+  if (!n || n.answer) return
+  n.answer = answer === 'ok' ? 'ok' : 'not'
+  n.answered_at = new Date().toISOString()
+  // "아직이에요"가 나오면 의뢰에 이의 표시를 남깁니다. 포인트 회수 같은 처리는 서버(운영진)가 정합니다.
+  const r = db.reports.find((x) => x.id === n.report_id)
+  if (r && n.answer === 'not') r.disputes = (r.disputes || 0) + 1
+  await save()
+}
+
+export async function reportAbuse(id, reason) {
+  const { me } = await find(id)
+  me.flags = me.flags || []
+  if (!me.flags.some((f) => f.report_id === id)) me.flags.push({ report_id: id, reason, at: new Date().toISOString() })
   await save()
 }

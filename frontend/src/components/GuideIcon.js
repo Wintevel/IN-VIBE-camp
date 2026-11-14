@@ -1,4 +1,4 @@
-import { View } from 'react-native'
+import { Text, View } from 'react-native'
 import { colors } from '../theme'
 import { CameraIcon, HeartIcon, PointIcon, TabIcon } from './Icons'
 
@@ -6,6 +6,6 @@ import { CameraIcon, HeartIcon, PointIcon, TabIcon } from './Icons'
 export default function GuideIcon({ name, size = 56 }) {
   const s = size * 0.5
   const icon =
-    name === 'camera' ? <CameraIcon size={s} color={colors.fg} /> : name === 'heart' ? <HeartIcon size={s} filled color={colors.red} /> : name === 'point' ? <PointIcon size={s} /> : <TabIcon name={name} color={colors.blue} size={s} />
+    name === 'alert' ? <Text style={{ fontSize: s, lineHeight: s * 1.15, fontWeight: '900', color: colors.red }}>!</Text> : name === 'camera' ? <CameraIcon size={s} color={colors.fg} /> : name === 'heart' ? <HeartIcon size={s} filled color={colors.red} /> : name === 'point' ? <PointIcon size={s} /> : <TabIcon name={name} color={colors.blue} size={s} />
   return <View style={{ width: size, height: size, borderRadius: size * 0.3, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' }}>{icon}</View>
 }

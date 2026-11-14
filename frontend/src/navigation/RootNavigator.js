@@ -12,7 +12,9 @@ import CrewScreen from '../screens/CrewScreen'
 import HelpScreen from '../screens/HelpScreen'
 import LoginScreen from '../screens/LoginScreen'
 import MapScreen from '../screens/MapScreen'
+import NoticesScreen from '../screens/NoticesScreen'
 import MeScreen from '../screens/MeScreen'
+import ProofScreen from '../screens/ProofScreen'
 import ReportCreateScreen from '../screens/ReportCreateScreen'
 import ShopScreen from '../screens/ShopScreen'
 import SettingsScreen from '../screens/SettingsScreen'
@@ -67,6 +69,8 @@ export default function RootNavigator() {
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
             <Stack.Screen name="Help" component={HelpScreen} />
+            <Stack.Screen name="Proof" component={ProofScreen} />
+            <Stack.Screen name="Notices" component={NoticesScreen} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />

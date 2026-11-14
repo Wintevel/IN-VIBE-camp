@@ -4,6 +4,7 @@ import { View } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import ClearOverlay from './src/components/ClearOverlay'
 import QuestSheet from './src/components/QuestSheet'
+import SpeedDash from './src/components/SpeedDash'
 import Toast from './src/components/Toast'
 import RootNavigator from './src/navigation/RootNavigator'
 import { AppStateProvider } from './src/state/AppState'
@@ -19,6 +20,7 @@ export default function App() {
           <RootNavigator />
           <QuestSheet />
           <Toast />
+          <SpeedDash />
           <ClearOverlay />
         </View>
         <StatusBar style="light" />

@@ -12,4 +12,6 @@ export const { getSession, onAuthChange, signInAnonymously, signOut, getNearbyRe
 export const resetLocal = isLocal ? local.resetLocal : null
 // 프로필 꾸미기도 서버에 아직 없어 기기 저장소 모드에서만 동작합니다(docs/backend-requests.md 요청).
 export const cosmeticsApi = isLocal ? { list: local.getCosmetics, buy: local.buyCosmetic, equip: local.equipCosmetic } : null
+// 상태 버튼·해결 확인 알림·신고도 서버에 아직 없어 기기 저장소 모드에서만 동작합니다.
+export const socialApi = isLocal ? { mark: local.setMark, notices: local.getNotices, answer: local.answerNotice, flag: local.reportAbuse } : null
 export { errorText } from './errors'

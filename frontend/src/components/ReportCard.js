@@ -1,6 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
-import { code, dist, isCrew, isPartner, issueLabel } from '../lib/format'
+import { code, dist, isCrew, isPartner, issueLabel, MARK_LABELS } from '../lib/format'
 import { colors, radius, text } from '../theme'
 import { GiftIcon, HeartIcon, PinIcon } from './Icons'
 import { PressScale } from './Motion'
@@ -11,6 +11,9 @@ import Stamp from './Stamp'
 export default function ReportCard({ report: r, onPress, onHeart }) {
   const done = r.status === 'completed'
   const img = photoUrl(r.photo_path)
+  // 가장 많이 눌린 상태 하나만 하트 옆에 보여 줍니다.
+  const best = MARK_LABELS.map(([k, name]) => [r.marks?.[k] || 0, name]).sort((a, b) => b[0] - a[0])[0]
+  const topMark = best && best[0] > 0 ? `${best[1]} ${best[0]}` : null
   return (
     <PressScale onPress={onPress} accessibilityRole="button" to={0.975} style={[styles.card, r.i_am_participating && !done && styles.accepted, (done || r.pending_until) && { opacity: 0.55 }]}>
       <View style={styles.thumb}>
@@ -35,6 +38,11 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
         </Text>
         <View style={styles.bottom}>
           <RewardPills report={r} style={{ flex: 1 }} />
+          {topMark ? (
+            <View style={styles.mark}>
+              <Text style={[text.chip, { color: colors.sub }]}>{topMark}</Text>
+            </View>
+          ) : null}
           <Pressable onPress={onHeart} hitSlop={6} accessibilityRole="button" accessibilityLabel="하트" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.heart, r.liked_by_me && styles.heartOn]}>
             <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sub} />
             <Text style={[text.chip, { color: r.liked_by_me ? colors.red : colors.sub }]}>{r.like_count ?? 0}</Text>
@@ -55,6 +63,7 @@ const styles = StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
   bottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 2 },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.panel2 },
+  mark: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
   heartOn: { backgroundColor: colors.redSoft },
   edge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: colors.blue },
 })

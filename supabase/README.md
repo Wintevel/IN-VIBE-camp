@@ -19,7 +19,10 @@ npx supabase db push     # migrations/ 를 원격에 적용
 테이블·API 는 [`../docs/api.md`](../docs/api.md) 에 있습니다. 이 폴더의 마이그레이션이 기준입니다.
 
 ## 현재 상태
-- 원격 프로젝트 ref: `ziyycebeszrrwnhtpqmr` (IN:VIBE CAMP). `migrations/` 의 3개 파일이 원격에 적용돼 있고, 파일 이름의 버전이 원격 마이그레이션 기록과 같습니다.
-- 시연용 데이터는 `seed.sql` (원격에는 이미 넣어 둠). 로컬은 `supabase db reset` 시 자동 실행됩니다.
+- 원격 프로젝트 ref: `ziyycebeszrrwnhtpqmr` (IN:VIBE CAMP). `migrations/` 의 6개 파일이 원격에 적용돼 있고, 파일 이름의 버전이 원격 마이그레이션 기록과 같습니다.
+  - `20261111…`: 처음 스키마·함수 (PR #5)
+  - `20261113194340_requests_schema`, `…194636_requests_functions`, `…194800_requests_data`: `docs/backend-requests.md` 1~3번 반영 (2026-11-14)
+- 시연용 데이터는 `seed.sql` (원격에는 이미 넣어 둠, `is_demo = true`). 로컬은 `supabase db reset` 시 자동 실행됩니다.
 - 대시보드 설정: Authentication > Anonymous sign-ins 켜 둠.
-- 서버 내부 값(승격 기준 하트 수, 하트당 점수, 인증 반경, 하루 상한 등)은 `public.app_settings` 한 줄에 있고 클라이언트는 읽을 수 없습니다. 값을 바꿀 땐 마이그레이션으로 update 합니다.
+- 서버 내부 값(승격 기준 하트 수, 하트당 점수, 하트 하루 상한, XP·레벨 기준, 인증 반경, 하루 상한, 제보 공개 지연 등)은 `public.app_settings` 한 줄에 있고 클라이언트는 읽을 수 없습니다. 값을 바꿀 땐 마이그레이션으로 update 합니다.
+- 예약 작업(pg_cron): `jubquest-expire-stale`(5분마다 만료 정리), `jubquest-next-season`(매일 00:05 KST 다음 시즌 생성).

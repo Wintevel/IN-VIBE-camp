@@ -7,6 +7,7 @@
 |---|---|---|
 | `frontend/` | 프론트엔드(한재준) | `frontend/CLAUDE.md` |
 | `supabase/` | 백엔드(팀원) | `supabase/CLAUDE.md` |
+| `web/` | 프론트엔드(한재준) | `web/README.md` |
 | `docs/api.md` | 공동 (둘 다 합의) | 아래 "계약" |
 | 루트 파일(`README.md`, `.gitignore`, `CLAUDE.md`) | 공동 | 바꾸면 PR 설명에 이유를 적기 |
 
