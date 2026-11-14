@@ -1,15 +1,15 @@
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
 import AvatarFrame from "../components/AvatarFrame";
 import DailyLimits from "../components/DailyLimits";
-import { BadgeIcon, PointIcon, XpIcon } from "../components/Icons";
+import { BadgeIcon, GearIcon, PointIcon, XpIcon } from "../components/Icons";
 import { Appear, Bar, CountUp, PressScale } from "../components/Motion";
 import { Card, List, SectionTitle } from "../components/ListRows";
 import ReportCard from "../components/ReportCard";
 import Screen from "../components/Screen";
 import { Empty, Loading, refresher } from "../components/States";
 import {
-  DEX_TOTAL,
-  dexCount,
   progress,
   statsOf,
   titleText,
@@ -47,61 +47,61 @@ export default function MeScreen({ navigation }) {
     (r) => r.i_am_participating && r.status !== "completed",
   );
   const s = statsOf(p, app.myCrew);
-  const feats = progress(s);
+  const feats = progress(s, p.feats_claimed || []);
+  const ready = feats.filter((a) => a.done && !a.claimed).length;
   const weekly = p.weekly || [];
-  const top = Math.max(1, ...weekly);
+  // 오른쪽 끝에서부터 이어진 주가 연속 활동 구간입니다.
+  const streakLen =
+    (p.streak_weeks || 0) + (weekly[weekly.length - 1] ? 0 : 1);
   const vault = (p.coupons || []).length + (p.rewards || []).length;
   const waiting = app.notices.filter((n) => !n.answer).length;
+  const title = titleText(p, app.myCrew);
   return (
     <Screen refreshControl={refresher(app)}>
       <View style={styles.me}>
-        <Pressable
-          onPress={() => app.canStyle && navigation.navigate("Style")}
-          accessibilityRole={app.canStyle ? "button" : undefined}
-          accessibilityLabel="프로필 꾸미기 열기"
-        >
+        <View style={{ alignItems: "center", gap: 8 }}>
           <AvatarFrame
             frame={p.frame}
             size={64}
             letter={(p.nickname || "줍").slice(0, 1)}
             uri={p.avatar_url}
           />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text
-            style={[
-              text.cardTitle,
-              { fontSize: 20 },
-              p.name_color && { color: p.name_color },
-            ]}
-          >
-            {p.nickname}
-          </Text>
-          <Text style={[text.chip, { color: colors.tape, marginTop: 2 }]}>
-            {titleText(p, app.myCrew)}
+          {app.canStyle ? (
+            <Pressable
+              onPress={() => navigation.navigate("Style")}
+              accessibilityRole="button"
+              accessibilityLabel="프로필 꾸미기 열기"
+              style={styles.chip}
+            >
+              <Text style={[text.chip, { color: colors.fg }]}>꾸미기</Text>
+            </Pressable>
+          ) : null}
+        </View>
+        <View style={{ flex: 1, alignSelf: "flex-start", paddingTop: 8 }}>
+          <Text style={[text.cardTitle, { fontSize: 20 }]}>
+            <Text style={p.name_color && { color: p.name_color }}>
+              {p.nickname}
+            </Text>
+            {title ? (
+              <Text style={[text.chip, { color: colors.tape }]}>
+                {" · "}
+                {title}
+              </Text>
+            ) : null}
           </Text>
           <Text style={[text.small, { marginTop: 4 }]}>
             {app.myCrew ? app.myCrew.name : "크루 없음"}
           </Text>
         </View>
-        <View style={{ gap: 6 }}>
-          {app.canStyle ? (
-            <Text
-              onPress={() => navigation.navigate("Style")}
-              style={[text.chip, styles.settings]}
-              accessibilityRole="button"
-            >
-              꾸미기
-            </Text>
-          ) : null}
-          <Text
-            onPress={() => navigation.navigate("Settings")}
-            style={[text.chip, styles.settings]}
-            accessibilityRole="button"
-          >
-            설정
-          </Text>
-        </View>
+        <Pressable
+          onPress={() => navigation.navigate("Settings")}
+          accessibilityRole="button"
+          accessibilityLabel="설정"
+          style={[styles.chip, { alignSelf: "flex-start", marginTop: 6 }]}
+        >
+          <GearIcon size={15} />
+          <Text style={[text.chip, { color: colors.fg }]}>설정</Text>
+        </Pressable>
       </View>
 
       <Card style={{ gap: 8 }}>
@@ -123,57 +123,55 @@ export default function MeScreen({ navigation }) {
       </Card>
 
       <Appear from="left">
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        <View style={styles.wallet}>
+          <View style={styles.slash} />
+          <View style={styles.slash2} />
+          <PointIcon size={30} />
           <View style={{ flex: 1 }}>
-            <PressScale
-              onPress={() => navigation.navigate("Collection")}
-              accessibilityRole="button"
-              accessibilityLabel="도전과제와 도감 열기"
-              style={[styles.tile, styles.feats]}
-            >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-              >
-                <BadgeIcon size={22} />
-                <Text style={[text.chip, { color: colors.purple }]}>
-                  도전과제 · 도감
-                </Text>
-              </View>
-              <Text style={[text.point, { color: colors.fg }]}>
-                {feats.filter((a) => a.done).length}
-                <Text style={[text.small, { color: colors.sub }]}>
-                  {" "}
-                  /{feats.length} 달성
-                </Text>
-              </Text>
-              <Text style={text.caption}>
-                도감 {dexCount(s)}/{DEX_TOTAL}
-              </Text>
-            </PressScale>
+            <Text style={text.caption}>내 포인트</Text>
+            <CountUp
+              value={p.points || 0}
+              style={[
+                text.point,
+                { fontSize: 26, lineHeight: 30, color: colors.tape },
+              ]}
+            />
           </View>
-          <View style={{ flex: 1 }}>
-            <PressScale
-              onPress={() => navigation.navigate("Shop")}
-              accessibilityRole="button"
-              accessibilityLabel="포인트 교환 상점 열기"
-              style={[styles.tile, styles.wallet]}
-            >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-              >
-                <PointIcon size={22} />
-                <Text style={[text.chip, { color: colors.tape }]}>
-                  교환 상점
-                </Text>
-              </View>
-              <CountUp
-                value={p.points || 0}
-                style={[text.point, { color: colors.tape }]}
-              />
-              <Text style={text.caption}>내 포인트</Text>
-            </PressScale>
-          </View>
+          <PressScale
+            onPress={() => navigation.navigate("Shop")}
+            accessibilityRole="button"
+            accessibilityLabel="포인트 교환 상점 열기"
+            style={styles.shopBtn}
+          >
+            <Text style={[text.chip, { color: colors.tapeInk }]}>교환 상점</Text>
+          </PressScale>
         </View>
+      </Appear>
+
+      <Appear from="left" index={1}>
+        <PressScale
+          onPress={() => navigation.navigate("Collection")}
+          accessibilityRole="button"
+          accessibilityLabel="도전과제 열기"
+          style={styles.feats}
+        >
+          <BadgeIcon size={24} />
+          <View style={{ flex: 1 }}>
+            <Text style={[text.chip, { color: colors.purple }]}>도전과제</Text>
+            <Text style={[text.small, { marginTop: 2 }]}>
+              {feats.filter((a) => a.done).length}/{feats.length} 달성
+            </Text>
+          </View>
+          {ready > 0 ? (
+            <View style={styles.ready}>
+              <Text style={[text.chip, { color: "#fff" }]}>
+                받을 보상 {ready}개
+              </Text>
+            </View>
+          ) : (
+            <Text style={[text.small, { color: colors.sub }]}>보기</Text>
+          )}
+        </PressScale>
       </Appear>
 
       <SectionTitle>내 활동</SectionTitle>
@@ -193,59 +191,10 @@ export default function MeScreen({ navigation }) {
             </View>
           ))}
         </View>
-        <View
-          style={styles.chart}
-          accessibilityRole="image"
-          accessibilityLabel={`최근 8주 동안 주마다 해결한 수: ${weekly.join(", ")}`}
-        >
-          {weekly.map((n, i) => {
-            const now = i === weekly.length - 1;
-            // 오른쪽 끝에서부터 이어진 주가 연속 활동 구간입니다.
-            const inStreak =
-              weekly.length - 1 - i <
-                (p.streak_weeks || 0) + (weekly[weekly.length - 1] ? 0 : 1) &&
-              n > 0;
-            return (
-              <View key={i} style={styles.col}>
-                <Text
-                  style={[
-                    text.caption,
-                    { color: n > 0 ? colors.fg : colors.disabled },
-                  ]}
-                >
-                  {n}
-                </Text>
-                <View style={styles.track}>
-                  <View
-                    style={{
-                      height: `${Math.max(4, (n / top) * 100)}%`,
-                      borderRadius: 5,
-                      backgroundColor:
-                        n === 0
-                          ? colors.panel2
-                          : inStreak
-                            ? colors.green
-                            : colors.blue,
-                    }}
-                  />
-                </View>
-                <Text
-                  numberOfLines={1}
-                  style={[text.caption, now && { color: colors.fg }]}
-                >
-                  {now
-                    ? "이번주"
-                    : i === weekly.length - 2
-                      ? "지난주"
-                      : `${weekly.length - 1 - i}주 전`}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+        <WeekLine weekly={weekly} streak={streakLen} />
         <Text style={text.caption}>
           {p.streak_weeks > 0
-            ? `초록 막대가 이어진 ${p.streak_weeks}주예요. ${p.active_this_week ? "이번 주도 이어 갔어요" : "이번 주에 한 건만 해결하면 이어져요"}`
+            ? `초록 선이 이어진 ${p.streak_weeks}주예요. ${p.active_this_week ? "이번 주도 이어 갔어요" : "이번 주에 한 건만 해결하면 이어져요"}`
             : "한 주에 한 건만 해결해도 연속 활동이 시작돼요"}
         </Text>
       </Card>
@@ -323,6 +272,109 @@ export default function MeScreen({ navigation }) {
   );
 }
 
+// 최근 8주 해결 수를 선으로 그립니다. 연속 활동 구간은 초록입니다.
+function WeekLine({ weekly, streak }) {
+  const [w, setW] = useState(0);
+  const H = 132;
+  const top = Math.max(1, ...weekly);
+  const n = weekly.length;
+  const padX = 18;
+  const x = (i) => padX + (n > 1 ? (i * (w - padX * 2)) / (n - 1) : 0);
+  const y = (v) => 24 + (1 - v / top) * (H - 24 - 26);
+  const first = Math.max(0, n - streak);
+  const seg = (from, to) =>
+    weekly
+      .slice(from, to + 1)
+      .map((v, k) => `${k ? "L" : "M"}${x(from + k)} ${y(v)}`)
+      .join("");
+  const label = (i) =>
+    i === n - 1 ? "이번주" : i === n - 2 ? "지난주" : `${n - 1 - i}주 전`;
+  return (
+    <View
+      style={{ height: H }}
+      onLayout={(e) => setW(e.nativeEvent.layout.width)}
+      accessibilityRole="image"
+      accessibilityLabel={`최근 ${n}주 동안 주마다 해결한 수: ${weekly.join(", ")}`}
+    >
+      {w > 0 && n > 0 ? (
+        <Svg width={w} height={H}>
+          {[0, 0.5, 1].map((t) => (
+            <Line
+              key={t}
+              x1={0}
+              x2={w}
+              y1={y(top * t)}
+              y2={y(top * t)}
+              stroke={colors.line}
+              strokeWidth={1}
+            />
+          ))}
+          <Path
+            d={seg(0, n - 1)}
+            stroke={colors.blue}
+            strokeWidth={2.5}
+            fill="none"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          {first < n - 1 ? (
+            <Path
+              d={seg(first, n - 1)}
+              stroke={colors.green}
+              strokeWidth={2.5}
+              fill="none"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          ) : null}
+          {weekly.map((v, i) => {
+            const on = i >= first && v > 0;
+            return (
+              <Circle
+                key={i}
+                cx={x(i)}
+                cy={y(v)}
+                r={4}
+                fill={v === 0 ? colors.panel : on ? colors.green : colors.blue}
+                stroke={on ? colors.green : v === 0 ? colors.sub : colors.blue}
+                strokeWidth={2}
+              />
+            );
+          })}
+          {weekly.map((v, i) => (
+            <SvgText
+              key={`v${i}`}
+              x={x(i)}
+              y={y(v) - 9}
+              fontSize={11}
+              fontWeight="700"
+              fill={v > 0 ? colors.fg : colors.disabled}
+              textAnchor="middle"
+            >
+              {v}
+            </SvgText>
+          ))}
+          {weekly.map((v, i) =>
+            i % 2 === (n - 1) % 2 ? (
+              <SvgText
+                key={`l${i}`}
+                x={x(i)}
+                y={H - 4}
+                fontSize={11}
+                fill={i === n - 1 ? colors.fg : colors.sub}
+                textAnchor={i === n - 1 ? "end" : "middle"}
+                dx={i === n - 1 ? 14 : 0}
+              >
+                {label(i)}
+              </SvgText>
+            ) : null,
+          )}
+        </Svg>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   me: {
     flexDirection: "row",
@@ -331,46 +383,69 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     alignItems: "center",
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: colors.panel2,
-    borderWidth: 2,
-    borderColor: colors.tape,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  settings: {
-    color: colors.fg,
-    backgroundColor: colors.panel2,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    overflow: "hidden",
-    ...font.bodyBold,
-  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  tile: {
-    gap: 6,
-    padding: 14,
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: colors.panel2,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+  },
+  wallet: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
     borderRadius: radius.lg,
     backgroundColor: colors.panel,
     borderWidth: 1,
+    borderColor: colors.tape,
+    overflow: "hidden",
+  },
+  slash: {
+    position: "absolute",
+    right: 110,
+    top: -30,
+    bottom: -30,
+    width: 44,
+    backgroundColor: "rgba(255,212,59,0.12)",
+    transform: [{ skewX: "-18deg" }],
+  },
+  slash2: {
+    position: "absolute",
+    right: 168,
+    top: -30,
+    bottom: -30,
+    width: 12,
+    backgroundColor: "rgba(255,212,59,0.12)",
+    transform: [{ skewX: "-18deg" }],
+  },
+  shopBtn: {
+    backgroundColor: colors.tape,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
   },
   feats: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1,
     borderColor: colors.purple,
     backgroundColor: "rgba(169,124,255,0.08)",
   },
-  wallet: {
-    borderColor: colors.tape,
-    backgroundColor: "rgba(255,212,59,0.06)",
+  ready: {
+    backgroundColor: colors.purple,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
   },
-  chart: { flexDirection: "row", gap: 6, height: 132 },
-  col: { flex: 1, alignItems: "center", gap: 4 },
-  track: { flex: 1, alignSelf: "stretch", justifyContent: "flex-end" },
 });

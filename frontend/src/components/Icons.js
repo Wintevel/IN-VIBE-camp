@@ -117,3 +117,18 @@ export function BadgeIcon({ size = 18, color = colors.purple }) {
     </Svg>
   )
 }
+
+// 설정 톱니바퀴
+export function GearIcon({ size = 16, color = colors.fg }) {
+  const p = { ...base, stroke: color }
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Circle cx="12" cy="12" r="6.2" {...p} />
+      <Circle cx="12" cy="12" r="2.2" {...p} />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
+        const a = (deg * Math.PI) / 180
+        return <Path key={deg} d={`M${12 + Math.cos(a) * 7.6} ${12 + Math.sin(a) * 7.6}L${12 + Math.cos(a) * 10} ${12 + Math.sin(a) * 10}`} {...p} strokeWidth={3} />
+      })}
+    </Svg>
+  )
+}

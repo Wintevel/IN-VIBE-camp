@@ -317,11 +317,18 @@ export function AppStateProvider({ children }) {
           showToast(uri ? '프로필 사진을 바꿨어요' : '기본 프로필로 돌아갔어요')
           return true
         }),
+      claimFeat: (feat) =>
+        run(async () => {
+          const d = await api.profileApi.claimFeat(feat.id)
+          await loadProfile()
+          showToast([`+${d.points_gained}P · +${d.xp_gained}XP`, d.cosmetic ? `꾸미기 "${d.cosmetic}" 획득` : null, d.leveled_up ? `Lv.${d.level} 달성` : null].filter(Boolean).join(' · '))
+          return d
+        }),
       saveTitle: (key, label) =>
         run(async () => {
           await api.profileApi.setTitle(key)
           await loadProfile()
-          showToast(`칭호를 "${label}"(으)로 바꿨어요`)
+          showToast(key ? `칭호를 "${label}"(으)로 바꿨어요` : '칭호를 뺐어요')
           return true
         }),
       saveNickname: (nickname) =>

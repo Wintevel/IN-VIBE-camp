@@ -18,6 +18,7 @@ import MeScreen from '../screens/MeScreen'
 import ProofScreen from '../screens/ProofScreen'
 import ReportCreateScreen from '../screens/ReportCreateScreen'
 import ShopScreen from '../screens/ShopScreen'
+import StylePickScreen from '../screens/StylePickScreen'
 import StyleScreen from '../screens/StyleScreen'
 import VaultScreen from '../screens/VaultScreen'
 import SettingsScreen from '../screens/SettingsScreen'
@@ -72,6 +73,7 @@ export default function RootNavigator() {
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
             <Stack.Screen name="Style" component={StyleScreen} />
+            <Stack.Screen name="StylePick" component={StylePickScreen} />
             <Stack.Screen name="Collection" component={CollectionScreen} />
             <Stack.Screen name="Vault" component={VaultScreen} />
             <Stack.Screen name="Help" component={HelpScreen} />
