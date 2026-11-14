@@ -19,10 +19,12 @@ npx supabase db push     # migrations/ 를 원격에 적용
 테이블·API 는 [`../docs/api.md`](../docs/api.md) 에 있습니다. 이 폴더의 마이그레이션이 기준입니다.
 
 ## 현재 상태
-- 원격 프로젝트 ref: `ziyycebeszrrwnhtpqmr` (IN:VIBE CAMP). `migrations/` 의 6개 파일이 원격에 적용돼 있고, 파일 이름의 버전이 원격 마이그레이션 기록과 같습니다.
+- 원격 프로젝트 ref: `ziyycebeszrrwnhtpqmr` (IN:VIBE CAMP). `migrations/` 의 파일이 원격에 적용돼 있고, 파일 이름의 버전이 원격 마이그레이션 기록과 같습니다.
   - `20261111…`: 처음 스키마·함수 (PR #5)
   - `20261113194340_requests_schema`, `…194636_requests_functions`, `…194800_requests_data`: `docs/backend-requests.md` 1~3번 반영 (2026-11-14)
+  - `20261114101545_partner_web`, `…101618_partner_web_description_fix`: 제휴업체 웹 연결 (2-17)
 - 시연용 데이터는 `seed.sql` (원격에는 이미 넣어 둠, `is_demo = true`). 로컬은 `supabase db reset` 시 자동 실행됩니다.
 - 대시보드 설정: Authentication > Anonymous sign-ins 켜 둠.
 - 서버 내부 값(승격 기준 하트 수, 하트당 점수, 하트 하루 상한, XP·레벨 기준, 인증 반경, 하루 상한, 제보 공개 지연 등)은 `public.app_settings` 한 줄에 있고 클라이언트는 읽을 수 없습니다. 값을 바꿀 땐 마이그레이션으로 update 합니다.
+- 운영진 알림: Vault 에 `discord_webhook_url` 를 넣으면 제휴 의뢰 검토 요청·업체 등록 때 디스코드로 알림(pg_net). 제휴 의뢰 승인·반려는 `docs/api.md` "제휴업체 웹" 의 SQL.
 - 예약 작업(pg_cron): `jubquest-expire-stale`(5분마다 만료 정리), `jubquest-next-season`(매일 00:05 KST 다음 시즌 생성).
