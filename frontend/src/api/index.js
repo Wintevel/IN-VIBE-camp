@@ -10,10 +10,11 @@ const impl = hasSupabase ? remote : local
 export const { getSession, onAuthChange, signInAnonymously, signOut, getNearbyReports, toggleLike, acceptReport, cancelParticipation, getMyProfile, setNickname, photoUrl, createReport, submitProof, getCrews, getMyCrew, getShopItems, redeemItem, createCrew, joinCrew, leaveCrew } = impl
 // 기기 저장소 모드에서만 있는 기능: 이 기기의 기록 지우기
 export const resetLocal = isLocal ? local.resetLocal : null
-// 프로필 꾸미기도 서버에 아직 없어 기기 저장소 모드에서만 동작합니다(docs/backend-requests.md 요청).
-export const cosmeticsApi = isLocal ? { list: local.getCosmetics, buy: local.buyCosmetic, equip: local.equipCosmetic } : null
-// 프로필 사진·칭호 선택도 기기 저장소 모드에서만 동작합니다.
-export const profileApi = isLocal ? { setAvatar: local.setAvatar, setTitle: local.setTitle } : null
-// 상태 버튼·해결 확인 알림·신고도 서버에 아직 없어 기기 저장소 모드에서만 동작합니다.
-export const socialApi = isLocal ? { mark: local.setMark, notices: local.getNotices, answer: local.answerNotice, flag: local.reportAbuse } : null
+// 서버 모드에서만 있는 기능: 이메일 로그인, 가입 동의 저장, 인증 사진을 찍자마자 올리기
+export const authApi = isLocal ? null : { signIn: remote.signInEmail, signUp: remote.signUpEmail, saveConsent: remote.saveConsent, getConsent: remote.getConsent }
+export const uploadProofPhoto = isLocal ? null : remote.uploadProofPhoto
+// 아래 묶음은 두 구현이 같은 모양으로 갖고 있습니다.
+export const cosmeticsApi = { list: impl.getCosmetics, buy: impl.buyCosmetic, equip: impl.equipCosmetic }
+export const profileApi = { setAvatar: impl.setAvatar, setTitle: impl.setTitle, claimFeat: impl.claimFeat }
+export const socialApi = { mark: impl.setMark, notices: impl.getNotices, answer: impl.answerNotice, flag: impl.reportAbuse }
 export { errorText } from './errors'

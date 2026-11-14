@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native'
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg'
 import { colors, text } from '../theme'
@@ -46,7 +46,7 @@ export default function AvatarFrame({ frame, size = 64, letter, letterColor, uri
   const r = size / 2 - w / 2
   const turn = useLoop(part.double ? 3600 : 5200, !!part.spin)
   const blink = useLoop(1800, !!part.stars)
-  const id = `g-${f.style}-${size}`
+  const id = `g${useId().replace(/[^a-zA-Z0-9]/g, '')}`
 
   return (
     <View style={{ width: size, height: size }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">

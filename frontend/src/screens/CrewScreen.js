@@ -31,7 +31,7 @@ export default function CrewScreen({ navigation }) {
       <Screen refreshControl={refresher(app)}>
         <ScreenHeader title="크루" sub="함께 줍는 크루를 만들거나 가입해요" />
         <Appear>
-          <CreateCrew onCreate={app.createCrew} />
+          <CreateCrew onCreate={app.createCrew} level={app.profile?.level || 1} />
         </Appear>
         <SectionTitle>크루 랭킹</SectionTitle>
         <Ranking crews={app.crews} onJoin={app.joinCrew} />
@@ -263,7 +263,8 @@ function Ranking({ crews, onJoin }) {
   )
 }
 
-function CreateCrew({ onCreate }) {
+function CreateCrew({ onCreate, level }) {
+  const locked = level < 3
   const [name, setName] = useState('')
   const [area, setArea] = useState('')
   const [busy, setBusy] = useState(false)
@@ -277,8 +278,9 @@ function CreateCrew({ onCreate }) {
       <Text style={text.section}>크루 만들기</Text>
       <TextInput value={name} onChangeText={setName} placeholder="크루 이름" placeholderTextColor={colors.disabled} style={styles.input} maxLength={16} accessibilityLabel="크루 이름" />
       <TextInput value={area} onChangeText={setArea} placeholder="활동 동네 (선택)" placeholderTextColor={colors.disabled} style={styles.input} maxLength={16} accessibilityLabel="활동 동네" />
-      <Button style={{ flex: 0 }} disabled={busy || name.trim().length < 2} onPress={submit}>
-        {busy ? '만드는 중…' : '크루 만들기'}
+      {locked ? <Text style={text.caption}>크루는 레벨 3부터 만들 수 있어요. 지금은 Lv.{level}이에요. 다른 크루에 들어가는 건 바로 할 수 있어요.</Text> : null}
+      <Button style={{ flex: 0 }} disabled={locked || busy || name.trim().length < 2} onPress={submit}>
+        {busy ? '만드는 중…' : locked ? '레벨 3부터 만들 수 있어요' : '크루 만들기'}
       </Button>
     </Card>
   )

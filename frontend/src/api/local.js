@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform } from 'react-native'
 import { errorText } from './errors'
+import { ACHIEVEMENTS, statsOf } from '../lib/achievements'
 
 // 기기 저장소 구현. 서버가 준비되기 전까지 앱 기능을 이 기기 안에서 실제로 동작시킵니다.
 // 응답 모양은 백엔드 API 가이드와 같게 맞췄고, 규칙은 docs/api.md 를 따릅니다
@@ -25,10 +26,12 @@ const PROOF_MIN_GAP_MS = 60 * 1000 // 임시값: 치우기 전 사진을 찍고 
 const DAY = 24 * 3600 * 1000
 const HEART_DAILY_LIMIT = 10
 // 아래 세 값은 임시값입니다. 서버가 생기면 서버가 정합니다.
-const POINTS_PER_HEART = 5 // 하트 1개마다 해결 보상에 붙는 포인트
+const HEARTS_PER_STEP = 3 // 하트가 이만큼 모일 때마다
+const POINTS_PER_STEP = 5 // 해결 보상에 이만큼 포인트가 붙습니다
+const CREW_CREATE_LEVEL = 3 // 크루를 만들 수 있는 최소 레벨
 const HEART_GIVER_POINTS = 1 // 하트를 누른 사람이 받는 포인트
 const CREW_XP_PER_LEVEL = 500
-const pointsOf = (r) => r.likes.length * POINTS_PER_HEART
+const pointsOf = (r) => Math.floor(r.likes.length / HEARTS_PER_STEP) * POINTS_PER_STEP
 
 // 포인트 교환 상점(예시 상품). 실제 쿠폰 발급은 연결되어 있지 않습니다.
 const SHOP = [
@@ -47,11 +50,17 @@ const COSMETICS = [
   { id: 'frame-galaxy', kind: 'frame', name: '분리수거 은하수', style: 'stars', colors: ['#A97CFF', '#FF7EB6', '#3182F6', '#A97CFF'], cost: 120, level: 1 },
   { id: 'frame-gold', kind: 'frame', name: '황금 집게', style: 'royal', colors: ['#FFF3B0', '#FFD43B', '#FF9F1A', '#FFD43B'], cost: 0, level: 3 },
   { id: 'frame-legend', kind: 'frame', name: '전설의 줍줍러', style: 'legend', colors: ['#FF7EB6', '#FFD43B', '#3DD68C', '#7DF9FF', '#A97CFF', '#FF7EB6'], cost: 0, level: 6 },
+  // 도전과제 보상으로만 받는 품목(feat = 도전과제 id). 살 수 없습니다.
+  { id: 'frame-ember', kind: 'frame', name: '열 번 찍은 불꽃', style: 'stars', colors: ['#FF9F1A', '#F04452', '#FFD43B', '#FF9F1A'], cost: 0, level: 1, feat: 'ten' },
+  { id: 'frame-month', kind: 'frame', name: '개근상 리본', style: 'neon', colors: ['#3DD68C', '#FFD43B', '#3DD68C'], cost: 0, level: 1, feat: 'streak4' },
   { id: 'name-white', kind: 'name', name: '기본 닉네임 색', colors: ['#F2F4F6'], cost: 0, level: 1 },
   { id: 'name-tape', kind: 'name', name: '노란 닉네임', colors: ['#FFD43B'], cost: 80, level: 1 },
   { id: 'name-mint', kind: 'name', name: '민트 닉네임', colors: ['#7DF9FF'], cost: 0, level: 4 },
+  { id: 'name-rose', kind: 'name', name: '장미 닉네임', colors: ['#FF7EB6'], cost: 0, level: 1, feat: 'places' },
 ]
 const MARKS = ['still', 'gone', 'worse']
+// 내 것인지: 도전과제 보상·구매 품목은 보유 목록에 있어야 하고, 레벨 품목은 레벨이 되면 내 것입니다.
+const has = (me, c) => (c.feat || c.cost > 0 ? (me.cosmetics || []).includes(c.id) : levelOf(me.xp) >= c.level)
 const DEFAULT_LOOK = { frame: 'frame-tape', name: 'name-white' }
 const item = (id) => COSMETICS.find((c) => c.id === id)
 // 저장된 착용 품목이 목록에서 빠졌으면 기본으로 돌아갑니다.
@@ -369,15 +378,9 @@ export async function getMyProfile() {
       const w = kstWeek(Date.now()) - (7 - i)
       return me.completed.filter((c) => kstWeek(c.at) === w).length
     }),
-    // 도전과제·도감 계산에 쓰는 누적 값
-    stats: {
-      completed: me.completed.length,
-      hearts: (me.hearts || []).length,
-      reports: db.reports.filter((r) => r.reporter_id === me.id).length,
-      rewards: (me.rewards || []).length,
-      places: tally(me.completed.map((c) => db.reports.find((x) => x.id === c.id)?.place_type)),
-      issues: tally(me.completed.map((c) => db.reports.find((x) => x.id === c.id)?.issue_type)),
-    },
+    // 도전과제 계산에 쓰는 누적 값과 이미 보상을 받은 도전과제
+    stats: statsRaw(db),
+    feats_claimed: me.feats || [],
     nickname: me.nickname,
     xp: me.xp,
     points: me.points,
@@ -396,6 +399,32 @@ export async function getMyProfile() {
   }
 }
 
+const statsRaw = (db) => {
+  const me = db.user
+  const of = (key) => tally(me.completed.map((c) => db.reports.find((x) => x.id === c.id)?.[key]))
+  return { completed: me.completed.length, hearts: (me.hearts || []).length, reports: db.reports.filter((r) => r.reporter_id === me.id).length, rewards: (me.rewards || []).length, places: of('place_type'), issues: of('issue_type') }
+}
+
+// 도전과제 보상 받기. 조건을 채웠는지 여기서 다시 확인하고 한 번만 줍니다. 보상: 포인트·XP, 일부는 꾸미기 품목.
+export async function claimFeat(id) {
+  const db = await load()
+  const me = db.user
+  const a = ACHIEVEMENTS.find((x) => x.id === id)
+  if (!a) fail('FEAT_NOT_FOUND')
+  me.feats = me.feats || []
+  if (me.feats.includes(id)) fail('FEAT_CLAIMED')
+  const s = statsOf({ stats: statsRaw(db), level: levelOf(me.xp), streak_weeks: streak(me.completed) }, (db.crews || []).find((c) => c.members.includes(me.id)))
+  if (a.value(s) < a.goal) fail('FEAT_NOT_DONE')
+  const was = levelOf(me.xp)
+  me.feats.push(id)
+  me.points += a.points
+  me.xp += a.xp
+  const gift = COSMETICS.find((c) => c.feat === id)
+  if (gift) (me.cosmetics = me.cosmetics || []).push(gift.id)
+  await save()
+  return { points_gained: a.points, xp_gained: a.xp, cosmetic: gift ? gift.name : null, leveled_up: levelOf(me.xp) > was, level: levelOf(me.xp) }
+}
+
 const tally = (keys) => keys.filter(Boolean).reduce((m, k) => ((m[k] = (m[k] || 0) + 1), m), {})
 
 // 프로필 사진. 웹은 작게 줄여 저장하고, 폰은 고른 사진의 파일 주소를 그대로 가리킵니다. null 이면 기본(닉네임 첫 글자).
@@ -405,7 +434,7 @@ export async function setAvatar(uri) {
   await save()
 }
 
-// 내가 고른 칭호. 'lv:3'(레벨 칭호) 또는 'ach:first'(도전과제 칭호). null 이면 지금 레벨 칭호.
+// 내가 고른 칭호. 'lv:3'(레벨 칭호) 또는 'ach:first'(도전과제 칭호). null 이면 칭호 없음(처음 상태).
 export async function setTitle(key) {
   const db = await load()
   db.user.title = key || null
@@ -547,6 +576,7 @@ export async function getMyCrew() {
 
 export async function createCrew({ name, area }) {
   const db = await load()
+  if (levelOf(db.user.xp) < CREW_CREATE_LEVEL) fail('CREW_LEVEL_TOO_LOW')
   if (db.crews.some((c) => c.members.includes(db.user.id))) fail('ALREADY_IN_CREW')
   if (db.crews.some((c) => c.name === name)) fail('CREW_NAME_TAKEN')
   const id = (db.crews.reduce((m, c) => Math.max(m, c.id), 0) || 0) + 1
@@ -607,8 +637,8 @@ export async function getCosmetics() {
   return COSMETICS.map((c) => ({
     ...c,
     // 포인트로 사는 품목은 산 뒤에, 레벨 품목은 레벨이 되면 내 것이 됩니다.
-    owned: c.cost === 0 ? level >= c.level : owned.includes(c.id),
-    locked: level < c.level,
+    owned: has(me, c),
+    locked: level < c.level || (!!c.feat && !owned.includes(c.id)),
     equipped: look[c.kind] === c.id,
   }))
 }
@@ -618,7 +648,7 @@ export async function buyCosmetic(id) {
   const me = db.user
   const c = COSMETICS.find((x) => x.id === id)
   if (!c) fail('COSMETIC_NOT_FOUND')
-  if (levelOf(me.xp) < c.level) fail('LEVEL_TOO_LOW')
+  if (levelOf(me.xp) < c.level || (c.feat && !has(me, c))) fail('LEVEL_TOO_LOW')
   me.cosmetics = me.cosmetics || []
   if (c.cost > 0 && !me.cosmetics.includes(id)) {
     if (me.points < c.cost) fail('NOT_ENOUGH_POINTS')
@@ -635,7 +665,7 @@ export async function equipCosmetic(id) {
   const me = db.user
   const c = COSMETICS.find((x) => x.id === id)
   if (!c) fail('COSMETIC_NOT_FOUND')
-  const mine = c.cost === 0 ? levelOf(me.xp) >= c.level : (me.cosmetics || []).includes(id)
+  const mine = has(me, c)
   if (!mine) fail('LEVEL_TOO_LOW')
   me.look = { ...lookOf(me), [c.kind]: id }
   await save()
