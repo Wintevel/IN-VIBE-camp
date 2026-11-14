@@ -22,6 +22,7 @@
 | 상점 | `shop_items` 조회, `redeem_item` |
 | 프로필 꾸미기 | `cosmetics_list`, `buy_cosmetic`, `equip_cosmetic` |
 | 설정 | `profiles` update (nickname, avatar_url, home_area), 로그아웃 |
+| 제휴업체 웹 | `partner_me`, `partner_register`, `partner_quests`, `partner_create_quest`, `partner_cancel_quest`, `partner_report` |
 | 로그인 | 카카오·구글·이메일로 확정(2026-11-14). 익명 계정은 보기만 가능. 서버는 아직 익명 로그인이며 `docs/backend-requests.md` 2-12 에서 바꿉니다 |
 
 **하트와 승격 표시 원칙**: 승격은 서버가 자동으로 처리하고, 앱은 승격이라는 말이나 기준을 보여주지 않습니다. 승격 기준값은 서버 내부(`app_settings`, 클라이언트 접근 불가)에만 있습니다. 승격된 제보는 의뢰(`kind='report'`)가 되고 라벨은 "주민 제보"로 내려갑니다.
@@ -86,10 +87,11 @@
 | `profiles` | id(=auth.users.id), nickname, avatar_url, home_area, points(보유), total_earned(누적 획득), xp, frame_id, name_color_id, created_at | 전체 읽기, 본인 nickname·avatar_url·home_area 수정. 가입 시 자동 생성 |
 | `reports` | id, author_id, title, description, category(`빗물받이`/`버스정류장`/`공원`/`골목·거리`/`기타`), issue_type, required_members, photo_url, lat, lng, address, status(`open`/`promoted`/`rejected`), heart_count, est_minutes, visible_at, is_demo, created_at | 전체 읽기, insert(title, description, category, issue_type, required_members, photo_url, lat, lng, address) |
 | `report_hearts` | report_id, user_id, created_at | 전체 읽기, 본인 insert(report_id). delete 없음 |
-| `quests` | id, kind(`partner`/`crew`/`report`), report_id, partner_id, crew_id, title, description, org_name, category, issue_type, lat, lng, address, est_minutes, time_label, goal, tools, reward_points, reward_text, reward_label, reward_value, reward_unit, proof_mode, proof_label, hot, required_members, starts_at, expires_at, status(`open`/`done`/`expired`), is_demo | 전체 읽기, 크루원만 `kind='crew'` insert |
+| `quests` | id, kind(`partner`/`crew`/`report`), report_id, partner_id, crew_id, title, description, org_name, category, issue_type, lat, lng, address, est_minutes, time_label, goal, tools, reward_points, reward_text, reward_label, reward_value, reward_unit, proof_mode, proof_label, hot, required_members, starts_at, expires_at, status(`review`/`scheduled`/`open`/`done`/`expired`/`rejected`), is_demo, 제휴업체 입력값(place_name, reward_type, reward_amount, capacity, reject_reason, reviewed_at, created_by) | 전체 읽기(검토 중·반려는 그 업체만), 크루원만 `kind='crew'` insert. 앱 목록에는 `open` 만 나옴 |
 | `quest_claims` | id, quest_id, user_id, status(`accepted`/`approved`/`cancelled`/`expired`), accepted_at, 전·후 photo_url/lat/lng/accuracy_m/taken_at/photo_hash, points_awarded, xp_awarded, crew_xp_awarded, reward_label, approved_at | 본인 것만 읽기. 쓰기는 RPC 로만 |
 | `point_ledger` | id, user_id, amount(포인트 증감), xp, crew_id, crew_score(크루 XP), reason, quest_id, report_id, created_at | 본인 것만 읽기 |
-| `partners` | id, name, logo_url, kind(`brand`/`gov`/`shop`), is_demo | 전체 읽기 |
+| `partners` | id, name, logo_url, kind(`brand`/`gov`/`shop`/`org`), is_demo, manager_name, created_at | 전체 읽기(manager_name 제외) |
+| `partner_members` | partner_id, user_id(유일 = 계정 하나에 업체 하나), role, created_at | 본인 것만 읽기. 등록은 `partner_register` |
 | `crews` | id, name, area, owner_id, is_demo | 전체 읽기 |
 | `crew_members` | crew_id, user_id(유일 = 1인 1크루), role(`owner`/`member`), joined_at | 전체 읽기, 본인 insert(crew_id)/delete (RPC 권장) |
 | `crew_events` | id, crew_id, type(`create`/`join`/`leave`/`quest`/`complete`), nickname, title, crew_xp, points, is_crew_quest, created_at | 같은 크루원만 읽기 |
@@ -260,6 +262,39 @@ supabase.rpc('map_overview', { p_lat, p_lng, p_radius_m: 1500 })
 ```
 범례 매핑: cleared+mine = 우리 크루, cleared+other = 다른 크루, quest = 의뢰 있음, hot_report = 제보 많음.
 
+### 제휴업체 웹 (`web/`)
+`web/src/api.js` 의 함수와 1:1 입니다. 로그인한 계정(지금은 익명도 가능) 하나가 업체 하나에 연결됩니다.
+```js
+supabase.rpc('partner_me')                                   // api.partner(): { id, name, manager, joined_at } 또는 null
+supabase.rpc('partner_register', { p_name, p_manager })      // api.start(): 업체 등록 후 partner_me 와 같은 값. 이미 있으면 그대로 반환
+supabase.auth.signOut()                                      // api.leave()
+supabase.rpc('partner_quests')                               // api.quests(): 내 업체 의뢰 배열 (최근 순)
+supabase.rpc('partner_create_quest', {                       // api.create(input): 검토 요청 → 만든 의뢰 반환
+  p_title, p_description, p_place_type, p_place_name, p_address, // place_type: park|street|drain|bus_stop|etc
+  p_proof_mode, p_reward_type, p_reward_amount, p_capacity,      // reward_type: voucher|coupon|point
+  p_starts_on, p_ends_on,                                        // 'YYYY-MM-DD'
+  p_lat, p_lng,                                                  // 선택. 있으면 앱 인증 시 100m 반경 검사
+})
+supabase.rpc('partner_cancel_quest', { p_quest_id })         // api.cancel(id): 검토 중인 것만
+supabase.rpc('partner_report')                               // api.report()
+// 에러: NOT_PARTNER, INVALID_NAME, INVALID_INPUT, CANNOT_CANCEL
+```
+- 의뢰 한 건의 모양은 `web/src/api.js` 의 예시와 같습니다: `id, title, description, place_type, place_name, address, proof_mode, reward_type, reward_amount, capacity, starts_on, ends_on, status, reject_reason, created_at, joined, completed, daily(이번 주 월~일 완료 수 7칸), sample`.
+- `status` 는 웹 기준 네 가지(`review`/`open`/`done`/`rejected`)로 내려갑니다. 승인됐지만 시작일 전이면 `open`, 기간이 지나 만료되면 `done` 입니다.
+- `partner_report` 는 `{ quests, joined, completed, paid, daily, byPlace: [[place_type, 완료 수]], rows, photos: [{ quest_id, title, before, after, at }] }` 입니다. 사진 경로는 `claim-photos` 버킷 공개 경로이고 화면에서 `getPublicUrl` 로 바꿉니다.
+- 검토 흐름: 등록하면 `review` → 운영진 승인 시 시작일 전이면 `scheduled`(웹에는 `open`), 시작일이 되면 `open` 으로 앱 의뢰판에 올라감 → 기간이 끝나거나 인증 완료가 모집 인원에 닿으면 종료. 반려하면 `rejected` 와 `reject_reason`.
+- 모집 인원(`capacity`)이 차면 앱에서 추가 수락이 `REPORT_FULL` 로 막힙니다.
+- 보상: `voucher`·`coupon` 은 앱에 `reward_label`(예: "지역 상품권 3,000원")로 보이고 포인트는 0, `point` 는 그 금액만큼 에코포인트로 지급합니다. 실제 상품권 지급과 업체 정산은 운영진이 따로 합니다.
+- 위치가 없는 의뢰는 앱 인증 시 "의뢰 위치 반경" 검사를 건너뜁니다. 웹에 지도 핀(위도·경도)을 붙이면 `p_lat`, `p_lng` 로 보내 주세요.
+
+운영진 검토는 앱·웹에서 호출할 수 없고, Supabase 대시보드 SQL 에디터에서 합니다.
+```sql
+select * from public.partner_review_queue;                        -- 검토 대기 목록
+select public.staff_review_quest(12, true);                       -- 승인
+select public.staff_review_quest(12, false, '장소가 불분명해요');   -- 반려
+```
+검토 요청·업체 등록이 들어오면 운영진 디스코드로 알림이 갑니다. 웹훅 주소는 Supabase Vault 에 `discord_webhook_url` 이름으로 넣습니다(커밋하지 않음). 없으면 알림만 건너뜁니다.
+
 ## 시드 데이터
 `supabase/seed.sql` 에 시연용 값(제휴 의뢰 3, 크루 의뢰 1, 주민 제보 3, 크루 5, 시즌 11)이 있고, 원격 DB 에는 사진 한 장 인증 예시(망가진 공원 벤치 사진 찍기, 충주사랑상품권 보상)도 있습니다. 모두 `is_demo = true` 입니다. 시연 좌표: lat 37.4520, lng 126.6560 (인하대 후문 근처). "인하대 후문 빗물받이 꽁초" 제보는 하트 1개만 더 받으면 승격됩니다.
 
@@ -268,6 +303,9 @@ supabase.rpc('map_overview', { p_lat, p_lng, p_radius_m: 1500 })
 - 치우기 전 사진은 촬영 직후 바로 업로드해 주세요. 두 장을 마지막에 함께 올리면 `TOO_FAST` 입니다.
 - 인증 시 사진 해시(SHA-256)를 같이 보내 주세요. 없으면 `MISSING_PROOF` 입니다. `NO_CHANGE` 검사를 쓰려면 32×32 미리보기도 보내 주세요(선택).
 - 새 에러 코드 `INVALID_PHOTO`, `ITEM_NOT_FOUND`, `INVALID_NAME`, `ALREADY_ACCEPTED`, `QUEST_CLOSED`, `MOCK_LOCATION`, `MISSING_PROOF`, `CLAIM_EXPIRED` 문구가 `errors.js` 에 필요합니다.
+
+## 프론트에 요청 (제휴업체 웹)
+- `web/src/api.js` 의 함수 안쪽을 위 RPC 로 바꿔 주세요. 웹에 Supabase 클라이언트와 로그인(지금은 익명도 됨, 업체 계정은 이메일 로그인 권장)이 필요합니다.
 
 ## 정해야 할 것
 - (확정됨) 로그인은 카카오·구글·이메일, 익명 계정은 둘러보기만. 서버 반영은 `docs/backend-requests.md` 2-12
