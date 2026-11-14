@@ -22,7 +22,7 @@
 | 상점 | `shop_items` 조회, `redeem_item` |
 | 프로필 꾸미기 | `cosmetics_list`, `buy_cosmetic`, `equip_cosmetic` |
 | 설정 | `profiles` update (nickname, avatar_url, home_area), 로그아웃 |
-| 로그인 | 지금은 익명 로그인. 카카오·이메일 연결은 이후 ? |
+| 로그인 | 카카오·구글·이메일로 확정(2026-11-14). 익명 계정은 보기만 가능. 서버는 아직 익명 로그인이며 `docs/backend-requests.md` 2-12 에서 바꿉니다 |
 
 **하트와 승격 표시 원칙**: 승격은 서버가 자동으로 처리하고, 앱은 승격이라는 말이나 기준을 보여주지 않습니다. 승격 기준값은 서버 내부(`app_settings`, 클라이언트 접근 불가)에만 있습니다. 승격된 제보는 의뢰(`kind='report'`)가 되고 라벨은 "주민 제보"로 내려갑니다.
 
@@ -270,7 +270,7 @@ supabase.rpc('map_overview', { p_lat, p_lng, p_radius_m: 1500 })
 - 새 에러 코드 `INVALID_PHOTO`, `ITEM_NOT_FOUND`, `INVALID_NAME`, `ALREADY_ACCEPTED`, `QUEST_CLOSED`, `MOCK_LOCATION`, `MISSING_PROOF`, `CLAIM_EXPIRED` 문구가 `errors.js` 에 필요합니다.
 
 ## 정해야 할 것
-- 로그인 방식 확정(카카오·이메일)과 익명 계정을 "둘러보기"로만 둘지 ?
+- (확정됨) 로그인은 카카오·구글·이메일, 익명 계정은 둘러보기만. 서버 반영은 `docs/backend-requests.md` 2-12
 - 1인 1크루 확정 여부 ? (지금 구현은 1인 1크루)
 - 같은 위치 중복 제보 처리 ?
 - 숫자 값(하트 1개당 해결 보상, 하트 누른 사람 포인트, XP·레벨 기준, 크루 의뢰 포인트, 상점·꾸미기 가격) ?
