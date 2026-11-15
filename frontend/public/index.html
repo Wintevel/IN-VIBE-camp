@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>%WEB_TITLE%</title>
+    <!-- PWA: 홈 화면 설치용. 주소가 /IN-VIBE-camp/ 아래라서 절대 경로로 씁니다(404.html 로 깊은 주소에 들어와도 같게). -->
+    <link rel="manifest" href="/IN-VIBE-camp/manifest.webmanifest" />
+    <meta name="theme-color" content="#111317" />
+    <link rel="apple-touch-icon" href="/IN-VIBE-camp/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="집게표" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+        background: #111317;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+    <script>
+      // 서비스 워커: 앱 셸 캐시. https 또는 localhost 에서만 동작합니다.
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/IN-VIBE-camp/sw.js', { scope: '/IN-VIBE-camp/' }).catch(function () {})
+        })
+      }
+    </script>
+  </body>
+</html>
