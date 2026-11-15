@@ -42,6 +42,7 @@ src/api/               index.js 가 구현을 고름: remote.js(Supabase) / loca
 ## 웹 미리보기와 배포
 - PC 브라우저: `npx expo start --web`
 - `main` 에 `frontend/` 변경이 합쳐지면 `.github/workflows/deploy-web.yml` 이 웹으로 빌드해 GitHub Pages 에 올립니다. 주소는 `https://wintevel.github.io/IN-VIBE-camp/` 입니다. 저장소 Settings > Pages 의 Source 가 "GitHub Actions" 여야 합니다.
+- 웹은 PWA 로도 쓸 수 있습니다. 폰 브라우저에서 열고 Android Chrome 은 "앱 설치"(또는 "홈 화면에 추가"), iOS Safari 는 공유 > "홈 화면에 추가"를 누르면 집게표 아이콘으로 설치되고 주소창 없이 열립니다. 설정 파일은 `frontend/public/` 에 있습니다(`index.html` 템플릿, `manifest.webmanifest`, `sw.js`, `icons/`). 서비스 워커는 앱 셸·번들만 캐시하고 Supabase 응답·업체 웹(`/partner/`)은 건드리지 않습니다. 오프라인에서는 화면만 뜨고 서버 데이터는 못 불러옵니다. 아이콘은 `node scripts/make-icons.js` 로 다시 만듭니다. 주소 경로를 바꾸면(`app.json` 의 `baseUrl`) `public/` 안의 `/IN-VIBE-camp/` 도 함께 바꿔야 합니다.
 - 웹은 미리보기용입니다. 실제 인증(카메라·위치 신뢰도)은 폰 앱 기준입니다.
 
 ## 지도
