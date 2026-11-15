@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import BoardBackground from '../components/BoardBackground'
 import Button from '../components/Button'
+import InstallApp from '../components/InstallApp'
 import Logo from '../components/Logo'
 import Stamp from '../components/Stamp'
 import { useApp } from '../state/AppState'
@@ -102,6 +103,7 @@ export default function LoginScreen() {
               로그인 없이 둘러보기
             </Button>
             <Text style={[text.caption, { textAlign: 'center' }]}>둘러보기는 의뢰판·지도·랭킹 보기만 돼요.</Text>
+            <InstallApp />
           </View>
         </View>
       </BoardBackground>
@@ -151,6 +153,7 @@ export default function LoginScreen() {
             {busy ? '시작하는 중…' : '시작하기'}
           </Button>
           <Text style={[text.caption, { textAlign: 'center' }]}>{emailAuth ? '이메일로 가입하거나 로그인 없이 둘러볼 수 있어요.' : '가입 없이 바로 시작해요. 닉네임은 설정에서 바꿀 수 있어요.'}</Text>
+          <InstallApp />
         </View>
       </View>
     </BoardBackground>

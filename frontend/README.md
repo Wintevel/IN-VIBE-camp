@@ -43,6 +43,8 @@ src/api/               index.js 가 구현을 고름: remote.js(Supabase) / loca
 - PC 브라우저: `npx expo start --web`
 - `main` 에 `frontend/` 변경이 합쳐지면 `.github/workflows/deploy-web.yml` 이 웹으로 빌드해 GitHub Pages 에 올립니다. 주소는 `https://wintevel.github.io/IN-VIBE-camp/` 입니다. 저장소 Settings > Pages 의 Source 가 "GitHub Actions" 여야 합니다.
 - 웹은 PWA 로도 쓸 수 있습니다. 폰 브라우저에서 열고 Android Chrome 은 "앱 설치"(또는 "홈 화면에 추가"), iOS Safari 는 공유 > "홈 화면에 추가"를 누르면 집게표 아이콘으로 설치되고 주소창 없이 열립니다. 설정 파일은 `frontend/public/` 에 있습니다(`index.html` 템플릿, `manifest.webmanifest`, `sw.js`, `icons/`). 서비스 워커는 앱 셸·번들만 캐시하고 Supabase 응답·업체 웹(`/partner/`)은 건드리지 않습니다. 오프라인에서는 화면만 뜨고 서버 데이터는 못 불러옵니다. 아이콘은 `node scripts/make-icons.js` 로 다시 만듭니다. 주소 경로를 바꾸면(`app.json` 의 `baseUrl`) `public/` 안의 `/IN-VIBE-camp/` 도 함께 바꿔야 합니다.
+- 웹의 첫 화면(로그인)과 내 정보 맨 아래에 "홈 화면에 앱으로 설치" 버튼이 있습니다(`src/components/InstallApp.js`, `src/lib/install.js`). 크롬 계열은 설치창을 바로 띄우고, 아이폰 사파리나 설치창을 못 띄우는 브라우저는 메뉴 안내 문구를 보여 줍니다. 이미 홈 화면 앱으로 열었거나 폰 앱(네이티브)에서는 보이지 않습니다.
+- 안드로이드 APK 버튼("갤럭시·안드로이드 앱(APK) 받기")은 APK 주소가 있을 때만 보입니다. 저장소 Settings > Secrets and variables > Actions > Variables 에 `APK_URL` 을 넣으면 다음 배포부터 켜집니다(로컬은 `.env` 의 `EXPO_PUBLIC_APK_URL`). APK 파일 자체는 EAS Build(`eas build -p android --profile preview`) 등으로 따로 만들어 올려야 합니다.
 - 웹은 미리보기용입니다. 실제 인증(카메라·위치 신뢰도)은 폰 앱 기준입니다.
 
 ## 지도
