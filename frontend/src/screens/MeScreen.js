@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
 import AvatarFrame from "../components/AvatarFrame";
 import DailyLimits from "../components/DailyLimits";
+import InstallApp from "../components/InstallApp";
 import {
   BackpackIcon,
   BadgeIcon,
@@ -291,6 +292,8 @@ export default function MeScreen({ navigation }) {
           },
         ]}
       />
+
+      <InstallApp card />
     </Screen>
   );
 }

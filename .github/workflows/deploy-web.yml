@@ -34,6 +34,8 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          # 저장소 Settings > Variables 의 APK_URL (선택). 있으면 웹에 APK 받기 버튼이 생깁니다.
+          EXPO_PUBLIC_APK_URL: ${{ vars.APK_URL }}
       # 새로고침·직접 주소 진입 대비, 그리고 _expo 폴더가 Jekyll 에 걸러지지 않게 함
       - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
       # PWA 서비스 워커에 빌드 번호를 넣어, 배포마다 sw.js 가 달라지고 옛 캐시가 지워지게 함
