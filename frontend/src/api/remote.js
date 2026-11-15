@@ -97,6 +97,8 @@ function fromQuest(x) {
   const id = `q${x.id}`
   const partner = x.kind === 'partner'
   const mineNow = x.my_status === 'accepted'
+  // 인증을 올리고 확인(투표·업체·운영진)을 기다리는 중
+  const verifying = x.my_status === 'submitted' || x.my_status === 'staff_review'
   known.set(id, { questId: x.id, reportId: x.report_id || null, claimId: x.my_claim_id || null, partner })
   const full = (x.current_members || 0) >= (x.required_members || 1)
   return {
@@ -140,6 +142,7 @@ function fromQuest(x) {
     distance_m: x.distance_m,
     liked_by_me: !!x.hearted,
     i_am_participating: mineNow,
+    verifying,
     is_demo: !!x.is_demo,
   }
 }
@@ -208,7 +211,7 @@ export async function toggleLike(id) {
 
 export async function acceptReport(id) {
   const k = row(id)
-  // 아직 의뢰가 되지 않은 제보는 서버가 수락을 받지 않습니다.
+  // 제보는 올리는 즉시 의뢰가 됩니다. 의뢰 번호가 없는 행은 아직 공개 전(3분)이거나 예전 제보입니다.
   if (!k.questId) fail('REPORT_NOT_READY')
   const d = await rpc('accept_quest', { p_quest_id: k.questId })
   k.claimId = d.claim_id
@@ -286,7 +289,25 @@ export async function submitProof(userId, id, before, after) {
   uploads.delete(`${id}:before`)
   uploads.delete(`${id}:after`)
   deadlines.delete(id)
-  return d
+  // 서버는 바로 지급하지 않고 확인 대기로 둡니다. 화면이 쓰는 이름(points_gained 등)에 "받을 예정" 값을 담고 pending 으로 구분합니다.
+  return {
+    pending: true,
+    status: d.status,
+    title: d.title,
+    reward_label: d.reward_label || null,
+    points_gained: d.points_pending || 0,
+    xp_gained: d.xp_pending || 0,
+    crew_xp_gained: d.crew_xp_pending || 0,
+    voters: d.voters || 0,
+    verify_deadline: d.verify_deadline || null,
+    by_partner: k.partner,
+  }
+}
+
+// 내가 올린 인증 중 확인 대기·운영진 검토·최근 반려. 수락만 한 것은 의뢰 목록에 이미 있으므로 뺍니다.
+export async function getMyClaims() {
+  const list = (await rpc('my_claims')) || []
+  return list.filter((c) => c.status !== 'accepted')
 }
 
 // ── 제보하기 ──────────────────────────────────────────
@@ -320,7 +341,7 @@ export async function getMyProfile() {
     cleaned: p.cleaned || [],
     rewards: p.rewards || [],
     coupons: p.coupons || [],
-    feats_claimed: p.feats_claimed || [], // 서버에 아직 없음(docs/backend-requests.md 5-3)
+    feats_claimed: p.feats_claimed || [],
   }
 }
 
@@ -347,8 +368,8 @@ export async function setAvatar(uri) {
   check(error)
 }
 export const setTitle = (key) => rpc('set_title', { p_key: key || null })
-// 도전과제 보상은 서버에 아직 없습니다(docs/backend-requests.md 5-3).
-export const claimFeat = async () => fail('FEAT_NOT_READY')
+// 도전과제 보상: 달성 여부는 서버가 판정합니다.
+export const claimFeat = (id) => rpc('claim_feat', { p_id: id })
 
 // ── 크루 ──────────────────────────────────────────────
 export async function getCrews() {

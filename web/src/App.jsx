@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, PLACES, placeLabel, STATUS, estimate, FEE_RATE } from './api.js'
+import { api, PLACES, placeLabel, STATUS, CLAIM_STATUS, estimate, FEE_RATE } from './api.js'
 
 const won = (n) => `${Number(n || 0).toLocaleString('ko-KR')}원`
 const day = (s) => (s ? s.slice(0, 10).replaceAll('-', '.') : '')
@@ -7,6 +7,7 @@ const TABS = [
   ['home', '소개'],
   ['new', '의뢰 만들기'],
   ['quests', '내 의뢰'],
+  ['claims', '인증 확인'],
   ['report', '활동 리포트'],
 ]
 
@@ -38,6 +39,8 @@ export default function App() {
       .finally(() => setReady(true))
   }, [])
   const needLogin = route !== 'home' && !partner
+  // 확인을 기다리는 인증 수(메뉴에 표시). tick 이 바뀌면 다시 셉니다.
+  const todo = useMemo(() => (partner && ready ? api.claims().filter((c) => c.status === 'submitted').length : 0), [partner, ready, tick])
 
   return (
     <div className="app">
@@ -51,6 +54,7 @@ export default function App() {
           {TABS.map(([k, label]) => (
             <a key={k} href={`#/${k}`} className={route === k ? 'on' : ''} aria-current={route === k ? 'page' : undefined}>
               {label}
+              {k === 'claims' && todo > 0 ? <b className="count">{todo}</b> : null}
             </a>
           ))}
         </nav>
@@ -97,6 +101,8 @@ export default function App() {
           <NewQuest partner={partner} onDone={() => (refresh(), go('quests'))} />
         ) : route === 'quests' ? (
           <Quests key={tick} onChange={refresh} />
+        ) : route === 'claims' ? (
+          <Claims key={tick} onChange={refresh} />
         ) : route === 'report' ? (
           <Report partner={partner} />
         ) : (
@@ -441,6 +447,126 @@ function Quests({ onChange }) {
                     수락 {q.joined}명 · 인증 완료 {q.completed}명 / 모집 {q.capacity}명 ({pct}%)
                   </p>
                 </>
+              )}
+            </article>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// 앱 사용자가 올린 인증을 업체 담당자가 확인합니다. 승인해야 보상이 지급되고, 기한 없이 업체가 반드시 판단합니다.
+function Claims({ onChange }) {
+  const list = api.claims()
+  const [busy, setBusy] = useState(null)
+  const [rejecting, setRejecting] = useState(null) // 반려 사유를 적는 중인 인증 id
+  const [reason, setReason] = useState('')
+  const [err, setErr] = useState(null)
+  const todo = list.filter((c) => c.status === 'submitted').length
+  const decide = async (c, approve) => {
+    setBusy(c.id)
+    setErr(null)
+    try {
+      await api.review(c.id, approve, reason.trim())
+      setRejecting(null)
+      setReason('')
+      onChange()
+    } catch (e) {
+      setErr(e.message)
+      setBusy(null)
+    }
+  }
+  if (!list.length)
+    return (
+      <section className="card narrow center">
+        <h2>확인할 인증이 없어요</h2>
+        <p className="sub">앱 사용자가 의뢰를 해결하고 사진을 올리면 여기에 나타나요.</p>
+      </section>
+    )
+  return (
+    <section>
+      <div className="head">
+        <div>
+          <h2>인증 확인</h2>
+          <p className="sub">현장을 확인한 뒤 승인하면 그때 보상이 지급돼요. 확인 대기 {todo}건 · 최근 30일</p>
+        </div>
+      </div>
+      {err ? (
+        <p className="err" role="alert">
+          {err}
+        </p>
+      ) : null}
+      <div className="list">
+        {list.map((c) => {
+          const [label, tone] = CLAIM_STATUS[c.status] || CLAIM_STATUS.submitted
+          const shots = c.single ? [['사진', c.before]] : [['치우기 전', c.before], ['치운 뒤', c.after]]
+          return (
+            <article key={c.id} className="card claim">
+              <div className="head">
+                <div>
+                  <span className={`badge ${tone}`}>{label}</span>
+                  {c.sample ? <span className="badge">예시</span> : null}
+                  <h3>{c.title}</h3>
+                  <p className="sub">
+                    {c.user || '이웃'} · {day(c.submitted_at)} 제출
+                    {c.lat != null && c.lng != null ? (
+                      <>
+                        {' · '}
+                        <a href={`https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lng}#map=18/${c.lat}/${c.lng}`} target="_blank" rel="noreferrer">
+                          촬영 위치 보기
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
+                </div>
+              </div>
+              <div className="shots">
+                {shots.map(([name, src]) => (
+                  <figure key={name}>
+                    {src ? (
+                      <a href={src} target="_blank" rel="noreferrer">
+                        <img src={src} alt={`${name} 사진`} loading="lazy" />
+                      </a>
+                    ) : (
+                      <div className="noshot">사진 없음</div>
+                    )}
+                    <figcaption>{name}</figcaption>
+                  </figure>
+                ))}
+              </div>
+              {c.status === 'submitted' ? (
+                rejecting === c.id ? (
+                  <div className="decide">
+                    <label className="field">
+                      <span>반려 사유 (앱 사용자에게 보여요)</span>
+                      <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="예: 치운 뒤 사진에 쓰레기가 남아 있어요" maxLength={80} autoFocus />
+                    </label>
+                    <div className="row">
+                      <button className="btn ghost small" disabled={busy === c.id} onClick={() => (setRejecting(null), setReason(''))}>
+                        취소
+                      </button>
+                      <button className="btn small danger" disabled={busy === c.id || reason.trim().length < 2} onClick={() => decide(c, false)}>
+                        반려하기
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="row">
+                    <button className="btn ghost small" disabled={busy === c.id} onClick={() => (setRejecting(c.id), setReason(''))}>
+                      반려
+                    </button>
+                    <button className="btn small" disabled={busy === c.id} onClick={() => decide(c, true)}>
+                      승인하고 보상 지급
+                    </button>
+                  </div>
+                )
+              ) : c.status === 'staff_review' ? (
+                <p className="sub">운영진이 확인하고 있어요.</p>
+              ) : (
+                <p className="sub">
+                  {day(c.decided_at)} {c.status === 'approved' ? '승인했어요' : `반려했어요${c.reject_reason ? ` · ${c.reject_reason}` : ''}`}
+                </p>
               )}
             </article>
           )

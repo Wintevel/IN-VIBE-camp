@@ -27,7 +27,7 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
           {isPartner(r) ? <Stamp type="partner">제휴 의뢰</Stamp> : <Stamp>주민 제보</Stamp>}
           {r.pending_until ? <Stamp type="hot">곧 공개</Stamp> : r.is_mine && !isPartner(r) ? <Stamp>내 제보</Stamp> : null}
           {isCrew(r) ? <Stamp type="partner">크루 {r.current_members}/{r.required_members}</Stamp> : null}
-          {r.status === 'in_progress' ? <Stamp type="hot">진행 중</Stamp> : null}
+          {r.verifying ? <Stamp type="hot">확인 대기</Stamp> : r.status === 'in_progress' ? <Stamp type="hot">진행 중</Stamp> : null}
           {done ? <Stamp type="done">완료</Stamp> : null}
         </View>
         <Text style={text.cardTitle} numberOfLines={2}>
