@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, Text } from 'react-native'
 
-// 움직임 공통: 빠르게 미끄러져 들어와 살짝 튕기는 등장, 눌림, 숫자 올라가기.
+// 움직임 공통: 짧게 미끄러져 들어오는 등장, 눌림, 숫자 올라가기.
+// 등장은 튕김(오버슈트) 없이 짧은 거리만 움직입니다. 화면 전환과 겹쳐도 정신없지 않게 하려는 것입니다.
 // 기기의 "동작 줄이기"가 켜져 있으면 전부 바로 최종 상태로 보여줍니다.
 export const ND = Platform.OS !== 'web'
 
@@ -14,13 +15,13 @@ try {
 } catch {}
 export const reduced = () => reduce
 
-const OFFSET = { right: [40, 0], left: [-40, 0], bottom: [0, 26], top: [0, -26] }
+const OFFSET = { right: [12, 0], left: [-12, 0], bottom: [0, 10], top: [0, -10] }
 
 export function Appear({ index = 0, from = 'right', delay = 0, children, style }) {
   const v = useRef(new Animated.Value(reduce ? 1 : 0)).current
   useEffect(() => {
     if (reduce) return
-    Animated.timing(v, { toValue: 1, duration: 420, delay: delay + Math.min(index, 8) * 60, easing: Easing.out(Easing.back(1.6)), useNativeDriver: ND }).start()
+    Animated.timing(v, { toValue: 1, duration: 260, delay: delay + Math.min(index, 6) * 35, easing: Easing.out(Easing.cubic), useNativeDriver: ND }).start()
   }, [v, index, delay])
   const [dx, dy] = OFFSET[from] || OFFSET.right
   return (
@@ -28,7 +29,7 @@ export function Appear({ index = 0, from = 'right', delay = 0, children, style }
       style={[
         style,
         {
-          opacity: v.interpolate({ inputRange: [0, 0.5], outputRange: [0, 1], extrapolate: 'clamp' }),
+          opacity: v.interpolate({ inputRange: [0, 0.7], outputRange: [0, 1], extrapolate: 'clamp' }),
           transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [dx, 0] }) }, { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [dy, 0] }) }],
         },
       ]}
