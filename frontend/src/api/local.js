@@ -681,6 +681,9 @@ export async function setMark(id, mark) {
 }
 
 // 내가 제보했거나 하트를 누른 의뢰가 해결됐다는 알림. 사진을 보고 "치워졌어요 / 아직이에요"로 답합니다.
+// 기기 저장소 모드는 혼자 쓰므로 확인해 줄 이웃이 없습니다. 인증은 바로 완료되고 확인 대기 목록은 늘 비어 있습니다.
+export const getMyClaims = async () => []
+
 export async function getNotices() {
   const db = await load()
   return (db.notices || []).filter((n) => n.to === db.user.id).reverse()

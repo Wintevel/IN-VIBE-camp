@@ -22,7 +22,7 @@
 | 상점 | `shop_items` 조회, `redeem_item` |
 | 프로필 꾸미기 | `cosmetics_list`, `buy_cosmetic`, `equip_cosmetic` |
 | 설정 | `profiles` update (nickname, avatar_url, home_area), 로그아웃 |
-| 제휴업체 웹 | `partner_me`, `partner_register`, `partner_quests`, `partner_create_quest`, `partner_cancel_quest`, `partner_report` |
+| 제휴업체 웹 | `partner_me`, `partner_register`, `partner_quests`, `partner_create_quest`, `partner_cancel_quest`, `partner_report`, `partner_claims`, `partner_review_claim` |
 | 로그인 | 카카오·구글·이메일로 확정(2026-11-14). 익명 계정은 보기만 가능. 서버는 아직 익명 로그인이며 `docs/backend-requests.md` 2-12 에서 바꿉니다 |
 
 **하트와 승격 표시 원칙**: 승격은 서버가 자동으로 처리하고, 앱은 승격이라는 말이나 기준을 보여주지 않습니다. 승격 기준값은 서버 내부(`app_settings`, 클라이언트 접근 불가)에만 있습니다. 승격된 제보는 의뢰(`kind='report'`)가 되고 라벨은 "주민 제보"로 내려갑니다.

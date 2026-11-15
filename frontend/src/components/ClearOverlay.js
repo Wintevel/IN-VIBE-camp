@@ -7,6 +7,7 @@ import { Appear, CountUp, ND, reduced } from './Motion'
 import { RewardIcon } from './Reward'
 
 // 의뢰 완료 연출: 기울어진 띠가 양쪽에서 가로지르고 "의뢰 완료"가 찍힌 뒤 보상이 종류별로 올라갑니다.
+// 서버 모드에서는 인증을 올려도 바로 지급되지 않습니다(c.pending). 이때는 "인증 제출"과 받을 예정인 보상, 누가 확인하는지를 보여 줍니다.
 export default function ClearOverlay() {
   const app = useApp()
   const c = app.celebrate
@@ -32,6 +33,14 @@ export default function ClearOverlay() {
     c.xp_gained > 0 ? { kind: 'xp', value: c.xp_gained, name: '경험치' } : null,
     c.crew_xp_gained > 0 ? { kind: 'crew', value: c.crew_xp_gained, name: '크루 경험치' } : null,
   ].filter(Boolean)
+  const wait = !!c.pending
+  const how = !wait
+    ? null
+    : c.status === 'staff_review'
+      ? '확인해 줄 이웃이 없어 운영진이 직접 확인해요'
+      : c.by_partner
+        ? '의뢰한 업체 담당자가 확인하면 지급돼요'
+        : `이웃 ${c.voters || 0}명이 사진을 보고 확인해요. 절반 이상이 "치워졌어요"면 지급돼요`
   const slide = (from) => band.interpolate({ inputRange: [0, 1], outputRange: [from * width * 1.4, 0] })
 
   return (
@@ -41,12 +50,13 @@ export default function ClearOverlay() {
         <View style={styles.bands} pointerEvents="none">
           <Animated.View style={[styles.band, { backgroundColor: colors.blue, top: 14, transform: [{ translateX: slide(1) }] }]} />
           <Animated.View style={[styles.band, { backgroundColor: colors.tape, transform: [{ translateX: slide(-1) }] }]}>
-            <Animated.Text style={[text.h1, styles.clear, { opacity: slam, transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [2.4, 1] }) }] }]}>의뢰 완료</Animated.Text>
+            <Animated.Text style={[text.h1, styles.clear, { opacity: slam, transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [2.4, 1] }) }] }]}>{wait ? '인증 제출' : '의뢰 완료'}</Animated.Text>
           </Animated.View>
         </View>
 
         <Appear from="bottom" delay={380}>
           <Text style={[text.cardTitle, { textAlign: 'center' }]}>{c.title}</Text>
+          {wait ? <Text style={[text.small, { textAlign: 'center', marginTop: 6 }]}>{how}</Text> : null}
         </Appear>
         {c.leveled_up ? (
           <Appear from="bottom" delay={460} style={styles.level}>
@@ -58,8 +68,8 @@ export default function ClearOverlay() {
           {rows.map((r, i) => (
             <Appear key={r.kind} from={i % 2 ? 'left' : 'right'} delay={520 + i * 110} style={styles.row}>
               <RewardIcon kind={r.kind} size={26} />
-              <Text style={[text.section, { flex: 1 }]}>{r.name}</Text>
-              {r.label ? <Text style={[text.num, { color: colors.tape }]}>{r.label}</Text> : <CountUp value={r.value} prefix="+" delay={520 + i * 110} style={[text.point, { color: r.kind === 'point' ? colors.tape : r.kind === 'crew' ? colors.purple : colors.blue }]} />}
+              <Text style={[text.section, { flex: 1 }]}>{wait ? `${r.name} · 확인 뒤 지급` : r.name}</Text>
+              {r.label ? <Text style={[text.num, { color: colors.tape }]}>{r.label}</Text> : <CountUp value={r.value} prefix={wait ? '' : '+'} delay={520 + i * 110} style={[text.point, { color: r.kind === 'point' ? colors.tape : r.kind === 'crew' ? colors.purple : colors.blue }]} />}
             </Appear>
           ))}
         </View>

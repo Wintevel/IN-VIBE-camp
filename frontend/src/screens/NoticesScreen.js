@@ -9,17 +9,21 @@ import Toast from '../components/Toast'
 import { useApp } from '../state/AppState'
 import { colors, radius, text } from '../theme'
 
-// 해결 확인 알림: 내가 제보했거나 하트를 누른 의뢰가 해결되면 사진을 보고 정말 치워졌는지 답합니다.
+// 해결 확인: 인증이 올라오면 사진을 보고 정말 치워졌는지 답합니다. 답은 곧 투표이고, "치워졌어요"가 절반 이상 모여야 해결한 이웃이 보상을 받습니다.
+// 받는 사람: 의뢰를 올린 사람, 하트를 누른 사람, 무작위로 뽑힌 이웃, 크루 의뢰는 크루장.
+const ROLE = { author: '내가 올린 제보', heart: '내가 하트를 누른 곳', random: '이웃 확인 요청', owner: '우리 크루 의뢰', crew: '우리 크루 의뢰' }
+const CLOSED = { approved: '확인이 끝나 보상이 지급됐어요', rejected: '아직이라는 의견이 많아 의뢰가 다시 열렸어요', staff_review: '운영진이 확인하고 있어요' }
 export default function NoticesScreen({ navigation }) {
   const app = useApp()
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="해결 확인" sub="내가 제보하거나 하트를 누른 곳이 치워졌는지 봐 주세요" action="닫기" onAction={() => navigation.goBack()} />
-        {app.notices.length === 0 ? <Empty title="확인할 알림이 없어요" sub="제보하거나 하트를 누른 의뢰가 해결되면 여기로 알려 드려요" /> : null}
+        <ScreenHeader title="해결 확인" sub="사진을 보고 정말 치워졌는지 알려 주세요. 절반 이상이 확인해야 보상이 지급돼요" action="닫기" onAction={() => navigation.goBack()} />
+        {app.notices.length === 0 ? <Empty title="확인할 알림이 없어요" sub="제보하거나 하트를 누른 의뢰에 인증이 올라오면 여기로 알려 드려요" /> : null}
         {app.notices.map((n) => (
           <Card key={n.id} style={{ gap: 12 }}>
             <View>
+              {ROLE[n.role] ? <Text style={[text.caption, { color: colors.tape, marginBottom: 2 }]}>{ROLE[n.role]}</Text> : null}
               <Text style={text.cardTitle}>{n.title}</Text>
               <Text style={[text.small, { marginTop: 2 }]}>{n.solver} 님이 해결했다고 올렸어요</Text>
             </View>
@@ -34,7 +38,12 @@ export default function NoticesScreen({ navigation }) {
               ))}
             </View>
             {n.answer ? (
-              <Text style={[text.chip, { color: n.answer === 'ok' ? colors.green : colors.red }]}>{n.answer === 'ok' ? '치워졌다고 확인했어요' : '아직이라고 알렸어요'}</Text>
+              <View style={{ gap: 4 }}>
+                <Text style={[text.chip, { color: n.answer === 'ok' ? colors.green : colors.red }]}>{n.answer === 'ok' ? '치워졌다고 확인했어요' : '아직이라고 알렸어요'}</Text>
+                {CLOSED[n.claim_status] ? <Text style={text.small}>{CLOSED[n.claim_status]}</Text> : null}
+              </View>
+            ) : CLOSED[n.claim_status] ? (
+              <Text style={text.small}>{CLOSED[n.claim_status]}</Text>
             ) : (
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Button type="ghost" onPress={() => app.answerNotice(n.id, 'not')}>

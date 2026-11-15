@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import DailyLimits from '../components/DailyLimits'
 import FilterChips from '../components/FilterChips'
 import { Appear, PressScale } from '../components/Motion'
+import ClaimStatus from '../components/ClaimStatus'
 import MyQuests from '../components/MyQuests'
 import ReportCard from '../components/ReportCard'
 import Screen from '../components/Screen'
@@ -37,7 +38,8 @@ export default function BoardScreen({ navigation }) {
   const going = app.reports.filter((r) => r.status === 'in_progress').length
   const accepted = app.reports.filter((r) => r.i_am_participating && r.status !== 'completed')
   const done = app.reports.filter((r) => r.status === 'completed').length
-  const waiting = app.notices.filter((n) => !n.answer).length
+  // 이미 결론이 난 인증의 알림은 답할 필요가 없으므로 세지 않습니다.
+  const waiting = app.notices.filter((n) => !n.answer && (!n.claim_status || n.claim_status === 'submitted')).length
 
   return (
     <View style={{ flex: 1 }}>
@@ -51,6 +53,7 @@ export default function BoardScreen({ navigation }) {
           </PressScale>
         ) : null}
         <MyQuests reports={accepted} photos={app.photos} onOpen={(id) => (app.reports.find((x) => x.id === id)?.status === 'in_progress' ? navigation.navigate('Proof', { reportId: id }) : app.openSheet(id))} />
+        <ClaimStatus claims={app.claims} />
         {app.reports.length > 0 ? <Ticker>{`주변 의뢰 ${open}건 · 진행 중 ${going}건 · 완료 ${done}건`}</Ticker> : null}
         <FilterChips options={FILTERS} value={filter} onChange={setFilter} />
         <View key={filter} style={{ gap: 12 }}>

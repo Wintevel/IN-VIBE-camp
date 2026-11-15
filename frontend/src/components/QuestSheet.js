@@ -25,8 +25,8 @@ export default function QuestSheet() {
   const single = r.proof_mode === 'single' // 사진 한 장으로 인증하는 의뢰
   const label1 = r.proof_label || '사진'
   const steps = single
-    ? [`현장에서 ${label1}을 앱 카메라로 찍어요`, '사진을 올리면 위치와 함께 접수돼요', '확인되면 보상이 지급돼요']
-    : ['현장에서 치우기 전 사진을 앱 카메라로 찍어요', '치운 뒤 같은 각도로 한 장 더 찍어요', '두 장을 올리면 보상이 지급돼요']
+    ? [`현장에서 ${label1}을 앱 카메라로 찍어요`, '사진을 올리면 위치와 함께 접수돼요', '이웃이나 의뢰한 곳이 확인하면 보상이 지급돼요']
+    : ['현장에서 치우기 전 사진을 앱 카메라로 찍어요', '치운 뒤 같은 각도로 한 장 더 찍어요', '두 장을 올리고 이웃이 확인하면 보상이 지급돼요']
   const img = photoUrl(r.photo_path)
   const proving = joined && started && !done
   const toProof = () => navigationRef.navigate('Proof', { reportId: r.id })
@@ -43,6 +43,7 @@ export default function QuestSheet() {
   let label = '의뢰 수락하기'
   let disabled = false
   if (done) [label, disabled] = ['완료된 의뢰예요', true]
+  else if (r.verifying) [label, disabled] = ['인증을 올렸어요 · 확인을 기다리는 중', true]
   else if (joined && started) [label, disabled] = ['인증하러 가기', false]
   else if (joined) [label, disabled] = [`인원을 기다리는 중 (${r.current_members}/${r.required_members})`, true]
   else if (started) [label, disabled] = ['다른 이웃이 진행 중이에요', true]

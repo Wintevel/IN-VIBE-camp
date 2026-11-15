@@ -42,6 +42,14 @@ const read = () => {
     return { partner: null, quests: [], nextId: 1 }
   }
 }
+
+// 앱 사용자가 올린 인증의 상태
+export const CLAIM_STATUS = {
+  submitted: ['확인 대기', 'wait'],
+  staff_review: ['운영진 검토', 'wait'],
+  approved: ['승인', 'on'],
+  rejected: ['반려', 'bad'],
+}
 const write = (db) => localStorage.setItem(KEY, JSON.stringify(db))
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString()
@@ -52,6 +60,13 @@ function sample(db) {
   db.quests = [
     mk({ title: '호암지 산책로 쓰레기 줍기', description: '산책로 주변 쓰레기를 주워 주세요.', place_type: 'park', place_name: '호암지 생태공원', address: '충주시 호암동', reward_amount: 5000, capacity: 30, starts_on: daysAgo(20).slice(0, 10), ends_on: daysAgo(6).slice(0, 10), status: 'done', created_at: daysAgo(24), joined: 30, completed: 27, daily: [2, 4, 3, 5, 6, 4, 3] }),
     mk({ title: '성서동 상가 골목 담배꽁초 치우기', description: '상가 골목 빗물받이 주변 담배꽁초를 치워 주세요.', place_type: 'street', place_name: '성서동 젊음의 거리', address: '충주시 성서동', reward_amount: 3000, capacity: 40, starts_on: daysAgo(5).slice(0, 10), ends_on: daysAgo(-9).slice(0, 10), status: 'open', created_at: daysAgo(8), joined: 18, completed: 11, daily: [0, 1, 2, 1, 3, 2, 2] }),
+  ]
+  // 인증 확인 화면 예시. 사진은 없고 승인·반려는 이 브라우저에만 남습니다.
+  const open = db.quests[1]
+  db.claims = [
+    { id: db.nextId++, sample: true, quest_id: open.id, title: open.title, user: '초록집게', before: null, after: null, single: false, submitted_at: daysAgo(0), status: 'submitted', reject_reason: null, decided_at: null },
+    { id: db.nextId++, sample: true, quest_id: open.id, title: open.title, user: '동네한바퀴', before: null, after: null, single: false, submitted_at: daysAgo(1), status: 'submitted', reject_reason: null, decided_at: null },
+    { id: db.nextId++, sample: true, quest_id: open.id, title: open.title, user: '줍줍이', before: null, after: null, single: false, submitted_at: daysAgo(2), status: 'approved', reject_reason: null, decided_at: daysAgo(1) },
   ]
 }
 
@@ -88,6 +103,18 @@ const local = {
     db.quests = db.quests.filter((q) => !(q.id === id && q.status === 'review'))
     write(db)
   },
+  claims: () => (read().claims || []).slice().sort((a, b) => (b.status === 'submitted') - (a.status === 'submitted') || (a.submitted_at < b.submitted_at ? 1 : -1)),
+  review(id, approve, reason) {
+    const db = read()
+    const c = (db.claims || []).find((x) => x.id === id && x.status === 'submitted')
+    if (!c) return
+    c.status = approve ? 'approved' : 'rejected'
+    c.reject_reason = approve ? null : reason || null
+    c.decided_at = new Date().toISOString()
+    const q = db.quests.find((x) => x.id === c.quest_id)
+    if (q && approve) q.completed += 1
+    write(db)
+  },
   report() {
     const qs = read().quests.filter((q) => q.status === 'open' || q.status === 'done')
     const sum = (f) => qs.reduce((a, q) => a + f(q), 0)
@@ -113,6 +140,7 @@ const ERRORS = {
   INVALID_NAME: '업체 이름은 2~30자로 적어 주세요',
   INVALID_INPUT: '입력한 내용을 다시 확인해 주세요',
   CANNOT_CANCEL: '검토 중인 의뢰만 취소할 수 있어요',
+  CLAIM_NOT_ACTIVE: '이미 처리했거나 확인할 수 없는 인증이에요',
   LOGIN_REQUIRED: '로그인이 필요해요',
   'Invalid login credentials': '이메일이나 비밀번호가 맞지 않아요',
   'Email not confirmed': '메일로 보낸 확인 링크를 먼저 눌러 주세요',
@@ -132,15 +160,19 @@ const rpc = async (name, args) => {
 }
 const NO_REPORT = { quests: 0, joined: 0, completed: 0, paid: 0, daily: [0, 0, 0, 0, 0, 0, 0], byPlace: [], rows: [], photos: [] }
 // 화면은 값을 바로 읽으므로, 서버에서 받은 값을 여기에 두고 바뀔 때마다 다시 받습니다.
-const cache = { signedIn: false, partner: null, quests: [], report: NO_REPORT }
+const cache = { signedIn: false, partner: null, quests: [], report: NO_REPORT, claims: [] }
+// 인증 사진은 claim-photos 버킷의 공개 경로입니다.
+const photo = (path) => (!path ? null : /^https?:/.test(path) ? path : sb.storage.from('claim-photos').getPublicUrl(path).data.publicUrl)
 async function load() {
   cache.partner = (await rpc('partner_me')) || null
   if (!cache.partner) {
     cache.quests = []
     cache.report = NO_REPORT
+    cache.claims = []
     return
   }
-  const [quests, report] = await Promise.all([rpc('partner_quests'), rpc('partner_report')])
+  const [quests, report, claims] = await Promise.all([rpc('partner_quests'), rpc('partner_report'), rpc('partner_claims')])
+  cache.claims = (claims || []).map((c) => ({ ...c, before: photo(c.before), after: photo(c.after) }))
   cache.quests = quests || []
   cache.report = { ...NO_REPORT, ...(report || {}) }
 }
@@ -170,7 +202,7 @@ const server = {
   },
   async leave() {
     await sb.auth.signOut()
-    Object.assign(cache, { signedIn: false, partner: null, quests: [], report: NO_REPORT })
+    Object.assign(cache, { signedIn: false, partner: null, quests: [], report: NO_REPORT, claims: [] })
   },
   reset() {},
   quests: () => cache.quests,
@@ -196,6 +228,12 @@ const server = {
     await load()
   },
   report: () => cache.report,
+  claims: () => cache.claims,
+  // 업체 담당자가 현장 확인 뒤 승인하면 그때 앱 사용자에게 보상이 지급됩니다. 반려하면 사유가 사용자에게 보입니다.
+  async review(id, approve, reason) {
+    await rpc('partner_review_claim', { p_claim_id: id, p_approve: !!approve, p_reason: approve ? null : reason || null })
+    await load()
+  },
 }
 
 export const api = remote ? server : local

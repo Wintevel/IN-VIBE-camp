@@ -61,7 +61,7 @@ export default function MeScreen({ navigation }) {
   const streakLen =
     (p.streak_weeks || 0) + (weekly[weekly.length - 1] ? 0 : 1);
   const vault = (p.coupons || []).length + (p.rewards || []).length;
-  const waiting = app.notices.filter((n) => !n.answer).length;
+  const waiting = app.notices.filter((n) => !n.answer && (!n.claim_status || n.claim_status === 'submitted')).length;
   const title = titleText(p, app.myCrew);
   return (
     <Screen refreshControl={refresher(app)}>
