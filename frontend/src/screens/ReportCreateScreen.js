@@ -10,10 +10,10 @@ import { colors, font, radius, text } from '../theme'
 
 // place_type 값은 서버와 같아야 합니다.
 const PLACES = [
-  ['drain', '빗물받이'],
-  ['bus_stop', '버스정류장'],
-  ['park', '공원'],
   ['street', '골목·거리'],
+  ['park', '공원'],
+  ['bus_stop', '버스정류장'],
+  ['drain', '빗물받이'],
   ['etc', '기타'],
 ]
 
@@ -37,7 +37,7 @@ export default function ReportCreateScreen({ navigation, route }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [spot, setSpot] = useState('')
-  const [placeType, setPlaceType] = useState('drain')
+  const [placeType, setPlaceType] = useState('street')
   const [issueType, setIssueType] = useState('litter')
   const [members, setMembers] = useState(crew ? 2 : 1)
   const [busy, setBusy] = useState(false)
@@ -70,7 +70,7 @@ export default function ReportCreateScreen({ navigation, route }) {
       {shot ? <Text style={text.caption}>촬영한 위치가 제보 위치로 기록돼요</Text> : null}
 
       <Text style={text.section}>제목</Text>
-      <TextInput value={title} onChangeText={setTitle} placeholder="예) 후문 빗물받이에 꽁초가 가득해요" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} />
+      <TextInput value={title} onChangeText={setTitle} placeholder="예) 후문 골목에 꽁초가 가득해요" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} />
 
       <Text style={text.section}>어떤 문제인가요</Text>
       <FilterChips options={ISSUES} value={issueType} onChange={setIssueType} />
