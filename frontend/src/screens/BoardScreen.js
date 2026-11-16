@@ -39,7 +39,7 @@ export default function BoardScreen({ navigation }) {
   const accepted = app.reports.filter((r) => r.i_am_participating && r.status !== 'completed')
   const done = app.reports.filter((r) => r.status === 'completed').length
   // 이미 결론이 난 인증의 알림은 답할 필요가 없으므로 세지 않습니다.
-  const waiting = app.notices.filter((n) => !n.answer && (!n.claim_status || n.claim_status === 'submitted')).length
+  const waiting = app.notices.filter((n) => !n.answer && (n.can_dispute || !n.claim_status || n.claim_status === 'submitted')).length
 
   return (
     <View style={{ flex: 1 }}>
@@ -71,6 +71,9 @@ export default function BoardScreen({ navigation }) {
       </Screen>
 
       <View style={styles.fabWrap} pointerEvents="box-none">
+        <PressScale onPress={() => navigation.navigate('QuickClean')} accessibilityRole="button" accessibilityLabel="바로 치운 곳 기록하기" style={[styles.fab, styles.fabQuick]} to={0.92}>
+          <Text style={[text.button, { color: colors.ink }]}>바로 치웠어요</Text>
+        </PressScale>
         <PressScale onPress={() => navigation.navigate('ReportCreate')} accessibilityRole="button" accessibilityLabel="주민 제보 올리기" style={styles.fab} to={0.92}>
           <Text style={[text.button, { color: colors.onBlue }]}>＋ 제보하기</Text>
         </PressScale>
@@ -81,6 +84,7 @@ export default function BoardScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   notice: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.tape, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 14 },
-  fabWrap: { position: 'absolute', right: 20, bottom: 16 },
+  fabWrap: { position: 'absolute', right: 20, bottom: 16, flexDirection: 'row', gap: 8 },
+  fabQuick: { backgroundColor: colors.green },
   fab: { backgroundColor: colors.blue, paddingHorizontal: 18, paddingVertical: 14, borderRadius: radius.pill },
 })

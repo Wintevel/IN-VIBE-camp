@@ -25,6 +25,15 @@ export const isPartner = (r) => r.kind === 'partner'
 // 보상 표시: 제휴 의뢰는 제휴처 보상, 포인트가 붙은 의뢰는 포인트, 아니면 경험치
 export const reward = (r) => (r.reward_value ? { value: r.reward_value, unit: r.reward_unit } : r.reward_points > 0 ? { value: r.reward_points, unit: 'POINT' } : { value: r.reward_xp ?? 0, unit: 'XP' })
 
+// 장소 종류. 값(place_type)은 서버와 같아야 합니다. 앞에 올수록 자주 고르는 곳입니다.
+export const PLACES = [
+  ['street', '골목·거리'],
+  ['park', '공원'],
+  ['bus_stop', '버스정류장'],
+  ['drain', '빗물받이'],
+  ['etc', '기타'],
+]
+
 // 제보 유형. 환경 미화 범위 안에서만 나눕니다. 값은 서버와 같아야 합니다.
 export const ISSUES = [
   ['litter', '쓰레기'],

@@ -243,7 +243,7 @@ export default function MeScreen({ navigation }) {
               .slice(0, 10)
               .map((c) => ({
                 label: c.title,
-                value: [c.place_label, day(c.at)].filter(Boolean).join(" · "),
+                value: [c.self ? "바로 치움" : null, c.place_label, day(c.at)].filter(Boolean).join(" · "),
                 key: `${c.id}-${c.at}`,
               }))}
           />

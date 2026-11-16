@@ -25,7 +25,7 @@
 | 제휴업체 웹 | `partner_me`, `partner_register`, `partner_quests`, `partner_create_quest`, `partner_cancel_quest`, `partner_report`, `partner_claims`, `partner_review_claim` |
 | 로그인 | 카카오·구글·이메일로 확정(2026-11-14). 익명 계정은 보기만 가능. 서버는 아직 익명 로그인이며 `docs/backend-requests.md` 2-12 에서 바꿉니다 |
 
-**하트와 승격 표시 원칙**: 승격은 서버가 자동으로 처리하고, 앱은 승격이라는 말이나 기준을 보여주지 않습니다. 승격 기준값은 서버 내부(`app_settings`, 클라이언트 접근 불가)에만 있습니다. 승격된 제보는 의뢰(`kind='report'`)가 되고 라벨은 "주민 제보"로 내려갑니다.
+**제보와 의뢰**: 5-2 이후 승격 문턱은 없습니다. 제보는 올리는 즉시 의뢰(`kind='report'`)가 되고(공개는 3분 뒤) 라벨은 "주민 제보"로 내려갑니다. 하트는 해결 보상을 늘리는 데만 씁니다. 개편 요청(기본 보상, 표본 확인, 바로 치웠어요)은 `docs/backend-requests.md` 7번입니다.
 
 ## 확정 규칙
 숫자 중 "임시"는 `app_settings` 에 있고 마이그레이션 한 줄로 바꿀 수 있습니다.
@@ -153,7 +153,7 @@ const { data } = await supabase.rpc('give_heart', { p_report_id })
 // { liked: true, like_count, points_gained, hearts_today, hearts_left }
 // 에러: HEART_FINAL(이미 누름), HEART_DAILY_LIMIT, REPORT_PENDING, CANNOT_LIKE_OWN_REPORT, REPORT_NOT_OPEN
 ```
-`from('report_hearts').insert({ report_id })` 도 같은 검사를 거칩니다(이미 누른 경우는 23505). 취소(delete)는 없습니다. 하트 5개째에 제보가 `reports_nearby` 에서 빠지고 `quests_nearby` 에 `kind='report'` 로 나타납니다.
+`from('report_hearts').insert({ report_id })` 도 같은 검사를 거칩니다(이미 누른 경우는 23505). 취소(delete)는 없습니다. 제보는 처음부터 `quests_nearby` 에 `kind='report'` 로 나오므로 하트 수로 목록이 바뀌지 않습니다(5-2).
 
 ### 제보하기
 ```js
@@ -385,7 +385,7 @@ select public.staff_review_quest(12, false, '장소가 불분명해요');   -- �
 검토 요청·업체 등록이 들어오면 운영진 디스코드로 알림이 갑니다. 웹훅 주소는 Supabase Vault 에 `discord_webhook_url` 이름으로 넣습니다(커밋하지 않음). 없으면 알림만 건너뜁니다.
 
 ## 시드 데이터
-`supabase/seed.sql` 에 시연용 값(제휴 의뢰 3, 크루 의뢰 1, 주민 제보 3, 크루 5, 시즌 11)이 있고, 원격 DB 에는 사진 한 장 인증 예시(망가진 공원 벤치 사진 찍기, 충주사랑상품권 보상)도 있습니다. 모두 `is_demo = true` 입니다. 시연 좌표: lat 37.4520, lng 126.6560 (인하대 후문 근처). "인하대 후문 빗물받이 꽁초" 제보는 하트 1개만 더 받으면 승격됩니다.
+`supabase/seed.sql` 에 시연용 값(제휴 의뢰 3, 크루 의뢰 1, 주민 제보 3, 크루 5, 시즌 11)이 있고, 원격 DB 에는 사진 한 장 인증 예시(망가진 공원 벤치 사진 찍기, 충주사랑상품권 보상)도 있습니다. 모두 `is_demo = true` 입니다. 시연 좌표: lat 37.4520, lng 126.6560 (인하대 후문 근처).
 
 ## 프론트에 요청
 - `remote.js` 를 이 문서의 RPC 이름으로 바꿔 주세요(위 2026-11-14 갱신 안내).

@@ -13,6 +13,9 @@ export const resetLocal = isLocal ? local.resetLocal : null
 // 서버 모드에서만 있는 기능: 이메일 로그인, 가입 동의 저장, 인증 사진을 찍자마자 올리기
 export const authApi = isLocal ? null : { signIn: remote.signInEmail, signUp: remote.signUpEmail, saveConsent: remote.saveConsent, getConsent: remote.getConsent }
 export const uploadProofPhoto = isLocal ? null : remote.uploadProofPhoto
+export const uploadQuickPhoto = isLocal ? null : remote.uploadQuickPhoto
+// 바로 치웠어요(의뢰 없이 전·후 사진 기록, 경험치만)
+export const quickClean = impl.quickClean
 // 아래 묶음은 두 구현이 같은 모양으로 갖고 있습니다.
 export const cosmeticsApi = { list: impl.getCosmetics, buy: impl.buyCosmetic, equip: impl.equipCosmetic }
 export const profileApi = { setAvatar: impl.setAvatar, setTitle: impl.setTitle, claimFeat: impl.claimFeat }

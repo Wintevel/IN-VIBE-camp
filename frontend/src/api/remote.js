@@ -289,19 +289,69 @@ export async function submitProof(userId, id, before, after) {
   uploads.delete(`${id}:before`)
   uploads.delete(`${id}:after`)
   deadlines.delete(id)
-  // 서버는 바로 지급하지 않고 확인 대기로 둡니다. 화면이 쓰는 이름(points_gained 등)에 "받을 예정" 값을 담고 pending 으로 구분합니다.
+  // 확인 대기면 화면이 쓰는 이름(points_gained 등)에 "받을 예정" 값을 담고 pending 으로 구분합니다.
+  // 개편(7-1) 뒤에는 표본에 뽑히지 않으면 서버가 바로 승인(approved)하고 지급합니다. 그때는 pending 이 아닙니다.
+  const now = d.status === 'approved'
   return {
-    pending: true,
+    pending: !now,
+    dispute_until: d.dispute_until || null,
     status: d.status,
     title: d.title,
     reward_label: d.reward_label || null,
-    points_gained: d.points_pending || 0,
-    xp_gained: d.xp_pending || 0,
-    crew_xp_gained: d.crew_xp_pending || 0,
+    points_gained: (now ? d.points_gained : d.points_pending) || 0,
+    xp_gained: (now ? d.xp_gained : d.xp_pending) || 0,
+    crew_xp_gained: (now ? d.crew_xp_gained : d.crew_xp_pending) || 0,
+    level: d.level,
+    leveled_up: !!d.leveled_up,
     voters: d.voters || 0,
     verify_deadline: d.verify_deadline || null,
     by_partner: k.partner,
   }
+}
+
+// ── 바로 치웠어요 (7-4, 서버 함수 quick_clean 요청 중) ──────────
+// 의뢰 없이 전·후 사진으로 기록합니다. 사진은 찍자마자 올립니다(서버가 업로드 시각으로 TOO_FAST 판정).
+const quickUploads = new Map() // slot → { uri, done }
+
+export function uploadQuickPhoto(userId, slot, shot) {
+  const done = (async () => {
+    const buf = await bytesOf(shot.uri)
+    const hash = await sha256(buf)
+    const path = await upload('claim-photos', `${userId}/self-${Date.now()}-${slot}.jpg`, buf)
+    return { path, hash }
+  })()
+  done.catch(() => {})
+  quickUploads.set(slot, { uri: shot.uri, done })
+  return done
+}
+
+async function quickUploaded(userId, slot, shot) {
+  const u = quickUploads.get(slot)
+  if (u && u.uri === shot.uri) {
+    try {
+      return await u.done
+    } catch {
+      // 다시 올립니다
+    }
+  }
+  return uploadQuickPhoto(userId, slot, shot)
+}
+
+export async function quickClean(userId, { before, after, placeType, issueType, title }) {
+  if (!before || !after) fail('MISSING_PROOF')
+  const [b, a] = [await quickUploaded(userId, 'before', before), await quickUploaded(userId, 'after', after)]
+  const [tb, ta] = await Promise.all([thumbOf(before.uri), thumbOf(after.uri)])
+  const d = await rpc('quick_clean', {
+    p_category: PLACE_NAME[placeType] || '기타',
+    p_issue_type: issueType || 'litter',
+    p_title: title || null,
+    p_before_photo_url: b.path, p_before_lat: before.lat, p_before_lng: before.lng, p_before_accuracy_m: before.accuracyM ?? null, p_before_taken_at: before.takenAt, p_before_photo_hash: b.hash,
+    p_after_photo_url: a.path, p_after_lat: after.lat, p_after_lng: after.lng, p_after_accuracy_m: after.accuracyM ?? null, p_after_taken_at: after.takenAt, p_after_photo_hash: a.hash,
+    p_mocked: !!(before.mocked || after.mocked),
+    p_before_thumb: tb, p_after_thumb: ta,
+  })
+  quickUploads.clear()
+  return { self: true, title: d.title, xp_gained: d.xp_gained || 0, points_gained: 0, crew_xp_gained: d.crew_xp_gained || 0, level: d.level, leveled_up: !!d.leveled_up }
 }
 
 // 내가 올린 인증 중 확인 대기·운영진 검토·최근 반려. 수락만 한 것은 의뢰 목록에 이미 있으므로 뺍니다.

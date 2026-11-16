@@ -26,12 +26,15 @@ const PROOF_MIN_GAP_MS = 60 * 1000 // 임시값: 치우기 전 사진을 찍고 
 const DAY = 24 * 3600 * 1000
 const HEART_DAILY_LIMIT = 10
 // 아래 세 값은 임시값입니다. 서버가 생기면 서버가 정합니다.
+const BASE_POINTS = 10 // 주민 제보를 해결하면 하트와 상관없이 받는 기본 포인트(2026-11-16 개편, docs/backend-requests.md 7-2)
 const HEARTS_PER_STEP = 3 // 하트가 이만큼 모일 때마다
-const POINTS_PER_STEP = 5 // 해결 보상에 이만큼 포인트가 붙습니다
+const POINTS_PER_STEP = 5 // 해결 보상에 이만큼 보너스 포인트가 붙습니다
+const POINTS_CAP = 100
 const CREW_CREATE_LEVEL = 3 // 크루를 만들 수 있는 최소 레벨
 const HEART_GIVER_POINTS = 1 // 하트를 누른 사람이 받는 포인트
 const CREW_XP_PER_LEVEL = 500
-const pointsOf = (r) => Math.floor(r.likes.length / HEARTS_PER_STEP) * POINTS_PER_STEP
+// 해결 보상 = 기본 포인트 + 하트 보너스. 제휴 의뢰는 포인트 대신 제휴 보상을 줍니다.
+const pointsOf = (r) => (r.kind === 'partner' ? 0 : Math.min(POINTS_CAP, BASE_POINTS + Math.floor(r.likes.length / HEARTS_PER_STEP) * POINTS_PER_STEP))
 
 // 포인트 교환 상점(예시 상품). 실제 쿠폰 발급은 연결되어 있지 않습니다.
 const SHOP = [
@@ -362,8 +365,8 @@ export async function getMyProfile() {
   const me = db.user
   // 내가 해결한 의뢰 기록(최근 순). 완료된 의뢰는 지우지 않고 기록으로 남깁니다.
   const cleaned = [...me.completed].reverse().map((c) => {
-    const r = db.reports.find((x) => x.id === c.id)
-    return { id: c.id, at: c.at, issue_type: r?.issue_type || null, title: r?.title || '지워진 의뢰', place_label: r ? (PLACE[r.place_type] || PLACE.etc)[0] : null }
+    const r = c.self ? c : db.reports.find((x) => x.id === c.id)
+    return { id: c.id, at: c.at, self: !!c.self, lat: c.self ? c.lat : r?.lat, lng: c.self ? c.lng : r?.lng, issue_type: r?.issue_type || null, title: r?.title || '지워진 의뢰', place_label: r ? (PLACE[r.place_type] || PLACE.etc)[0] : null }
   })
   return {
     id: me.id,
@@ -400,7 +403,7 @@ export async function getMyProfile() {
 
 const statsRaw = (db) => {
   const me = db.user
-  const of = (key) => tally(me.completed.map((c) => db.reports.find((x) => x.id === c.id)?.[key]))
+  const of = (key) => tally(me.completed.map((c) => (c.self ? c : db.reports.find((x) => x.id === c.id))?.[key]))
   return { completed: me.completed.length, hearts: (me.hearts || []).length, reports: db.reports.filter((r) => r.reporter_id === me.id).length, rewards: (me.rewards || []).length, places: of('place_type'), issues: of('issue_type') }
 }
 
@@ -528,6 +531,37 @@ export async function submitProof(userId, id, before, after) {
   for (const u of watchers) db.notices.push({ id: db.nextId++, to: u, report_id: r.id, title: r.title, solver: me.nickname, before_path: r.before_path, after_path: r.after_path, single: r.proof_mode === 'single', at: r.completed_at, answer: null })
   await save()
   return { xp_gained: xp, points_gained: points, crew_xp_gained: crewXp, title: r.title, reward_label: r.reward_label || null, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points, streak_weeks: streak(me.completed) }
+}
+
+// "바로 치웠어요": 의뢰 없이 보자마자 치운 것을 전·후 사진으로 기록합니다(2026-11-16 개편, 7-4).
+// 포인트는 없고 경험치만 받습니다(가짜 제보를 올려 직접 푸는 악용을 막기 위해). 하루 3개 상한은 의뢰 해결과 같이 셉니다.
+export async function quickClean(userId, { before, after, placeType, issueType, title }) {
+  const db = await load()
+  const me = db.user
+  if (!before || !after) fail('MISSING_PROOF')
+  if (donesToday(me) >= DAILY_LIMIT) fail('DAILY_LIMIT')
+  if (before.uri === after.uri) fail('DUPLICATE_PHOTO')
+  if (meters(before, after) > PROOF_APART_M) fail('PHOTOS_TOO_FAR_APART')
+  const gap = new Date(after.takenAt).getTime() - new Date(before.takenAt).getTime()
+  if (!(gap >= 0)) fail('INVALID_TIME')
+  if (gap < PROOF_MIN_GAP_MS) fail('TOO_FAST')
+  if (await sameScene(before.uri, after.uri)) fail('NO_CHANGE')
+  const xp = (PLACE[placeType] || PLACE.etc)[1]
+  const was = levelOf(me.xp)
+  me.xp += xp
+  const crew = db.crews.find((c) => c.members.includes(me.id))
+  const crewXp = crew ? xp : 0
+  const name = title || `${(PLACE[placeType] || PLACE.etc)[0]} 바로 치움`
+  if (crew) {
+    crew.score += crewXp
+    crew.contrib = crew.contrib || {}
+    crew.contrib[me.id] = (crew.contrib[me.id] || 0) + crewXp
+    feed(crew, { type: 'complete', user: me.nickname, title: name, crew_xp: crewXp, points: 0, is_crew_quest: false })
+  }
+  const at = new Date().toISOString()
+  me.completed.push({ id: `self-${db.nextId++}`, self: true, at, title: name, place_type: placeType, issue_type: issueType || 'litter', lat: after.lat, lng: after.lng, before_path: await keepPhoto(before.uri), after_path: await keepPhoto(after.uri) })
+  await save()
+  return { self: true, title: name, xp_gained: xp, points_gained: 0, crew_xp_gained: crewXp, level: levelOf(me.xp), leveled_up: levelOf(me.xp) > was, xp: me.xp, points: me.points }
 }
 
 // ── 크루 ──────────────────────────────────────────────
