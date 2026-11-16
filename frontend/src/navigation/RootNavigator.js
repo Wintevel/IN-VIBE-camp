@@ -3,6 +3,7 @@ import { DarkTheme, NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Text, View } from 'react-native'
 import { TabIcon } from '../components/Icons'
+import { Pop, reduced } from '../components/Motion'
 import { navigationRef } from './ref'
 import { useApp } from '../state/AppState'
 import { colors, text } from '../theme'
@@ -45,10 +46,21 @@ function Tabs() {
         tabBarInactiveTintColor: colors.disabled,
         tabBarStyle: { backgroundColor: colors.ink, borderTopColor: colors.line },
         tabBarLabel: ({ children, color }) => <Text style={[text.tab, { color }]}>{children}</Text>,
+        // 탭을 바꿀 때 화면이 부드럽게 교차합니다(탭 안의 화면은 다시 등장 효과를 재생하지 않음).
+        animation: reduced() ? 'none' : 'fade',
+        transitionSpec: { animation: 'timing', config: { duration: 180 } },
       }}
     >
       {TABS.map(([name, component, title, icon]) => (
-        <Tab.Screen key={name} name={name} component={component} options={{ title, tabBarIcon: ({ color }) => <TabIcon name={icon} color={color} /> }} />
+        <Tab.Screen key={name} name={name} component={component} options={{
+            title,
+            // 선택한 탭 아이콘이 한 번 통통 튑니다.
+            tabBarIcon: ({ color, focused }) => (
+              <Pop on={focused}>
+                <TabIcon name={icon} color={color} />
+              </Pop>
+            ),
+          }} />
       ))}
     </Tab.Navigator>
   )

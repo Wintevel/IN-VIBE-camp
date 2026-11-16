@@ -1,5 +1,6 @@
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native'
+import { ScrollView, StyleSheet, Text } from 'react-native'
 import { colors, radius, text } from '../theme'
+import { PressScale } from './Motion'
 
 export default function FilterChips({ options, value, onChange }) {
   return (
@@ -7,9 +8,9 @@ export default function FilterChips({ options, value, onChange }) {
       {options.map(([key, label]) => {
         const on = key === value
         return (
-          <Pressable key={key} onPress={() => onChange(key)} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && styles.on]}>
+          <PressScale key={key} onPress={() => onChange(key)} to={0.92} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && styles.on]}>
             <Text style={[text.chip, { color: on ? colors.ink : colors.sub }]}>{label}</Text>
-          </Pressable>
+          </PressScale>
         )
       })}
     </ScrollView>

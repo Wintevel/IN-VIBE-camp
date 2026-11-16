@@ -23,7 +23,13 @@
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
         overflow: hidden;
-        background: #111317;
+        background: #0A0B0D;
+        overscroll-behavior: none; /* 끝까지 스크롤했을 때 페이지가 출렁이지 않게 */
+        -webkit-tap-highlight-color: transparent; /* 폰에서 누를 때 생기는 회색 네모 제거(앱 쪽 눌림 효과가 대신함) */
+        -webkit-font-smoothing: antialiased;
+      }
+      [role='button'], button, a {
+        touch-action: manipulation; /* 두 번 탭 확대 지연 없이 바로 반응 */
       }
       /* These styles make the root element full-height */
       #root {

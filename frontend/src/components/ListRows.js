@@ -8,7 +8,7 @@ export function Card({ children, style }) {
 export function ListRow({ label, value, onPress, danger, icon }) {
   const Row = onPress ? Pressable : View
   return (
-    <Row onPress={onPress} style={styles.row} accessibilityRole={onPress ? 'button' : undefined}>
+    <Row onPress={onPress} style={onPress ? ({ pressed, hovered }) => [styles.row, (pressed || hovered) && { backgroundColor: pressed ? colors.panel2 : 'rgba(255,255,255,0.03)' }] : styles.row} accessibilityRole={onPress ? 'button' : undefined}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         {icon}
         <Text style={[{ ...font.bodyMedium, fontSize: 14, lineHeight: 20, color: danger ? colors.red : colors.fg }]}>{label}</Text>

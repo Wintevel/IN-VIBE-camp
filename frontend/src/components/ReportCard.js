@@ -1,9 +1,9 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Image, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
 import { code, dist, isCrew, isPartner, issueLabel, MARK_LABELS } from '../lib/format'
 import { colors, radius, text } from '../theme'
 import { GiftIcon, HeartIcon, PinIcon } from './Icons'
-import { PressScale } from './Motion'
+import { Pop, PressScale } from './Motion'
 import { RewardPills } from './Reward'
 import Stamp from './Stamp'
 
@@ -43,10 +43,12 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
               <Text style={[text.chip, { color: colors.sub }]}>{topMark}</Text>
             </View>
           ) : null}
-          <Pressable onPress={onHeart} hitSlop={6} accessibilityRole="button" accessibilityLabel="하트" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.heart, r.liked_by_me && styles.heartOn]}>
-            <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sub} />
+          <PressScale onPress={onHeart} hitSlop={6} to={0.88} accessibilityRole="button" accessibilityLabel="하트" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.heart, r.liked_by_me && styles.heartOn]}>
+            <Pop on={!!r.liked_by_me}>
+              <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sub} />
+            </Pop>
             <Text style={[text.chip, { color: r.liked_by_me ? colors.red : colors.sub }]}>{r.like_count ?? 0}</Text>
-          </Pressable>
+          </PressScale>
         </View>
       </View>
       {r.i_am_participating && !done ? <View style={styles.edge} /> : null}

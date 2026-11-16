@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
+import { useFrameSize } from '../lib/frame'
 import { useApp } from '../state/AppState'
 import { colors, text } from '../theme'
 import Button from './Button'
@@ -11,7 +12,7 @@ import { RewardIcon } from './Reward'
 export default function ClearOverlay() {
   const app = useApp()
   const c = app.celebrate
-  const { width } = useWindowDimensions()
+  const { width } = useFrameSize()
   const band = useRef(new Animated.Value(0)).current
   const slam = useRef(new Animated.Value(0)).current
 

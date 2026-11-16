@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { Animated, Easing, StyleSheet, View, useWindowDimensions } from 'react-native'
+import { Animated, Easing, StyleSheet, View } from 'react-native'
+import { useFrameSize } from '../lib/frame'
 import { useApp } from '../state/AppState'
 import { colors, text } from '../theme'
 import { ND, reduced } from './Motion'
@@ -17,7 +18,7 @@ const DURATION = 620
 
 export default function SpeedDash() {
   const { dash, endDash } = useApp()
-  const { width } = useWindowDimensions()
+  const { width } = useFrameSize()
   const v = useRef(new Animated.Value(0)).current
   useEffect(() => {
     if (!dash) return
