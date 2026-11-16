@@ -55,6 +55,7 @@ export default function CaptureScreen({ navigation, route }) {
       }
       if (shot.mocked) throw new Error('모의 위치가 켜져 있으면 인증할 수 없어요.')
       if (kind === 'quest') app.setPhoto(reportId, slot, shot)
+      else if (kind === 'quick') app.setQuickPhoto(slot, shot)
       else app.setDraftPhoto(shot)
       close()
     } catch (e) {

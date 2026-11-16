@@ -31,6 +31,7 @@ export function AppStateProvider({ children }) {
   const [celebrate, setCelebrate] = useState(null) // 의뢰 완료 연출에 쓸 보상 정보
   const [photos, setPhotos] = useState({}) // { [reportId]: { before, after } }
   const [draftPhoto, setDraftPhoto] = useState(null)
+  const [quickPhotos, setQuickPhotos] = useState({}) // 바로 치웠어요: { before, after }
   const [sheet, setSheet] = useState({ id: null, visible: false })
   const [toast, setToast] = useState(null)
   const coordsRef = useRef(null)
@@ -213,6 +214,21 @@ export function AppStateProvider({ children }) {
       photos,
       draftPhoto,
       setDraftPhoto,
+      quickPhotos,
+      setQuickPhoto: (slot, shot) => {
+        setQuickPhotos((p) => ({ ...p, [slot]: shot }))
+        if (api.uploadQuickPhoto) run(() => api.uploadQuickPhoto(userId, slot, shot))
+      },
+      clearQuick: () => setQuickPhotos({}),
+      // 의뢰 없이 바로 치운 것을 기록합니다. 경험치만 받고, 성공하면 완료 연출을 띄웁니다.
+      quickClean: (input) =>
+        run(async () => {
+          const d = await api.quickClean(userId, { ...input, before: quickPhotos.before, after: quickPhotos.after })
+          setQuickPhotos({})
+          setCelebrate(d)
+          await refresh()
+          return d
+        }),
       toast,
       showToast,
       refresh,
@@ -344,7 +360,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, tutorialSeen, userId, guest, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, notices, claims, dash, celebrate, photos, draftPhoto, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, tutorialSeen, userId, guest, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, notices, claims, dash, celebrate, photos, draftPhoto, quickPhotos, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

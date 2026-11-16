@@ -35,8 +35,11 @@ export default function ClearOverlay() {
     c.crew_xp_gained > 0 ? { kind: 'crew', value: c.crew_xp_gained, name: '크루 경험치' } : null,
   ].filter(Boolean)
   const wait = !!c.pending
+  // 바로 승인된 인증은 이의 기간 동안 이웃이 "아직이에요"를 남길 수 있습니다(7-1).
   const how = !wait
-    ? null
+    ? c.dispute_until
+      ? '바로 지급됐어요. 이웃이 사진을 보고 이의를 남기면 운영진이 다시 확인해요'
+      : null
     : c.status === 'staff_review'
       ? '확인해 줄 이웃이 없어 운영진이 직접 확인해요'
       : c.by_partner
@@ -51,13 +54,13 @@ export default function ClearOverlay() {
         <View style={styles.bands} pointerEvents="none">
           <Animated.View style={[styles.band, { backgroundColor: colors.blue, top: 14, transform: [{ translateX: slide(1) }] }]} />
           <Animated.View style={[styles.band, { backgroundColor: colors.tape, transform: [{ translateX: slide(-1) }] }]}>
-            <Animated.Text style={[text.h1, styles.clear, { opacity: slam, transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [2.4, 1] }) }] }]}>{wait ? '인증 제출' : '의뢰 완료'}</Animated.Text>
+            <Animated.Text style={[text.h1, styles.clear, { opacity: slam, transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [2.4, 1] }) }] }]}>{wait ? '인증 제출' : c.self ? '치움 완료' : '의뢰 완료'}</Animated.Text>
           </Animated.View>
         </View>
 
         <Appear from="bottom" delay={380}>
           <Text style={[text.cardTitle, { textAlign: 'center' }]}>{c.title}</Text>
-          {wait ? <Text style={[text.small, { textAlign: 'center', marginTop: 6 }]}>{how}</Text> : null}
+          {how ? <Text style={[text.small, { textAlign: 'center', marginTop: 6 }]}>{how}</Text> : null}
         </Appear>
         {c.leveled_up ? (
           <Appear from="bottom" delay={460} style={styles.level}>

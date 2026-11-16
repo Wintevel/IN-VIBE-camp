@@ -17,6 +17,7 @@ import MapScreen from '../screens/MapScreen'
 import NoticesScreen from '../screens/NoticesScreen'
 import MeScreen from '../screens/MeScreen'
 import ProofScreen from '../screens/ProofScreen'
+import QuickCleanScreen from '../screens/QuickCleanScreen'
 import ReportCreateScreen from '../screens/ReportCreateScreen'
 import ShopScreen from '../screens/ShopScreen'
 import StylePickScreen from '../screens/StylePickScreen'
@@ -82,6 +83,7 @@ export default function RootNavigator() {
           <>
             <Stack.Screen name="Main" component={Tabs} />
             <Stack.Screen name="ReportCreate" component={ReportCreateScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="QuickClean" component={QuickCleanScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Capture" component={CaptureScreen} options={{ presentation: 'fullScreenModal' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />

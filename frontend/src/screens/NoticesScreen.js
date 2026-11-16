@@ -42,6 +42,17 @@ export default function NoticesScreen({ navigation }) {
                 <Text style={[text.chip, { color: n.answer === 'ok' ? colors.green : colors.red }]}>{n.answer === 'ok' ? '치워졌다고 확인했어요' : '아직이라고 알렸어요'}</Text>
                 {CLOSED[n.claim_status] ? <Text style={text.small}>{CLOSED[n.claim_status]}</Text> : null}
               </View>
+            ) : n.can_dispute ? (
+              // 개편(7-1): 바로 지급된 인증도 이의 기간에는 답할 수 있습니다. "아직이에요"가 모이면 운영진이 다시 봅니다.
+              <View style={{ gap: 8 }}>
+                <Text style={text.small}>보상은 이미 지급됐어요. 사진이 이상하면 알려 주세요</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Button type="ghost" onPress={() => app.answerNotice(n.id, 'not')}>
+                    아직이에요
+                  </Button>
+                  <Button onPress={() => app.answerNotice(n.id, 'ok')}>치워졌어요</Button>
+                </View>
+              </View>
             ) : CLOSED[n.claim_status] ? (
               <Text style={text.small}>{CLOSED[n.claim_status]}</Text>
             ) : (

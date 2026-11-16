@@ -4,18 +4,9 @@ import * as Location from 'expo-location'
 import Button from '../components/Button'
 import FilterChips from '../components/FilterChips'
 import Screen from '../components/Screen'
-import { ISSUES } from '../lib/format'
+import { ISSUES, PLACES } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
-
-// place_type 값은 서버와 같아야 합니다.
-const PLACES = [
-  ['street', '골목·거리'],
-  ['park', '공원'],
-  ['bus_stop', '버스정류장'],
-  ['drain', '빗물받이'],
-  ['etc', '기타'],
-]
 
 // 좌표 → 주소. 웹 등 주소를 못 구하는 환경에서는 비워 둡니다(좌표 숫자는 사람이 읽을 수 없어 보여 주지 않음).
 async function lookup(shot) {
@@ -41,6 +32,8 @@ export default function ReportCreateScreen({ navigation, route }) {
   const [issueType, setIssueType] = useState('litter')
   const [members, setMembers] = useState(crew ? 2 : 1)
   const [busy, setBusy] = useState(false)
+  // 길에서 바로 올릴 수 있게 사진과 제목만 받고, 나머지는 펼쳐야 보입니다(2026-11-16 개편). 크루 의뢰는 인원이 필요해 펼쳐 둡니다.
+  const [more, setMore] = useState(crew)
   const shot = app.draftPhoto
   const ready = title.trim().length > 0 && !!shot && !busy
 
@@ -68,10 +61,22 @@ export default function ReportCreateScreen({ navigation, route }) {
         {shot ? <Image source={{ uri: shot.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <Text style={[text.chip, { color: colors.sub }]}>사진 찍기 (앱 카메라만 가능)</Text>}
       </Pressable>
       {shot ? <Text style={text.caption}>촬영한 위치가 제보 위치로 기록돼요</Text> : null}
+      {!crew ? (
+        <Text onPress={() => navigation.replace('QuickClean')} accessibilityRole="button" style={[text.caption, { color: colors.green }]}>
+          보자마자 직접 치웠다면? "바로 치웠어요"로 기록하기 →
+        </Text>
+      ) : null}
 
       <Text style={text.section}>제목</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="예) 후문 골목에 꽁초가 가득해요" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} />
 
+      {!more ? (
+        <Text onPress={() => setMore(true)} accessibilityRole="button" style={[text.small, styles.more]}>
+          ＋ 문제 유형·장소·인원 더 적기 (선택)
+        </Text>
+      ) : null}
+      {more ? (
+      <>
       <Text style={text.section}>어떤 문제인가요</Text>
       <FilterChips options={ISSUES} value={issueType} onChange={setIssueType} />
 
@@ -95,6 +100,8 @@ export default function ReportCreateScreen({ navigation, route }) {
         </Pressable>
         <Text style={[text.caption, { flex: 1 }]}>{members > 1 ? '크루 의뢰로 올라가요. 인원이 모이면 시작돼요' : '혼자 치울 수 있는 양이에요'}</Text>
       </View>
+      </>
+      ) : null}
 
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
         <Button type="ghost" onPress={close}>
@@ -112,6 +119,7 @@ const styles = StyleSheet.create({
   photo: { aspectRatio: 4 / 3, borderRadius: radius.md, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.line, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   photoDone: { borderStyle: 'solid', borderColor: colors.blue },
   input: { backgroundColor: colors.panel, borderRadius: radius.cardSm, borderWidth: 1, borderColor: colors.line, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 16, paddingVertical: 14 },
+  more: { color: colors.blue, paddingVertical: 6, alignSelf: 'flex-start' },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stepBtn: { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
 })

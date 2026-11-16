@@ -18,12 +18,18 @@ const LEGEND = [
 // 동네 지도: 서버에서 받은 주변 의뢰를 위치에 찍습니다. 핀을 누르면 의뢰 시트가 열립니다.
 export default function MapScreen() {
   const app = useApp()
-  const markers = useMemo(() => app.reports.filter((r) => r.lat && r.lng).map((r) => ({ id: r.id, lat: r.lat, lng: r.lng, color: COLOR[r.status] || colors.tape })), [app.reports])
-  const count = (s) => app.reports.filter((r) => r.status === s).length
+  // "바로 치웠어요" 기록은 의뢰가 아니라서 내 정보의 치운 곳 목록(cleaned)에서 가져와 같은 초록 핀으로 찍습니다.
+  const selfs = useMemo(() => (app.profile?.cleaned || []).filter((c) => c.self && c.lat && c.lng), [app.profile])
+  const markers = useMemo(
+    () => [...app.reports.filter((r) => r.lat && r.lng).map((r) => ({ id: r.id, lat: r.lat, lng: r.lng, color: COLOR[r.status] || colors.tape })), ...selfs.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng, color: colors.green }))],
+    [app.reports, selfs],
+  )
+  const count = (s) => app.reports.filter((r) => r.status === s).length + (s === 'completed' ? selfs.length : 0)
+  const select = (id) => (String(id).startsWith('self-') ? null : app.openSheet(id))
   return (
     <Screen refreshControl={refresher(app)}>
       <ScreenHeader title="동네 지도" sub="핀을 누르면 의뢰를 볼 수 있어요" />
-      <View style={styles.map}>{app.coords ? <MapView center={app.coords} me={app.located ? app.coords : null} markers={markers} onSelect={app.openSheet} /> : null}</View>
+      <View style={styles.map}>{app.coords ? <MapView center={app.coords} me={app.located ? app.coords : null} markers={markers} onSelect={select} /> : null}</View>
       <View style={styles.legend}>
         {LEGEND.map(([label, color]) => (
           <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

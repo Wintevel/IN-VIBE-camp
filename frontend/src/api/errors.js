@@ -52,6 +52,7 @@ const ERRORS = {
   'Password should be': '비밀번호는 6자 이상으로 정해 주세요',
   'Unable to validate email': '이메일 주소를 확인해 주세요',
   'Anonymous sign-ins are disabled': '둘러보기가 꺼져 있어요. 이메일로 시작해 주세요',
+  'Could not find the function public.quick_clean': '"바로 치웠어요"는 서버 준비 중이에요. 곧 열려요',
   TOO_FAR: '의뢰 장소에서 100m 안에서 찍은 사진만 인증할 수 있어요',
 }
 
