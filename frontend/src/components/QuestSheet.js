@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Image, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
 import { code, dist, isCrew, isPartner, remain, issueLabel, MARK_LABELS, FLAG_REASONS, placeText } from '../lib/format'
 import { navigationRef } from '../navigation/ref'
@@ -8,6 +8,7 @@ import { colors, font, radius, text } from '../theme'
 import BottomSheet from './BottomSheet'
 import Button from './Button'
 import { HeartIcon } from './Icons'
+import { Pop, PressScale } from './Motion'
 import { RewardTiles, rewardParts } from './Reward'
 import Stamp from './Stamp'
 
@@ -103,18 +104,20 @@ export default function QuestSheet() {
       <Text style={text.sheetTitle}>{r.title}</Text>
       {app.social && !done ? (
         <View style={styles.react}>
-          <Pressable onPress={() => app.toggleHeart(r.id)} accessibilityRole="button" accessibilityLabel="하트 누르기" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.chip, r.liked_by_me && { backgroundColor: colors.redSoft }]}>
-            <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sheetSub} />
+          <PressScale onPress={() => app.toggleHeart(r.id)} to={0.9} accessibilityRole="button" accessibilityLabel="하트 누르기" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.chip, r.liked_by_me && { backgroundColor: colors.redSoft }]}>
+            <Pop on={!!r.liked_by_me}>
+              <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sheetSub} />
+            </Pop>
             <Text style={[text.chip, { color: r.liked_by_me ? colors.red : colors.sheetSub }]}>{r.like_count ?? 0}</Text>
-          </Pressable>
+          </PressScale>
           {MARK_LABELS.map(([k, name]) => {
             const on = r.my_mark === k
             return (
-              <Pressable key={k} onPress={() => app.mark(r.id, k)} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && { backgroundColor: colors.blueWeak, borderColor: colors.blue }]}>
+              <PressScale key={k} onPress={() => app.mark(r.id, k)} to={0.92} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && { backgroundColor: colors.blueWeak, borderColor: colors.blue }]}>
                 <Text style={[text.chip, { color: on ? colors.blue : colors.sheetSub }]}>
                   {name} {r.marks?.[k] || 0}
                 </Text>
-              </Pressable>
+              </PressScale>
             )
           })}
         </View>
@@ -149,9 +152,9 @@ export default function QuestSheet() {
             <Text style={text.section}>신고하는 이유</Text>
             <View style={styles.react}>
               {FLAG_REASONS.map(([k, name]) => (
-                <Pressable key={k} onPress={() => sendFlag(k)} accessibilityRole="button" style={styles.chip}>
+                <PressScale key={k} onPress={() => sendFlag(k)} to={0.92} accessibilityRole="button" style={styles.chip}>
                   <Text style={[text.chip, { color: colors.sheetFg }]}>{name}</Text>
-                </Pressable>
+                </PressScale>
               ))}
             </View>
             <Text style={[text.caption, { color: colors.sheetSub }]}>신고한 제보는 내 의뢰판에서 사라지고 운영진이 확인해요.</Text>

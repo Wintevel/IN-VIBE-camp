@@ -39,15 +39,53 @@ export function Appear({ index = 0, from = 'right', delay = 0, children, style }
   )
 }
 
-// 누르면 살짝 줄었다가 튕겨 돌아오는 Pressable
+// 누르면 살짝 줄었다가 튕겨 돌아오는 Pressable. 웹에서는 마우스를 올리면 살짝 옅어집니다.
 export function PressScale({ children, style, to = 0.96, ...rest }) {
-  const s = useRef(new Animated.Value(1)).current
-  const go = (toValue) => Animated.spring(s, { toValue, speed: 40, bounciness: toValue === 1 ? 12 : 0, useNativeDriver: ND }).start()
+  const { s, hover, props } = usePress(to)
   return (
-    <Pressable onPressIn={() => !reduce && go(to)} onPressOut={() => go(1)} {...rest}>
-      <Animated.View style={[style, { transform: [{ scale: s }] }]}>{children}</Animated.View>
+    <Pressable {...props} {...rest}>
+      <Animated.View style={[style, { opacity: hover, transform: [{ scale: s }] }]}>{children}</Animated.View>
     </Pressable>
   )
+}
+
+// 눌림(줄었다 돌아옴)과 마우스 올림(웹)을 공통으로 처리하는 훅. Button·PressScale 이 같이 씁니다.
+export function usePress(to = 0.96) {
+  const s = useRef(new Animated.Value(1)).current
+  const hover = useRef(new Animated.Value(1)).current
+  const go = (toValue) => Animated.spring(s, { toValue, speed: 40, bounciness: toValue === 1 ? 10 : 0, useNativeDriver: ND }).start()
+  const fade = (toValue) => Animated.timing(hover, { toValue, duration: 120, useNativeDriver: ND }).start()
+  const props = {
+    onPressIn: () => !reduce && go(to),
+    onPressOut: () => go(1),
+    ...(ND ? null : { onHoverIn: () => fade(0.88), onHoverOut: () => fade(1) }),
+  }
+  return { s, hover, props }
+}
+
+// on 이 켜질 때(하트 누름 등) 한 번 통통 튀는 아이콘 틀. 처음 그릴 때는 움직이지 않습니다.
+export function Pop({ on, children, style }) {
+  const s = useRef(new Animated.Value(1)).current
+  const first = useRef(true)
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    if (!on || reduce) return
+    s.setValue(0.6)
+    Animated.spring(s, { toValue: 1, speed: 18, bounciness: 18, useNativeDriver: ND }).start()
+  }, [on, s])
+  return <Animated.View style={[style, { transform: [{ scale: s }] }]}>{children}</Animated.View>
+}
+
+// 아래에서 살짝 올라오며 나타나고, visible 이 꺼지면 내려가며 사라지는 요소(안내·팝업용)
+export function FadeUp({ visible = true, children, style, distance = 12, duration = 220 }) {
+  const v = useRef(new Animated.Value(reduce ? 1 : 0)).current
+  useEffect(() => {
+    Animated.timing(v, { toValue: visible ? 1 : 0, duration: reduce ? 0 : visible ? duration : 160, easing: visible ? Easing.out(Easing.cubic) : Easing.in(Easing.quad), useNativeDriver: ND }).start()
+  }, [visible, v, duration])
+  return <Animated.View style={[style, { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [distance, 0] }) }] }]}>{children}</Animated.View>
 }
 
 // 0에서 값까지 올라가는 숫자

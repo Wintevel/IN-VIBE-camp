@@ -6,6 +6,7 @@ import BoardBackground from '../components/BoardBackground'
 import Button from '../components/Button'
 import InstallApp from '../components/InstallApp'
 import Logo from '../components/Logo'
+import { Appear } from '../components/Motion'
 import Stamp from '../components/Stamp'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
@@ -68,7 +69,7 @@ export default function LoginScreen() {
   if (step === 'email') {
     return (
       <BoardBackground>
-        <View style={[styles.wrap, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24, gap: 16 }]}>
+        <Appear key="email" from="right" style={[styles.wrap, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24, gap: 16 }]}>
           <View style={{ gap: 14 }}>
             <View style={{ gap: 6 }}>
               <Text style={[text.h1, { fontSize: 28, lineHeight: 36 }]}>{mode === 'in' ? '로그인' : '가입하기'}</Text>
@@ -105,7 +106,7 @@ export default function LoginScreen() {
             <Text style={[text.caption, { textAlign: 'center' }]}>둘러보기는 의뢰판·지도·랭킹 보기만 돼요.</Text>
             <InstallApp />
           </View>
-        </View>
+        </Appear>
       </BoardBackground>
     )
   }
@@ -113,7 +114,7 @@ export default function LoginScreen() {
   if (step === 'consent') {
     return (
       <BoardBackground>
-        <View style={[styles.wrap, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24, gap: 16 }]}>
+        <Appear key="consent" from="right" style={[styles.wrap, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24, gap: 16 }]}>
           <View style={{ gap: 6 }}>
             <Text style={[text.h1, { fontSize: 28, lineHeight: 36 }]}>시작하기 전에</Text>
             <Text style={[text.small]}>집게표를 쓰려면 아래 내용에 동의가 필요해요.</Text>
@@ -132,14 +133,14 @@ export default function LoginScreen() {
               {busy ? '시작하는 중…' : '동의하고 시작'}
             </Button>
           </View>
-        </View>
+        </Appear>
       </BoardBackground>
     )
   }
 
   return (
     <BoardBackground>
-      <View style={[styles.wrap, { paddingTop: insets.top + 80, paddingBottom: insets.bottom + 24 }]}>
+      <Appear key="intro" from="left" style={[styles.wrap, { paddingTop: insets.top + 80, paddingBottom: insets.bottom + 24 }]}>
         <View style={{ gap: 14 }}>
           <Logo size={76} />
           <View style={{ alignSelf: 'flex-start' }}>
@@ -155,7 +156,7 @@ export default function LoginScreen() {
           <Text style={[text.caption, { textAlign: 'center' }]}>{emailAuth ? '이메일로 가입하거나 로그인 없이 둘러볼 수 있어요.' : '가입 없이 바로 시작해요. 닉네임은 설정에서 바꿀 수 있어요.'}</Text>
           <InstallApp />
         </View>
-      </View>
+      </Appear>
     </BoardBackground>
   )
 }
