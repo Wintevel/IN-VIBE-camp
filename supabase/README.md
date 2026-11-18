@@ -26,6 +26,7 @@ npx supabase db push     # migrations/ 를 원격에 적용
   - `20261114105452_requests_2`: 익명 제한·가입 동의·상태 버튼·해결 확인 알림·신고·내 정보 개편 (2-12 ~ 2-16, 2-18)
   - `20261114154247_verify_votes`: 인증 확인 투표·업체 확인, 5-1 ~ 5-5
   - `…172535_verify_votes_v2`, `…172619_verify_votes_v2_fix`, `…172735_verify_votes_fixed_weights`: 투표 비율 40/30/30·50% 기준, 크루장 확인, 업체 기한 없음
+  - `20261118062807_requests_7`, `…115059_requests_7_fix`, `…115208_requests_7_map`: `docs/backend-requests.md` 7-1 ~ 7-4 (표본 확인·사후 이의, 기본 10점, 투표 1점, 바로 치웠어요)
 - 시연용 데이터는 `seed.sql` (원격에는 이미 넣어 둠, `is_demo = true`). 로컬은 `supabase db reset` 시 자동 실행됩니다.
 - 대시보드 인증 설정 (2026-11-16 기준)
   - **이메일 로그인**: 켜 둠. 앱 가입·로그인은 이메일(+ 필수 동의 `save_consent`). Confirm email 은 켜져 있음(시연 기간에 끌지 결정 중. 기본 메일은 시간당 발송 수가 적음).
