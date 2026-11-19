@@ -41,7 +41,7 @@
 - **하루 10개**(KST 0시 기준). 11번째는 `HEART_DAILY_LIMIT`
 - 하트를 누른 사람은 **1점**(임시). 같은 제보에는 한 번만
 - (5-2) 승격 문턱은 없습니다. 제보는 올리는 즉시 같은 위치에 `kind='report'` 의뢰가 되고, 3분 뒤 공개되면 수락할 수 있습니다. 그래서 `reports_nearby` 는 거의 비어 있고 주민 제보는 `quests_nearby` 에 나옵니다
-- **제보자는 포인트를 받지 않습니다.** 제보를 치운 사람(해결자)만 **하트 3개마다 5점**(`floor(하트 수 / 3) × 5`, 최대 100점)을 받습니다. 하트 0~2개면 포인트 0, XP 만
+- **제보자는 포인트를 받지 않습니다.** 제보를 치운 사람(해결자)만 **기본 10점 + 하트 3개마다 5점**(`least(10 + floor(하트 수 / 3) × 5, 100)`, 7-2)을 받습니다. 하트 0개여도 10점
 - 본인 제보에는 하트 불가(`CANNOT_LIKE_OWN_REPORT`), 본인 제보는 본인이 해결 불가(`OWN_REPORT`). 단, 필요 인원 2명 이상인 의뢰는 올린 사람도 참여
 
 **포인트와 XP**
@@ -49,7 +49,7 @@
 - **XP**: 쌓이기만 하는 값(`xp`). 의뢰를 해결하면 장소 유형별로 빗물받이 100 · 버스정류장 80 · 공원 150 · 골목·거리 80 · 기타 50 (임시)
 - **개인 레벨** = XP 300마다 1레벨(임시). 칭호는 프론트가 레벨 숫자로 붙입니다
 - 크루 만들기는 레벨 3부터(5-1, `CREW_LEVEL_TOO_LOW`). 가입은 제한 없음
-- 의뢰 보상 포인트: 주민 제보 = floor(하트 수 / 3) × 5(최대 100), 제휴 = `reward_points`, 크루 의뢰 = 50(임시)
+- 의뢰 보상 포인트: 주민 제보 = least(10 + floor(하트 수 / 3) × 5, 100) (`report_base_points` 10, 임시), 제휴 = `reward_points`, 크루 의뢰 = 50(임시)
 
 **크루**
 - 1인 1크루(확정 대기 ?). 바로 가입(초대·승인 없음)
@@ -196,15 +196,23 @@ const { data, error } = await supabase.rpc('approve_claim', {
   p_before_thumb, p_after_thumb,  // 선택: 32×32 RGB 픽셀(3072바이트)을 base64 로. 있으면 NO_CHANGE 검사
 })
 // single(사진 한 장) 의뢰는 p_before_* 와 p_mocked 만 보내면 됩니다.
-// 성공(제출됨): { status: 'submitted'|'staff_review', title, points_pending, xp_pending, crew_xp_pending,
-//                reward_label, voters, verify_deadline, daily_remaining }   ← 포인트는 아직 지급 전
+// 성공(바로 승인, 7-1): { status: 'approved', title, points_gained, xp_gained, crew_xp_gained, reward_label,
+//                points, xp, level, leveled_up, dispute_until, daily_remaining }   ← 이미 지급됨, dispute_until 까지 이의 가능
+// 성공(표본 확인·업체 확인): { status: 'submitted'|'staff_review', title, points_pending, xp_pending, crew_xp_pending,
+//                reward_label, voters, verify_deadline(제휴는 null), daily_remaining }   ← 포인트는 아직 지급 전
 // 실패: DAILY_LIMIT, REPORT_NOT_IN_PROGRESS, TOO_FAR, PHOTOS_TOO_FAR_APART, INVALID_TIME, TOO_FAST, NO_CHANGE,
 //       MOCK_LOCATION, INVALID_PHOTO, DUPLICATE_PHOTO, MISSING_PROOF, CLAIM_EXPIRED, QUEST_CLOSED, CLAIM_NOT_ACTIVE
 ```
 해시는 촬영 파일 내용의 SHA-256 입니다. 검사에서 실패해도 claim 은 `accepted` 로 남아서 다시 찍어 올릴 수 있습니다(만료 제외).
 
-### 인증 확인 (2026-11-15 장연우 결정)
+### 인증 확인 (2026-11-15 장연우 결정, 2026-11-18 7-1 반영)
 인증 상태: `accepted`(수락) → `submitted`(확인 대기) → `approved`(승인, 이때 포인트·XP·크루 XP 지급) 또는 `rejected`(반려, 의뢰는 다시 열림). 결론이 안 나면 `staff_review`(운영진 검토).
+
+**표본 확인 + 사후 이의 (7-1)**: 주민 제보·크루 의뢰는 자동 검사를 통과하면 **표본에 뽑힌 것만** 아래 투표로 가고, 나머지는 **바로 승인**(`decided_by = 'auto'`)됩니다.
+- 표본 대상(하나라도 해당): ① 해결자의 승인 인증이 3건 미만(`verify_trust_after`) ② 최근 30일 안에 반려·이의 ③ 해결자와 올린 사람이 최근 30일 안에 서로의 제보에 하트를 누르거나 서로의 의뢰를 해결함 ④ 무작위 20%(`verify_sample_rate`).
+- 바로 승인된 인증은 **이의 기간 48시간**(`dispute_window`). 올린 사람(2표)·크루장·하트 누른 사람에게 `kind: 'dispute'` 알림이 갑니다. "아직이에요"가 2표(`dispute_threshold`) 모이면 `staff_review` 로 바뀌고 지급한 포인트·XP·크루 점수를 회수합니다(`point_ledger` reason `claim_disputed`, 잔액이 모자라면 잔액만큼). 운영진이 승인하면 다시 지급, 반려하면 의뢰가 다시 열립니다.
+- 표본 투표의 무작위 이웃은 의뢰 위치 3km(`verify_near_m`) 안에서 최근 30일에 제보·인증한 사람을 먼저 뽑고, 모자라면 나머지에서 뽑습니다.
+- 표본 투표에 답하면 **1점**(`verify_answer_points`, 하루 5번 `verify_answer_daily`, reason `verify_answer`, 7-3). 이의 알림 답에는 포인트가 없습니다.
 
 **주민 제보: 이웃 투표** (2026-11-15 02:23 수정)
 - 의뢰를 올린 사람 **40%** + 하트 누른 사람 **30%**(똑같이 나눔) + 의뢰와 관련 없는 이웃 **30%**(무작위 3명, 똑같이 나눔). 해결한 본인은 빠집니다.
@@ -226,8 +234,22 @@ await supabase.rpc('partner_review_claim', { p_claim_id, p_approve: true, p_reas
 ```
 판단 기한은 없고 업체가 반드시 판단합니다. 업체 계정이 없는 의뢰(시드 등)만 운영진 검토로 갑니다.
 
-**하루 3개 상한**은 인증을 제출한 시점에 셉니다(확인 대기 포함). `my_claims` 는 수락 중·확인 대기·운영진 검토·최근 3일 반려를 내려 줍니다:
-`{ claim_id, quest_id, title, kind, status, accepted_at, deadline_at, submitted_at, verify_deadline, ok_percent, voters, answered, reject_reason, points_pending, xp_pending, lat, lng, address }`.
+**하루 3개 상한**은 인증을 제출한 시점에 셉니다(확인 대기 포함, "바로 치웠어요"도 같이 셈). `my_claims` 는 수락 중·확인 대기·운영진 검토·최근 3일 반려·**이의 기간 중인 승인**을 내려 줍니다:
+`{ claim_id, quest_id, title, kind, status, accepted_at, deadline_at, submitted_at, verify_deadline, dispute_until, ok_percent, voters, answered, reject_reason, points_pending, xp_pending, lat, lng, address }`. `dispute_until` 은 이의 기간 중인 `approved` 행에만 있습니다. `ok_percent`·`voters`·`answered` 는 표본 투표 기준입니다.
+
+**바로 치웠어요 (7-4)**: 의뢰 없이 치운 것을 전·후 사진으로 기록합니다. 포인트는 없고 XP(장소 유형별)만, 크루원이면 크루 XP 1배. 확인 투표는 없습니다.
+```js
+await supabase.storage.from('claim-photos').upload(`${user.id}/self-${Date.now()}-before.jpg`, beforeFile)
+const { data, error } = await supabase.rpc('quick_clean', {
+  p_category, p_issue_type, p_title,   // 제목이 비면 "공원 바로 치움" 처럼 서버가 만듦
+  p_before_photo_url, p_before_lat, p_before_lng, p_before_accuracy_m, p_before_taken_at, p_before_photo_hash,
+  p_after_photo_url,  p_after_lat,  p_after_lng,  p_after_accuracy_m,  p_after_taken_at,  p_after_photo_hash,
+  p_mocked, p_before_thumb, p_after_thumb,
+})
+// { id, title, xp_gained, crew_xp_gained, level, leveled_up, daily_remaining }
+// 에러: DAILY_LIMIT, PHOTOS_TOO_FAR_APART, INVALID_TIME, TOO_FAST, NO_CHANGE, MOCK_LOCATION, INVALID_PHOTO, DUPLICATE_PHOTO, MISSING_PROOF, LOGIN_REQUIRED, CONSENT_REQUIRED
+```
+검사는 `approve_claim` 과 같고 의뢰 위치 반경만 없습니다. 전 사진은 3시간 안에 찍고 올린 것이어야 합니다. 기록은 `self_cleans` 테이블(본인만 읽기)에 남고, `my_cleaned`·`my_profile.cleaned`(`self: true`, id 는 `'self-12'`), `map_overview` 의 `cleared` 점, 도전과제 `stats` 에 들어갑니다.
 
 운영진 결정: 대시보드 SQL 에디터에서 `select public.staff_review_claim(12, true);` / `select public.staff_review_claim(12, false, '사유');`. 목록은 `staff_attention` 의 `claim_review`.
 
@@ -253,11 +275,14 @@ const { data } = await supabase.rpc('set_mark', { p_report_id, p_mark: 'still' }
 주민 제보·크루 의뢰의 인증이 **제출되면** 투표할 사람(위 "인증 확인" 기준, 해결한 본인 제외)에게 알림이 하나씩 생깁니다. 답이 곧 투표입니다.
 ```js
 supabase.rpc('my_notices')
-// [{ id, claim_id, report_id, quest_id, title, solver, before_path, after_path, single,
-//    role: 'author'|'heart'|'random'|'owner', weight(%), claim_status, at, answer: null|'ok'|'not', answered_at }]
+// [{ id, kind: 'vote'|'dispute', claim_id, report_id, quest_id, title, solver, before_path, after_path, single,
+//    role: 'author'|'heart'|'random'|'owner', weight(%, vote 만), claim_status, can_dispute, dispute_until(dispute 만),
+//    at, answer: null|'ok'|'not', answered_at }]
+// kind 'vote' = 표본 투표(답이 곧 투표), 'dispute' = 바로 승인된 인증의 이의 알림. can_dispute 가 true 면 "아직이에요/치워졌어요" 버튼
 // 사진 경로는 claim-photos 버킷 공개 경로
 await supabase.rpc('answer_notice', { p_notice_id, p_answer: 'ok' })  // 'ok'(치워졌어요) | 'not'(아직이에요). 한 번만
-// { id, answer, claim_status }   에러: NOTICE_NOT_FOUND(없거나 이미 답함)
+// { id, answer, claim_status, points_gained }   에러: NOTICE_NOT_FOUND(없거나 이미 답함)
+// points_gained: 표본 투표 답 1점(하루 5번까지), 이의 알림은 0
 ```
 집계 규칙은 위 "인증 확인". 이미 결론 난 인증에 늦게 답해도 결과는 바뀌지 않습니다. 푸시 알림은 없습니다(앱 안 목록만).
 
@@ -276,11 +301,12 @@ supabase.rpc('my_profile')
 //   hearts_today, hearts_limit, completes_today, completes_limit, daily_remaining,
 //   title_key, weekly: [8개 숫자, 오래된 주부터], stats: { completed, hearts, reports, rewards, places: {drain: 2, ...}, issues: {litter: 1, ...} },
 //   completed_count, streak_weeks, active_this_week,
-//   cleaned: [{ id, at, title, place_label, issue_type }],   // 내가 치운 곳 최근 10건
+//   cleaned: [{ id, at, title, place_label, issue_type, self, lat, lng }],   // 내가 치운 곳 최근 10건(id 는 문자열, 바로 치움은 'self-N')
 //   rewards: [{ label, from, at }],                           // 받은 제휴 보상
 //   coupons: [{ name, code, at }],                            // 상점 쿠폰
 //   records: [[라벨, 값]] }
 supabase.rpc('my_cleaned', { p_limit: 20, p_before: null }) // 치운 곳 더 보기 (p_before 에 마지막 at 을 넣으면 다음 쪽)
+// [{ id(문자열), at, title, place_label, issue_type, kind('self' 포함), self, points, xp, lat, lng, address }]
 await supabase.from('profiles').update({ nickname, home_area }).eq('id', me)
 await supabase.auth.signOut()
 ```
@@ -349,7 +375,7 @@ supabase.rpc('map_overview', { p_lat, p_lng, p_radius_m: 1500 })
 // { stats: [['38%','우리 동네 정화율'], ['14','우리 크루 구역'], ['6','새 제보']],
 //   points: [{ type:'cleared'|'quest'|'hot_report', lat, lng, crew:'mine'|'other'|'none'|null }] }
 ```
-범례 매핑: cleared+mine = 우리 크루, cleared+other = 다른 크루, quest = 의뢰 있음, hot_report = 제보 많음.
+범례 매핑: cleared+mine = 우리 크루, cleared+other = 다른 크루, quest = 의뢰 있음, hot_report = 제보 많음. `cleared` 에는 "바로 치웠어요" 기록도 들어갑니다(7-4). 정화율의 치운 곳 수에도 셉니다.
 
 ### 제휴업체 웹 (`web/`)
 `web/src/api.js` 의 함수와 1:1 입니다. 로그인한 계정(지금은 익명도 가능) 하나가 업체 하나에 연결됩니다.

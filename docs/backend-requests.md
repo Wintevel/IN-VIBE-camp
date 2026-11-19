@@ -195,21 +195,24 @@
 
 배경: 지금 구조는 제보자·해결자·확인해 줄 이웃이 같은 동네에 동시에 있어야 한 바퀴가 돕니다. 사용자가 적으면 확인 투표가 멈추고(푸시 없음, 투표 보상 없음), 새 제보는 하트 0개라 해결해도 포인트가 0이며, 체험 20분 안에 보상까지 닿지 못합니다. 또 제보자 40% + 하트 30% 를 계정 두 개로 채우면 이웃 확인 없이 50% 를 넘깁니다. 그래서 "혼자서도 한 바퀴가 돌고 사람이 늘수록 좋아지는" 구조로 바꿉니다. 숫자는 모두 임시값이니 `app_settings` 에 두세요. 프론트는 기기 저장소 모드(`frontend/src/api/local.js`)에 먼저 반영했고, 서버 응답이 아래 모양이면 바로 동작합니다.
 
-- [ ] **7-1. 인증 확인: 전원 투표 → 표본 확인 + 사후 이의 (확정)**
+- [x] **7-1. 인증 확인: 전원 투표 → 표본 확인 + 사후 이의 (확정)**
   `approve_claim` 의 자동 검사(100m·시각·해시·1분·모의 위치)를 통과하면, 주민 제보·크루 의뢰는 **표본에 뽑힌 것만** 지금의 투표(`submitted`)로 보내고 나머지는 **바로 `approved`** 로 지급합니다. 제휴 의뢰는 지금처럼 업체가 확인합니다.
   - 표본 대상(하나라도 해당하면 투표): ① 해결자의 승인 인증이 3건 미만(`verify_trust_after = 3`) ② 해결자가 최근 30일 안에 반려·이의가 있었음 ③ 해결자와 제보자가 최근 30일 안에 서로의 제보에 하트를 누르거나 해결한 적이 있음(계정 두 개 짬짜미) ④ 그 밖에는 무작위 `verify_sample_rate = 0.2`.
   - 바로 승인된 인증은 **이의 기간 48시간**(`dispute_window`): 제보자·하트 누른 사람에게 지금처럼 `resolve_notices` 를 만들고, "아직이에요"가 2건(`dispute_threshold`, 제보자 답은 2건으로 셈) 모이면 `staff_review` 로 바꾸고 지급한 포인트·XP 를 회수(`point_ledger` 음수, reason `claim_disputed`)합니다. 운영진이 승인하면 다시 지급.
   - 무작위 이웃은 전체 사용자 대신 **의뢰 위치 3km 안에서 최근 활동한 사용자**(최근 인증·제보 위치 기준) 우선, 모자라면 지금처럼 전체에서.
   - 응답: `approve_claim` 이 바로 승인이면 `{ status: 'approved', title, points_gained, xp_gained, crew_xp_gained, reward_label, level, leveled_up, dispute_until, daily_remaining }`, 표본이면 지금 모양 그대로(`submitted`).
   - `my_claims` 에 이의 기간 중인 `approved` 행도 `dispute_until` 과 함께 내려 주세요(앱은 "지급됨 · 이의 기간"으로 표시). `my_notices` 행에 `can_dispute`(바로 승인된 인증이고 이의 기간 안이면 true) 를 넣어 주세요. 그 알림에는 앱이 "아직이에요/치워졌어요" 버튼을 보여 줍니다.
+  > 처리 (2026-11-18, 장연우): `20261118062807_requests_7`, `…115059_requests_7_fix`. 이의 알림은 `kind: 'dispute'`, 올린 사람 2표·크루장·하트 누른 사람 1표(해결자 제외). 회수는 잔액이 모자라면 잔액만큼. 바로 승인은 `decided_by = 'auto'`.
 
-- [ ] **7-2. 해결 보상 = 기본 포인트 + 하트 보너스 (확정)**
+- [x] **7-2. 해결 보상 = 기본 포인트 + 하트 보너스 (확정)**
   주민 제보 의뢰 포인트를 `least(base + floor(하트/3) × 5, 100)`, `report_base_points = 10` 으로 바꿔 주세요. 하트 0개여도 10점입니다. `quests_nearby.point` 와 `reports_nearby.point` 도 같은 식. `docs/api.md` 44·52행도 같이 고쳐 주세요.
+  > 처리 (2026-11-18): `report_point_value` 에 `report_base_points` 10 을 더함. `quests_nearby`·`reports_nearby`·`approve_claim` 이 같은 함수를 씀. `docs/api.md` 44·52행 수정.
 
-- [ ] **7-3. 투표한 사람에게 소량 포인트 (임시값, 선택)**
+- [x] **7-3. 투표한 사람에게 소량 포인트 (임시값, 선택)**
   표본 투표에 답하면 1점(`verify_answer_points = 1`, 하루 5번까지). 확인해 줄 이유를 만듭니다. 하기 어려우면 미뤄도 됩니다.
+  > 처리 (2026-11-18): 표본 투표(`kind: 'vote'`) 답에만 지급. `answer_notice` 응답에 `points_gained`.
 
-- [ ] **7-4. "바로 치웠어요" (확정)**
+- [x] **7-4. "바로 치웠어요" (확정)**
   의뢰 없이 보자마자 치운 것을 전·후 사진으로 기록합니다. **포인트는 없고 XP 만**(장소 유형별 XP 그대로), 크루원이면 크루 XP 1배, 하루 3개 상한은 의뢰 해결과 같이 셉니다. 포인트가 없으니 확인 투표는 없고, 신고만 받습니다.
   ```js
   supabase.rpc('quick_clean', {
@@ -222,6 +225,7 @@
   // 에러: DAILY_LIMIT, PHOTOS_TOO_FAR_APART, INVALID_TIME, TOO_FAST, NO_CHANGE, MOCK_LOCATION, INVALID_PHOTO, DUPLICATE_PHOTO, MISSING_PROOF
   ```
   검사는 `approve_claim` 과 같습니다(의뢰 위치 반경만 없음). 사진은 `claim-photos/{user id}/self-…` 에 찍자마자 올라옵니다. 기록은 `my_cleaned`·`my_profile.cleaned` 에 `self: true` 로, **`lat`·`lng` 도 함께** 내려 주세요(지도에 초록 핀). `map_overview` 의 `cleared` 점에도 넣어 주세요. 도전과제 `stats.completed`·`places`·`issues` 에도 셉니다.
+  > 처리 (2026-11-18): `quick_clean`, 테이블 `self_cleans`(본인만 읽기). 응답에 `id` 도 있음. 전 사진은 3시간 안. `my_cleaned` 의 `id` 는 문자열로 바뀜(바로 치움은 `'self-N'`). `map_overview` 에는 `cleared` 점만 더하고 나머지(`hot_report` 등)는 그대로. 신고는 운영진이 `hidden_at` 으로 숨김(앱 신고 RPC 는 요청 없어 안 만듦).
 
 - [ ] **7-5. 공식 의뢰 (서버 변경 없음, 운영 방식)**
   주민 제보만으로는 의뢰가 모자라므로 운영진이 "집게표 운영진" 업체 계정으로 제휴 웹에서 의뢰를 올립니다(포인트 보상, 위치 핀 포함). 확인은 운영진이 업체 웹 "인증 확인"에서 합니다. 체험 날에는 체험 장소 근처에 몇 건 미리 올려 둡니다. 업체 웹에 위치 입력이 없어 지금은 `p_lat`·`p_lng` 를 SQL 로 넣어야 하니, 체험 전에 운영진 의뢰 3건의 위치를 넣어 주세요(위치는 한재준이 정해서 전달).
