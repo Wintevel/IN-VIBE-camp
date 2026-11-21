@@ -10,7 +10,6 @@ import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
 import Toast from '../components/Toast'
 import { ACHIEVEMENTS, statsOf, titleOptions, titleText } from '../lib/achievements'
-import { ga } from '../lib/format'
 import { Points } from '../components/GuideParts'
 import { useApp } from '../state/AppState'
 import { colors, radius, text } from '../theme'
@@ -33,19 +32,19 @@ export default function StylePickScreen({ navigation, route }) {
   let cells = []
   if (kind === 'title') {
     const now = titleText(p, app.myCrew)
-    cells = [{ key: 'none', label: '착용 안 함', open: true, on: !now, how: '칭호를 보이지 않아요', value: null }, ...titleOptions(statsOf(p, app.myCrew)).map((t) => ({ key: t.key, label: t.label, open: t.open, on: t.label === now, how: t.open ? '열린 칭호예요' : t.how, value: t.key }))]
+    cells = [{ key: 'none', label: '착용 안 함', open: true, on: !now, how: '칭호 숨김', value: null }, ...titleOptions(statsOf(p, app.myCrew)).map((t) => ({ key: t.key, label: t.label, open: t.open, on: t.label === now, how: t.open ? '사용 가능' : t.how, value: t.key }))]
   } else if (kind === 'photo') {
     cells = [
-      { key: 'none', label: '기본', open: true, on: !p.avatar_url, how: '닉네임 첫 글자를 보여 줘요' },
-      ...(p.avatar_url ? [{ key: 'mine', label: '지금 사진', open: true, on: true, how: '지금 쓰는 사진이에요' }] : []),
-      { key: 'pick', label: '갤러리에서 고르기', open: true, on: false, how: photo ? '고른 사진이에요. 적용을 눌러 주세요' : '폰에 있는 사진을 골라요' },
+      { key: 'none', label: '기본', open: true, on: !p.avatar_url, how: '닉네임 첫 글자 표시' },
+      ...(p.avatar_url ? [{ key: 'mine', label: '지금 사진', open: true, on: true, how: '사용 중인 사진' }] : []),
+      { key: 'pick', label: '갤러리에서 고르기', open: true, on: false, how: photo ? '고른 사진 · 적용을 눌러 저장' : '갤러리에서 선택' },
     ]
   } else {
     cells = app.cosmetics
       .filter((c) => c.kind === kind)
       .map((c) => {
         const feat = c.feat && ACHIEVEMENTS.find((a) => a.id === c.feat)
-        const how = c.owned ? '가지고 있어요' : feat ? `도전과제 "${feat.name}" 보상` : c.locked ? `레벨 ${c.level}${ga(c.level)} 되면 열려요` : `${c.cost.toLocaleString()} 포인트로 살 수 있어요`
+        const how = c.owned ? '보유 중' : feat ? feat.unlock : c.locked ? `레벨 ${c.level} 달성 시 해제` : `${c.cost.toLocaleString()} 포인트로 구매 가능`
         return { key: c.id, label: c.name, open: c.owned, on: c.equipped, how, cost: !c.owned && !c.locked && c.cost > 0 ? c.cost : 0, item: c }
       })
   }
@@ -72,7 +71,7 @@ export default function StylePickScreen({ navigation, route }) {
 
   const short = sel.cost > points
   const can = kind === 'photo' ? (sel.key === 'pick' ? !!photo : !sel.on) : sel.cost ? !short : sel.open && !sel.on
-  const label = sel.on && sel.key !== 'pick' ? '적용 중' : sel.cost ? (short ? `${(sel.cost - points).toLocaleString()} 포인트 부족` : `${sel.cost.toLocaleString()} 포인트로 구매`) : !sel.open ? '잠겨 있어요' : '적용'
+  const label = sel.on && sel.key !== 'pick' ? '적용 중' : sel.cost ? (short ? `${(sel.cost - points).toLocaleString()} 포인트 부족` : `${sel.cost.toLocaleString()} 포인트로 구매`) : !sel.open ? sel.how : '적용'
   const apply = async () => {
     setBusy(true)
     const ok = kind === 'title' ? await app.saveTitle(sel.value, sel.label) : kind === 'photo' ? await app.saveAvatar(sel.key === 'pick' ? photo : null) : await app.wearCosmetic(sel.item)
@@ -169,16 +168,13 @@ export default function StylePickScreen({ navigation, route }) {
         </Button>
         {/* 잠긴 칸(포인트로 못 사는 것)을 고르면 버튼 자리에 여는 조건을 바로 보여 줍니다. */}
         {!sel.open && !sel.cost ? (
-          <View style={styles.lockInfo} accessibilityLabel={`잠겨 있어요. ${sel.how}`}>
+          <View style={styles.lockInfo} accessibilityLabel={`잠김. ${sel.how}`}>
             <View style={styles.lockBig}>
               <LockIcon size={14} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[text.caption, { fontSize: 11 }]}>잠겨 있어요</Text>
-              <Text style={[text.chip, { color: colors.fg }]} numberOfLines={2}>
-                {sel.how}
-              </Text>
-            </View>
+            <Text style={[text.chip, { flex: 1, color: colors.fg }]} numberOfLines={2}>
+              {sel.how}
+            </Text>
           </View>
         ) : (
           <Button disabled={!can || busy} onPress={apply} style={{ flex: 2 }}>

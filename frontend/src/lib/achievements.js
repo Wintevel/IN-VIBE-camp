@@ -1,22 +1,22 @@
-import { TITLES, ga } from './format'
+import { TITLES } from './format'
 
-// 도전과제. 달성하면 보상(포인트·XP, 일부는 꾸미기 품목)을 받고, 이름을 칭호로 쓸 수 있습니다.
+// 도전과제. unlock 은 잠긴 칭호에 보이는 해제 조건("… 시 해제" 꼴). 달성하면 보상(포인트·XP, 일부는 꾸미기 품목)을 받고, 이름을 칭호로 쓸 수 있습니다.
 // 조건과 보상 숫자는 임시값입니다. 꾸미기 보상은 api/local.js 의 COSMETICS 에서 feat 로 연결합니다.
 // value(s) 는 지금 값, goal 은 목표. s 는 프로필의 stats 에 level·streak·crew 를 더한 것(statsOf).
 export const ACHIEVEMENTS = [
-  { id: 'first', name: '첫 줍', desc: '의뢰를 처음 해결하기', goal: 1, points: 10, xp: 30, value: (s) => s.completed },
-  { id: 'ten', name: '열 번 찍어 안 치워지는 길 없다', desc: '의뢰 10건 해결하기', goal: 10, points: 50, xp: 150, gift: '테두리 "열 번 찍은 불꽃"', value: (s) => s.completed },
-  { id: 'thirty', name: '이쯤 되면 직업', desc: '의뢰 30건 해결하기', goal: 30, points: 150, xp: 400, value: (s) => s.completed },
-  { id: 'heart10', name: '하트 인플루언서', desc: '하트 10개 누르기', goal: 10, points: 10, xp: 30, value: (s) => s.hearts },
-  { id: 'heart50', name: '공감 능력 만렙', desc: '하트 50개 누르기', goal: 50, points: 30, xp: 100, value: (s) => s.hearts },
-  { id: 'report1', name: '동네 파수꾼', desc: '제보를 처음 올리기', goal: 1, points: 10, xp: 30, value: (s) => s.reports },
-  { id: 'report10', name: '프로 제보러', desc: '제보 10건 올리기', goal: 10, points: 30, xp: 100, value: (s) => s.reports },
-  { id: 'streak2', name: '작심삼일 탈출', desc: '2주 연속 활동하기', goal: 2, points: 20, xp: 60, value: (s) => s.streak },
-  { id: 'streak4', name: '한 달째 출근 중', desc: '4주 연속 활동하기', goal: 4, points: 50, xp: 150, gift: '테두리 "개근상 리본"', value: (s) => s.streak },
-  { id: 'crew', name: '혼자가 아니야', desc: '크루에 들어가기', goal: 1, points: 10, xp: 30, value: (s) => (s.crew ? 1 : 0) },
-  { id: 'places', name: '동네 한 바퀴', desc: '모든 장소 종류에서 한 번씩 해결하기', goal: 5, points: 50, xp: 150, gift: '닉네임 색 "장미 닉네임"', value: (s) => Object.keys(s.places).length },
-  { id: 'issues', name: '편식 없는 집게', desc: '모든 문제 유형을 한 번씩 해결하기', goal: 5, points: 50, xp: 150, value: (s) => Object.keys(s.issues).length },
-  { id: 'reward', name: '상품권 사냥꾼', desc: '제휴 보상을 처음 받기', goal: 1, points: 10, xp: 30, value: (s) => s.rewards },
+  { id: 'first', name: '첫 줍', unlock: '의뢰 첫 해결 시 해제', desc: '의뢰를 처음 해결하기', goal: 1, points: 10, xp: 30, value: (s) => s.completed },
+  { id: 'ten', name: '열 번 찍어 안 치워지는 길 없다', unlock: '의뢰 10건 해결 시 해제', desc: '의뢰 10건 해결하기', goal: 10, points: 50, xp: 150, gift: '테두리 "열 번 찍은 불꽃"', value: (s) => s.completed },
+  { id: 'thirty', name: '이쯤 되면 직업', unlock: '의뢰 30건 해결 시 해제', desc: '의뢰 30건 해결하기', goal: 30, points: 150, xp: 400, value: (s) => s.completed },
+  { id: 'heart10', name: '하트 인플루언서', unlock: '하트 10개 사용 시 해제', desc: '하트 10개 누르기', goal: 10, points: 10, xp: 30, value: (s) => s.hearts },
+  { id: 'heart50', name: '공감 능력 만렙', unlock: '하트 50개 사용 시 해제', desc: '하트 50개 누르기', goal: 50, points: 30, xp: 100, value: (s) => s.hearts },
+  { id: 'report1', name: '동네 파수꾼', unlock: '첫 제보 시 해제', desc: '제보를 처음 올리기', goal: 1, points: 10, xp: 30, value: (s) => s.reports },
+  { id: 'report10', name: '프로 제보러', unlock: '제보 10건 시 해제', desc: '제보 10건 올리기', goal: 10, points: 30, xp: 100, value: (s) => s.reports },
+  { id: 'streak2', name: '작심삼일 탈출', unlock: '2주 연속 활동 시 해제', desc: '2주 연속 활동하기', goal: 2, points: 20, xp: 60, value: (s) => s.streak },
+  { id: 'streak4', name: '한 달째 출근 중', unlock: '4주 연속 활동 시 해제', desc: '4주 연속 활동하기', goal: 4, points: 50, xp: 150, gift: '테두리 "개근상 리본"', value: (s) => s.streak },
+  { id: 'crew', name: '혼자가 아니야', unlock: '크루 가입 시 해제', desc: '크루에 들어가기', goal: 1, points: 10, xp: 30, value: (s) => (s.crew ? 1 : 0) },
+  { id: 'places', name: '동네 한 바퀴', unlock: '모든 장소 종류에서 해결 시 해제', desc: '모든 장소 종류에서 한 번씩 해결하기', goal: 5, points: 50, xp: 150, gift: '닉네임 색 "장미 닉네임"', value: (s) => Object.keys(s.places).length },
+  { id: 'issues', name: '편식 없는 집게', unlock: '모든 문제 유형 해결 시 해제', desc: '모든 문제 유형을 한 번씩 해결하기', goal: 5, points: 50, xp: 150, value: (s) => Object.keys(s.issues).length },
+  { id: 'reward', name: '상품권 사냥꾼', unlock: '첫 제휴 보상 수령 시 해제', desc: '제휴 보상을 처음 받기', goal: 1, points: 10, xp: 30, value: (s) => s.rewards },
 ]
 
 const EMPTY = { completed: 0, hearts: 0, reports: 0, rewards: 0, places: {}, issues: {} }
@@ -31,8 +31,8 @@ export function titleOptions(s) {
   const levels = [...TITLES]
     .reverse()
     .filter(([min]) => min >= 2)
-    .map(([min, label]) => ({ key: `lv:${min}`, label, open: s.level >= min, how: `레벨 ${min}${ga(min)} 되면 열려요` }))
-  const feats = progress(s).map((a) => ({ key: `ach:${a.id}`, label: a.name, open: a.done, how: `도전과제 · ${a.desc}` }))
+    .map(([min, label]) => ({ key: `lv:${min}`, label, open: s.level >= min, how: `레벨 ${min} 달성 시 해제` }))
+  const feats = progress(s).map((a) => ({ key: `ach:${a.id}`, label: a.name, open: a.done, how: a.unlock }))
   return [...levels, ...feats]
 }
 // 화면에 보일 칭호. 고르지 않았거나 더는 쓸 수 없으면 빈 문자열(칭호 없음).

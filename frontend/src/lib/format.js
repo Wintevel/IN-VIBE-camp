@@ -88,8 +88,6 @@ export const TITLES = [
   [2, '허리 숙이기 장인'],
   [1, '일단 주워 봄'],
 ]
-// 숫자 뒤 조사: 2·4·5·9(이·사·오·구)로 끝나면 '가', 나머지는 '이' (예: 레벨 5가, 레벨 3이, 레벨 10이)
-export const ga = (n) => ([2, 4, 5, 9].includes(n % 10) ? '가' : '이')
 export const levelTitle = (level) => (TITLES.find(([min]) => level >= min) || TITLES[TITLES.length - 1])[1]
 
 // 이웃 상태 버튼. 하트 옆에 나란히 둡니다(1인 1개, 바꿀 수 있음).
