@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import BoardBackground from '../components/BoardBackground'
 import Button from '../components/Button'
 import GuideIcon from '../components/GuideIcon'
+import { GuideVisual, Points } from '../components/GuideParts'
 import Logo from '../components/Logo'
 import { Appear } from '../components/Motion'
 import { GUIDE } from '../lib/guide'
@@ -31,29 +32,33 @@ export default function TutorialScreen() {
           </Text>
         </View>
 
-        <Appear key={i} from="right" style={styles.body}>
-          {g ? (
-            <>
-              <GuideIcon name={g.icon} size={72} />
-              <Text style={[text.h1, { fontSize: 30, lineHeight: 38 }]}>{g.title}</Text>
-              <Text style={[text.regular, { color: colors.sub }]}>{g.lead}</Text>
-              <View style={styles.points}>
-                {g.points.map((p) => (
-                  <View key={p} style={styles.point}>
-                    <View style={styles.bullet} />
-                    <Text style={[text.regular, { flex: 1 }]}>{p}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
-          ) : (
-            <>
-              <Logo size={88} />
-              <Text style={[text.h1, { fontSize: 34, lineHeight: 42 }]}>집게표에 온 걸 환영해요</Text>
-              <Text style={[text.regular, { color: colors.sub }]}>동네의 치울 곳을 이웃이 알리고, 근처에 있는 사람이 해결하는 앱이에요. 쓰는 법을 1분만 볼게요.</Text>
-            </>
-          )}
-        </Appear>
+        <ScrollView style={{ flex: 1, marginVertical: 16 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <Appear key={i} from="right" style={styles.body}>
+            {g ? (
+              <>
+                <GuideIcon name={g.icon} size={64} />
+                <View style={{ gap: 6 }}>
+                  <Text style={[text.h1, { fontSize: 28, lineHeight: 36 }]}>{g.title}</Text>
+                  <Text style={[text.regular, { color: colors.sub }]}>{g.lead}</Text>
+                </View>
+                <View style={styles.panel}>
+                  <GuideVisual g={g} />
+                </View>
+                <Points points={g.points} big />
+              </>
+            ) : (
+              <>
+                <Logo size={88} />
+                <Text style={[text.h1, { fontSize: 34, lineHeight: 42 }]}>집게표에 온 걸 환영해요</Text>
+                <Text style={[text.regular, { color: colors.sub }]}>이웃이 알린 쓰레기를 근처 사람이 치우는 앱이에요.</Text>
+                <View style={styles.panel}>
+                  <GuideVisual g={{ flow: [['camera', '이웃이 제보'], ['board', '내가 수락'], ['check', '치우고 인증'], ['point', '보상']] }} />
+                </View>
+                <Text style={[text.small, { color: colors.sub }]}>쓰는 법을 1분만 볼게요.</Text>
+              </>
+            )}
+          </Appear>
+        </ScrollView>
 
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {i >= 0 ? (
@@ -74,8 +79,7 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', gap: 6 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.line },
   dotOn: { width: 22, backgroundColor: colors.tape },
-  body: { gap: 16 },
-  points: { gap: 12, marginTop: 8, backgroundColor: colors.panel, borderRadius: 16, borderWidth: 1, borderColor: colors.line, padding: 16 },
-  point: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.tape, marginTop: 9 },
+  scroll: { flexGrow: 1, justifyContent: 'center' },
+  body: { gap: 18 },
+  panel: { gap: 12, backgroundColor: colors.panel, borderRadius: 16, borderWidth: 1, borderColor: colors.line, padding: 16 },
 })

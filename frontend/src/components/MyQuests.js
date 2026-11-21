@@ -4,9 +4,11 @@ import { colors, radius, text } from '../theme'
 import { CameraIcon } from './Icons'
 import { Appear, PressScale } from './Motion'
 import { RewardPills } from './Reward'
+import useDragScroll from './useDragScroll'
 
 // 내가 수락한 의뢰만 모아 의뢰판 맨 위에 두는 영역. 필터 칩이 아니라 늘 보이는 가로 선반입니다.
 export default function MyQuests({ reports, photos, onOpen }) {
+  const drag = useDragScroll()
   if (reports.length === 0) return null
   return (
     <View style={styles.wrap}>
@@ -15,7 +17,7 @@ export default function MyQuests({ reports, photos, onOpen }) {
         <Text style={text.section}>내가 수락한 의뢰</Text>
         <Text style={[text.num, { fontSize: 15, color: colors.blue }]}>{reports.length}</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.list} style={styles.scroll}>
+      <ScrollView ref={drag} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.list} style={styles.scroll}>
         {reports.map((r, i) => {
           const started = r.status === 'in_progress'
           const p = photos[r.id] || {}

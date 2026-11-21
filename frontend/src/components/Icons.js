@@ -166,3 +166,27 @@ export function HelpIcon({ size = 20, color = colors.blue }) {
     </Svg>
   )
 }
+
+// 안내 화면용 작은 선 아이콘: 시계·체크·금지·연필
+export function LineIcon({ name, size = 18, color = colors.fg }) {
+  const p = { ...base, stroke: color }
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      {name === 'clock' && (
+        <>
+          <Circle cx="12" cy="12" r="9" {...p} />
+          <Path d="M12 7v5l3 2" {...p} />
+        </>
+      )}
+      {name === 'check' && <Path d="M5 12.5 10 17 19 7" {...p} />}
+      {name === 'no' && (
+        <>
+          <Circle cx="12" cy="12" r="9" {...p} />
+          <Path d="M6 18 18 6" {...p} />
+        </>
+      )}
+      {name === 'x' && <Path d="M6 6l12 12M18 6 6 18" {...p} />}
+      {name === 'edit' && <Path d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4" {...p} />}
+    </Svg>
+  )
+}

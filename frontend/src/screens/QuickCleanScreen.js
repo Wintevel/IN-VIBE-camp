@@ -9,7 +9,7 @@ import { RewardIcon } from '../components/Reward'
 import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
 import Toast from '../components/Toast'
-import { PLACES } from '../lib/format'
+import { PLACE_PICK, pickNote, pickValue } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
 
@@ -19,6 +19,7 @@ export default function QuickCleanScreen({ navigation }) {
   const app = useApp()
   const [placeType, setPlaceType] = useState('street')
   const [title, setTitle] = useState('')
+  const [placeNote, setPlaceNote] = useState('')
   const [busy, setBusy] = useState(false)
   const p = app.quickPhotos
   const ready = !!(p.before && p.after) && !busy
@@ -29,7 +30,9 @@ export default function QuickCleanScreen({ navigation }) {
   }
   const submit = async () => {
     setBusy(true)
-    const d = await app.quickClean({ placeType, title: title.trim() })
+    // 서버 장소 값에 없는 곳(학교 앞, 기타에 적은 말)은 한 줄 기록이 비었을 때 "학교 앞 바로 치움"처럼 제목으로 씁니다.
+    const note = pickNote(PLACE_PICK, placeType, placeNote)
+    const d = await app.quickClean({ placeType: pickValue(PLACE_PICK, placeType), title: title.trim() || (note ? `${note} 바로 치움` : '') })
     setBusy(false)
     if (d) navigation.goBack()
   }
@@ -72,7 +75,10 @@ export default function QuickCleanScreen({ navigation }) {
         </View>
 
         <Text style={text.section}>장소 종류</Text>
-        <FilterChips wrap options={PLACES} value={placeType} onChange={setPlaceType} />
+        <FilterChips wrap options={PLACE_PICK} value={placeType} onChange={setPlaceType} />
+        {placeType === 'etc' ? (
+          <TextInput value={placeNote} onChangeText={setPlaceNote} placeholder="어떤 곳인지 적어 주세요. 예) 학교 앞, 주차장" placeholderTextColor={colors.disabled} style={styles.input} maxLength={20} autoFocus accessibilityLabel="장소 직접 적기" />
+        ) : null}
         <Text style={text.section}>한 줄 기록 (선택)</Text>
         <TextInput value={title} onChangeText={setTitle} placeholder="예) 정류장 의자 밑 꽁초" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} accessibilityLabel="한 줄 기록" />
         <Text style={[text.caption, { color: colors.red }]}>깨진 유리, 주사기처럼 다칠 수 있는 것은 손대지 말고 제보로 알려 주세요.</Text>

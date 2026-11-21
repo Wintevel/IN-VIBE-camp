@@ -8,6 +8,10 @@ export function useAppFonts() {
     link.rel = 'stylesheet'
     link.href = HREF
     document.head.appendChild(link)
+    // 한글이 글자 단위로 끊기지 않고 띄어쓰기에서 줄바꿈되게 합니다(긴 영문·숫자는 넘치면 끊음).
+    const style = document.createElement('style')
+    style.textContent = '#root, #root * { word-break: keep-all; overflow-wrap: anywhere; }'
+    document.head.appendChild(style)
   }
   return true
 }
