@@ -410,6 +410,25 @@ select public.staff_review_quest(12, false, '장소가 불분명해요');   -- �
 ```
 검토 요청·업체 등록이 들어오면 운영진 디스코드로 알림이 갑니다. 웹훅 주소는 Supabase Vault 에 `discord_webhook_url` 이름으로 넣습니다(커밋하지 않음). 없으면 알림만 건너뜁니다.
 
+### 운영 웹 (`/dev/`, 2026-11-21)
+마이그레이션 `20261121160000_staff_console.sql`. 위 SQL 에디터 작업을 웹(`https://wintevel.github.io/IN-VIBE-camp/dev/`)에서 하도록 운영진 전용 함수를 더했습니다. 기존 함수는 바꾸지 않고 감쌉니다.
+- 운영진 목록 `staff_members(user_id, name)`. 웹으로는 추가할 수 없고 SQL 에디터에서 넣습니다: `insert into public.staff_members (user_id, name) select id, '운영진' from auth.users where email = '...';`
+- 모든 `admin_*` 는 `authenticated` 만 호출 가능하고, 운영진이 아니면 `NOT_STAFF`. 처리한 일은 `staff_actions` 에 남습니다.
+
+| 함수 | 하는 일 |
+|---|---|
+| `admin_me()` | `{ staff, name }` |
+| `admin_overview()` | 처리할 일 수(`quest_review`, `claim_review`, `flagged`), `users`, `banned`, 오늘 인증·제보 수, 최근 기록 8개(`recent`) |
+| `admin_quests(p_status default 'review')` | 제휴 의뢰 목록(`partner_quest_json` + `org_name`). `'all'` 은 최근 60일 |
+| `admin_review_quest(p_quest_id, p_approve, p_reason)` | `staff_review_quest` 호출. 반려는 사유 2자 이상(`REASON_REQUIRED`) |
+| `admin_claims(p_status default 'staff_review')` | 인증 목록(사진 경로·위치·이의 시각·`decided_by`). `'all'` 은 최근 14일 |
+| `admin_review_claim(p_claim_id, p_approve, p_reason)` | `staff_review_claim` 호출 |
+| `admin_reports()` | 숨김·신고 대기·"치워졌어요" 누적 제보와 신고 사유 |
+| `admin_set_report(p_report_id, p_action)` | `hide`(숨기고 신고 처리) / `restore`(다시 보이고 신고 기각) / `dismiss`(보이는 채로 신고 기각) |
+| `admin_users(p_query default '')` | 닉네임 일부·이메일 전체·id 로 찾기(최대 50). 이메일은 가려서(`hj****@gmail.com`) |
+| `admin_adjust_points(p_user_id, p_delta, p_reason)` | 포인트 더하기·빼기(0 아래로 안 내려감). 원장 reason `staff_adjust`. 바뀐 뒤 포인트를 돌려줌 |
+| `admin_ban_user(p_user_id, p_days, p_reason)` | `auth.users.banned_until` 로 로그인 정지(0 이면 해제). 운영진은 정지 불가(`CANNOT_BAN_STAFF`). 이미 받은 토큰은 만료까지 유효 |
+
 ## 시드 데이터
 `supabase/seed.sql` 에 시연용 값(제휴 의뢰 3, 크루 의뢰 1, 주민 제보 3, 크루 5, 시즌 11)이 있고, 원격 DB 에는 사진 한 장 인증 예시(망가진 공원 벤치 사진 찍기, 충주사랑상품권 보상)도 있습니다. 모두 `is_demo = true` 입니다. 시연 좌표: lat 37.4520, lng 126.6560 (인하대 후문 근처).
 

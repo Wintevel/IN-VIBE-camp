@@ -40,8 +40,9 @@ jobs:
       - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
       # PWA 서비스 워커에 빌드 번호를 넣어, 배포마다 sw.js 가 달라지고 옛 캐시가 지워지게 함
       - run: sed -i "s/__BUILD_ID__/${GITHUB_SHA::8}/" dist/sw.js
-      # 제휴업체용 웹(web/)을 같은 사이트의 /partner/ 아래에 함께 올립니다
-      - run: npm ci && npm run build && cp -r dist ../frontend/dist/partner
+      # 제휴업체용 웹(web/)을 같은 사이트의 /partner/ 아래에, 같은 빌드를 운영 화면용으로 /dev/ 아래에 올립니다
+      # (주소가 /dev 로 끝나면 운영 화면이 열림. 운영진 확인은 서버의 admin_* 함수가 함)
+      - run: npm ci && npm run build && cp -r dist ../frontend/dist/partner && cp -r dist ../frontend/dist/dev
         working-directory: web
         env:
           VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
