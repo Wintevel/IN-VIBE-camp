@@ -6,7 +6,7 @@ import { reduced } from './Motion'
 
 const ACircle = Animated.createAnimatedComponent(Circle)
 
-// 뉴모피즘 원형 다이얼: 솟은 원판 위에 진행 링이 돌고, 가운데는 안으로 패인 홈에 내용을 둡니다(레벨·진행률용).
+// 원형 다이얼(뉴모피즘 촉감): 살짝 솟은 원판 위에 진행 링이 차오르고, 가운데는 안으로 패인 홈에 내용을 둡니다(레벨용).
 export default function Dial({ size = 104, ratio = 0, color = colors.blue, stroke = 9, children, accessibilityLabel }) {
   const v = useRef(new Animated.Value(reduced() ? ratio : 0)).current
   useEffect(() => {
@@ -39,5 +39,5 @@ export default function Dial({ size = 104, ratio = 0, color = colors.blue, strok
 
 const styles = StyleSheet.create({
   plate: { backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.raised },
-  well: { backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.inset },
+  well: { backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center', ...neu.inset },
 })

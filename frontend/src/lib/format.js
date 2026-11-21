@@ -76,20 +76,3 @@ export const FLAG_REASONS = [
   ['danger', '위험한 장소'],
   ['etc', '기타'],
 ]
-
-// 닉네임 색(꾸미기 아이템)은 어두운 화면 기준으로 고른 밝은 색이라, 밝은 뉴모피즘 바탕에서는 잘 안 보입니다.
-// 서버 값은 그대로 두고, 그릴 때만 바탕(#E4E9F2) 대비 3.5:1 이 될 때까지 잉크색(#2D3748) 쪽으로 섞어 보여 줍니다.
-const lum = (h) => {
-  const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4))
-  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
-}
-const mix = (a, b, t) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - t) + parseInt(b.slice(i, i + 2), 16) * t).toString(16).padStart(2, '0')).join('')
-const BASE_L = lum('#E4E9F2')
-export function nameColor(c) {
-  if (!c || !/^#[0-9a-f]{6}$/i.test(c)) return c
-  for (let t = 0; t <= 1; t += 0.1) {
-    const m = mix(c, '#2D3748', t)
-    if ((BASE_L + 0.05) / (lum(m) + 0.05) >= 3.5) return m
-  }
-  return '#2D3748'
-}

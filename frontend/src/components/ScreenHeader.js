@@ -20,5 +20,5 @@ export default function ScreenHeader({ title, sub, action, onAction }) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingTop: 6 },
-  chip: { backgroundColor: colors.panel, paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.pill },
+  chip: { backgroundColor: colors.panel2, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill },
 })

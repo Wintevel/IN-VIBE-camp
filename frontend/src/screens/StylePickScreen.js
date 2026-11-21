@@ -11,8 +11,7 @@ import ScreenHeader from '../components/ScreenHeader'
 import Toast from '../components/Toast'
 import { ACHIEVEMENTS, statsOf, titleOptions, titleText } from '../lib/achievements'
 import { useApp } from '../state/AppState'
-import { colors, neu, radius, text } from '../theme'
-import { nameColor as readableName } from '../lib/format'
+import { colors, radius, text } from '../theme'
 
 const NAMES = { photo: '프로필 사진', frame: '테두리', title: '칭호', name: '닉네임 색' }
 
@@ -54,7 +53,7 @@ export default function StylePickScreen({ navigation, route }) {
 
   // 미리보기: 고른 칸을 입혀 본 모습
   const frame = kind === 'frame' ? sel.item : p.frame
-  const nameColor = readableName(kind === 'name' ? sel.item.colors[0] : p.name_color)
+  const nameColor = kind === 'name' ? sel.item.colors[0] : p.name_color
   const title = kind === 'title' ? (sel.value ? sel.label : '') : titleText(p, app.myCrew)
   const uri = kind === 'photo' ? (sel.key === 'pick' ? photo : sel.key === 'none' ? null : p.avatar_url) : p.avatar_url
 
@@ -91,11 +90,11 @@ export default function StylePickScreen({ navigation, route }) {
     const active = c.key === sel.key
     return (
       <Appear key={c.key} index={i} from="bottom" style={kind === 'title' ? styles.slotWide : styles.slot}>
-      <PressScale onPress={() => pick(c)} accessibilityRole="button" accessibilityState={{ selected: active }} accessibilityLabel={`${c.label}${c.open ? '' : ', 잠김'}${c.on ? ', 적용 중' : ''}`} surface="raisedSm" active={active} style={[styles.cell, kind === 'title' && styles.cellWide, active && styles.cellOn, !c.open && kind !== 'title' && { opacity: 0.6 }]}>
+      <PressScale onPress={() => pick(c)} accessibilityRole="button" accessibilityState={{ selected: active }} accessibilityLabel={`${c.label}${c.open ? '' : ', 잠김'}${c.on ? ', 적용 중' : ''}`} style={[styles.cell, kind === 'title' && styles.cellWide, active && styles.cellOn, !c.open && kind !== 'title' && { opacity: 0.6 }]}>
         {kind === 'frame' ? (
           <AvatarFrame frame={c.item} size={48} letter="" />
         ) : kind === 'name' ? (
-          <Text style={[text.title, { color: readableName(c.item.colors[0]) }]}>가</Text>
+          <Text style={[text.title, { color: c.item.colors[0] }]}>가</Text>
         ) : kind === 'photo' ? (
           c.key === 'pick' && !photo ? (
             <Text style={[text.h1, { color: colors.sub }]}>＋</Text>
@@ -130,7 +129,7 @@ export default function StylePickScreen({ navigation, route }) {
             <AvatarFrame frame={frame} size={96} letter={letter} uri={uri} />
             <Text style={[text.cardTitle, { fontSize: 20, marginTop: 14 }, nameColor && { color: nameColor }]}>
               {p.nickname}
-              {title ? <Text style={[text.chip, { color: colors.tapeText }]}> · {title}</Text> : null}
+              {title ? <Text style={[text.chip, { color: colors.tape }]}> · {title}</Text> : null}
             </Text>
           </Animated.View>
           <View style={styles.info}>
@@ -172,16 +171,15 @@ export default function StylePickScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   preview: { alignItems: 'center', paddingTop: 30, paddingBottom: 14 },
-  info: { alignSelf: 'stretch', marginTop: 16, gap: 2, padding: 14, borderRadius: radius.lg, backgroundColor: colors.panel, ...neu.inset },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  slot: { width: '30%', flexGrow: 1 },
-  slotWide: { width: '46%', flexGrow: 1 },
-  // 칸은 솟은 면, 고른 칸은 안으로 패이고 파란 테두리 대신 파란 점선 없이 글자색으로 표시합니다.
-  cell: { minHeight: 112, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, borderRadius: radius.cardSm, backgroundColor: colors.panel },
+  info: { alignSelf: 'stretch', marginTop: 16, gap: 2, padding: 12, borderRadius: radius.md, backgroundColor: colors.panel2 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  slot: { width: '31.5%' },
+  slotWide: { width: '48.5%' },
+  cell: { minHeight: 112, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, borderRadius: radius.cardSm, backgroundColor: colors.panel, borderWidth: 1.5, borderColor: colors.line },
   cellWide: { minHeight: 64 },
-  cellOn: { backgroundColor: colors.blueWeak },
+  cellOn: { borderColor: colors.blue, backgroundColor: colors.blueWeak },
   badge: { position: 'absolute', top: 6, right: 6, fontSize: 10, lineHeight: 14, color: colors.tapeInk, backgroundColor: colors.tape, paddingHorizontal: 6, borderRadius: radius.pill, overflow: 'hidden', fontWeight: '700' },
   lockDot: { position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.disabled, alignItems: 'center', justifyContent: 'center' },
-  lock: { color: '#FFFFFF', backgroundColor: colors.disabled },
-  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: 16, padding: 20, paddingBottom: 24, backgroundColor: colors.ink, boxShadow: '0px -10px 24px rgba(194,203,217,0.6)' },
+  lock: { color: colors.fg, backgroundColor: colors.disabled },
+  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: 8, padding: 16, paddingBottom: 24, backgroundColor: colors.ink, borderTopWidth: 1, borderTopColor: colors.line },
 })

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native'
-import { colors, neu, radius, text } from '../theme'
+import { colors, radius, text } from '../theme'
 import { CrewXpIcon, GiftIcon, PointIcon, XpIcon } from './Icons'
 
 // 보상은 종류마다 아이콘을 따로 붙여 보여줍니다. "+" 로 한 줄에 잇지 않습니다.
@@ -14,7 +14,7 @@ export function rewardParts(r) {
 }
 
 const ICON = { gift: GiftIcon, point: PointIcon, xp: XpIcon, crew: CrewXpIcon }
-const TINT = { gift: colors.tapeText, point: colors.tapeText, xp: colors.blueText, crew: colors.purple }
+const TINT = { gift: colors.tape, point: colors.tape, xp: colors.blue, crew: colors.purple }
 const fmt = (v) => (typeof v === 'number' ? v.toLocaleString() : v)
 
 export function RewardIcon({ kind, size }) {
@@ -41,7 +41,7 @@ export function RewardTiles({ parts, style }) {
   return (
     <View style={[styles.tiles, style]}>
       {parts.map((p) => (
-        <View key={p.kind} style={styles.tile}>
+        <View key={p.kind} style={[styles.tile, { borderColor: TINT[p.kind] + '55' }]}>
           <RewardIcon kind={p.kind} size={22} />
           <Text style={[text.point, { fontSize: p.kind === 'gift' ? 17 : 22, color: TINT[p.kind] }]} numberOfLines={1} adjustsFontSizeToFit>
             {fmt(p.value)}
@@ -55,7 +55,7 @@ export function RewardTiles({ parts, style }) {
 
 const styles = StyleSheet.create({
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.panel, paddingLeft: 6, paddingRight: 10, paddingVertical: 4, borderRadius: radius.pill, ...neu.insetSm },
-  tiles: { flexDirection: 'row', gap: 16 },
-  tile: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 14, paddingHorizontal: 6, borderRadius: radius.lg, backgroundColor: colors.panel, ...neu.raised },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.panel2, paddingLeft: 6, paddingRight: 9, paddingVertical: 4, borderRadius: radius.pill },
+  tiles: { flexDirection: 'row', gap: 8 },
+  tile: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 6, borderRadius: radius.cardSm, backgroundColor: colors.sheetWeak, borderWidth: 1 },
 })

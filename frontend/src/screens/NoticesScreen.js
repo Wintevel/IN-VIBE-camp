@@ -7,7 +7,7 @@ import ScreenHeader from '../components/ScreenHeader'
 import { Empty } from '../components/States'
 import Toast from '../components/Toast'
 import { useApp } from '../state/AppState'
-import { colors, neu, radius, text } from '../theme'
+import { colors, radius, text } from '../theme'
 
 // 해결 확인: 인증이 올라오면 사진을 보고 정말 치워졌는지 답합니다. 답은 곧 투표이고, "치워졌어요"가 절반 이상 모여야 해결한 이웃이 보상을 받습니다.
 // 받는 사람: 의뢰를 올린 사람, 하트를 누른 사람, 무작위로 뽑힌 이웃, 크루 의뢰는 크루장.
@@ -23,11 +23,11 @@ export default function NoticesScreen({ navigation }) {
         {app.notices.map((n) => (
           <Card key={n.id} style={{ gap: 12 }}>
             <View>
-              {ROLE[n.role] ? <Text style={[text.caption, { color: colors.tapeText, marginBottom: 2 }]}>{ROLE[n.role]}</Text> : null}
+              {ROLE[n.role] ? <Text style={[text.caption, { color: colors.tape, marginBottom: 2 }]}>{ROLE[n.role]}</Text> : null}
               <Text style={text.cardTitle}>{n.title}</Text>
               <Text style={[text.small, { marginTop: 2 }]}>{n.solver} 님이 해결했다고 올렸어요</Text>
             </View>
-            <View style={{ flexDirection: 'row', gap: 14 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
               {(n.single ? [['사진', n.before_path]] : [['치우기 전', n.before_path], ['치운 뒤', n.after_path]]).map(([label, path]) => (
                 <View key={label} style={styles.photo}>
                   {photoUrl(path) ? <Image source={{ uri: photoUrl(path) }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={`${label} 사진`} /> : null}
@@ -46,7 +46,7 @@ export default function NoticesScreen({ navigation }) {
               // 개편(7-1): 바로 지급된 인증도 이의 기간에는 답할 수 있습니다. "아직이에요"가 모이면 운영진이 다시 봅니다.
               <View style={{ gap: 8 }}>
                 <Text style={text.small}>보상은 이미 지급됐어요. 사진이 이상하면 알려 주세요</Text>
-                <View style={{ flexDirection: 'row', gap: 16 }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
                   <Button type="ghost" onPress={() => app.answerNotice(n.id, 'not')}>
                     아직이에요
                   </Button>
@@ -56,7 +56,7 @@ export default function NoticesScreen({ navigation }) {
             ) : CLOSED[n.claim_status] ? (
               <Text style={text.small}>{CLOSED[n.claim_status]}</Text>
             ) : (
-              <View style={{ flexDirection: 'row', gap: 16 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Button type="ghost" onPress={() => app.answerNotice(n.id, 'not')}>
                   아직이에요
                 </Button>
@@ -72,6 +72,6 @@ export default function NoticesScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  photo: { flex: 1, aspectRatio: 4 / 3, borderRadius: radius.lg, backgroundColor: colors.panel, overflow: 'hidden', ...neu.inset },
-  tag: { position: 'absolute', left: 6, bottom: 6, backgroundColor: 'rgba(45,55,72,0.82)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  photo: { flex: 1, aspectRatio: 4 / 3, borderRadius: radius.md, backgroundColor: colors.panel2, overflow: 'hidden' },
+  tag: { position: 'absolute', left: 6, bottom: 6, backgroundColor: 'rgba(17,19,23,0.78)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
 })

@@ -12,7 +12,7 @@ import Stamp from '../components/Stamp'
 import Toast from '../components/Toast'
 import { code, remain } from '../lib/format'
 import { useApp } from '../state/AppState'
-import { colors, neu, radius, text } from '../theme'
+import { colors, radius, text } from '../theme'
 
 // 의뢰 해결 인증 화면. 수락하면 바로 이 화면으로 넘어오고, 의뢰판의 "내가 수락한 의뢰"에서도 열립니다.
 export default function ProofScreen({ navigation, route }) {
@@ -65,7 +65,7 @@ export default function ProofScreen({ navigation, route }) {
           </Card>
         </Appear>
 
-        <Appear from="right" index={1} style={{ flexDirection: 'row', gap: 20 }}>
+        <Appear from="right" index={1} style={{ flexDirection: 'row', gap: 10 }}>
           <PhotoSlot n={single ? null : 1} shot={p.before} label={single ? label1 : '치우기 전'} onPress={() => capture('before')} />
           {single ? null : <PhotoSlot n={2} shot={p.after} label="치운 뒤" onPress={() => capture('after')} />}
         </Appear>
@@ -82,7 +82,7 @@ export default function ProofScreen({ navigation, route }) {
         </View>
         <Text style={[text.caption, { color: colors.red }]}>깨진 유리, 주사기처럼 다칠 수 있는 것은 손대지 말고 구청이나 안전신문고에 신고해 주세요.</Text>
 
-        <View style={{ flexDirection: 'row', gap: 16 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
           <Button type="ghost" disabled={busy} onPress={cancel}>
             수락 취소
           </Button>
@@ -97,7 +97,7 @@ export default function ProofScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  quest: { flexDirection: 'row', gap: 14, padding: 14, borderLeftWidth: 4, borderLeftColor: colors.blue },
-  thumb: { width: 76, alignSelf: 'stretch', minHeight: 76, borderRadius: radius.md, backgroundColor: colors.panel, ...neu.inset },
-  step: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.raisedSm },
+  quest: { flexDirection: 'row', gap: 12, padding: 12, borderColor: colors.blue },
+  thumb: { width: 76, alignSelf: 'stretch', minHeight: 76, borderRadius: radius.md, backgroundColor: colors.panel2 },
+  step: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
 })

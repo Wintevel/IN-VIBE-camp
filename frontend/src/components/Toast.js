@@ -31,6 +31,6 @@ export default function Toast() {
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', left: 20, right: 20, bottom: 96, alignItems: 'center', zIndex: 70 },
-  box: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.sheetToast, paddingHorizontal: 20, paddingVertical: 13, borderRadius: 18, boxShadow: '8px 8px 20px rgba(45,55,72,0.28), -6px -6px 16px #FFFFFF' },
+  box: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.sheetToast, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 14 },
   action: { paddingVertical: 2 },
 })

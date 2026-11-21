@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, neu, text } from '../theme'
 import { ND, reduced, SHADOW_EASE } from './Motion'
 
-// 아래 탭바(뉴모피즘). 바탕에서 솟은 판 위에, 고른 탭 자리만 안으로 패인 홈이 있고 그 홈이 탭을 따라 미끄러집니다.
-// 고른 탭 글자·아이콘은 파랑, 나머지는 슬레이트(바탕 대비 4.8:1)입니다.
+// 아래 탭바(뉴모피즘 촉감). 살짝 솟은 판 위에서, 고른 탭 자리만 안으로 패인 홈이 탭을 따라 스프링으로 미끄러집니다.
+// 고른 탭은 흰 글자, 나머지는 보조 글자색입니다.
 const PAD = 6
 
 export default function TabBar({ state, descriptors, navigation }) {
@@ -31,7 +31,7 @@ export default function TabBar({ state, descriptors, navigation }) {
         {state.routes.map((route, i) => {
           const { options } = descriptors[route.key]
           const focused = state.index === i
-          const color = focused ? colors.blueText : colors.disabled
+          const color = focused ? colors.fg : colors.sub
           const label = options.title ?? route.name
           const onPress = () => {
             const e = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
@@ -50,8 +50,8 @@ export default function TabBar({ state, descriptors, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { backgroundColor: colors.ink, paddingHorizontal: 16, paddingTop: 10 },
-  bar: { flexDirection: 'row', backgroundColor: colors.panel, borderRadius: 26, padding: PAD, ...neu.raised },
-  pit: { position: 'absolute', top: PAD, bottom: PAD, left: 0, borderRadius: 20, backgroundColor: colors.panel, ...neu.inset },
+  wrap: { backgroundColor: colors.ink, paddingHorizontal: 14, paddingTop: 8 },
+  bar: { flexDirection: 'row', backgroundColor: colors.panel, borderRadius: 24, borderWidth: 1, borderColor: colors.line, padding: PAD, ...neu.raised },
+  pit: { position: 'absolute', top: PAD, bottom: PAD, left: 0, borderRadius: 18, backgroundColor: colors.ink, ...neu.inset },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 8 },
 })

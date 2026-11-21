@@ -8,7 +8,7 @@ import Logo from '../components/Logo'
 import { Appear } from '../components/Motion'
 import { GUIDE } from '../lib/guide'
 import { useApp } from '../state/AppState'
-import { colors, neu, text } from '../theme'
+import { colors, text } from '../theme'
 
 // 처음 시작할 때 한 번 보여 주는 안내. 같은 내용을 내 정보 > 도움말에서 다시 볼 수 있습니다.
 export default function TutorialScreen() {
@@ -55,7 +55,7 @@ export default function TutorialScreen() {
           )}
         </Appear>
 
-        <View style={{ flexDirection: 'row', gap: 16 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
           {i >= 0 ? (
             <Button type="ghost" onPress={() => setI(i - 1)}>
               이전
@@ -71,11 +71,11 @@ export default function TutorialScreen() {
 const styles = StyleSheet.create({
   wrap: { flex: 1, paddingHorizontal: 20, justifyContent: 'space-between' },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dots: { flexDirection: 'row', gap: 8, padding: 6, borderRadius: 99, ...neu.insetSm },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.shade },
-  dotOn: { width: 24, backgroundColor: colors.tape },
+  dots: { flexDirection: 'row', gap: 6 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.line },
+  dotOn: { width: 22, backgroundColor: colors.tape },
   body: { gap: 16 },
-  points: { gap: 12, marginTop: 8, backgroundColor: colors.panel, borderRadius: 22, padding: 18, ...neu.raised },
+  points: { gap: 12, marginTop: 8, backgroundColor: colors.panel, borderRadius: 16, borderWidth: 1, borderColor: colors.line, padding: 16 },
   point: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  bullet: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.tape, marginTop: 8, boxShadow: '1px 1px 2px #C2CBD9' },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.tape, marginTop: 9 },
 })

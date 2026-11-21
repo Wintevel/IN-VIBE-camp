@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, View } from 'react-native'
 import { photoUrl } from '../api'
 import { code, dist, isCrew, isPartner, issueLabel, MARK_LABELS } from '../lib/format'
-import { colors, neu, radius, text } from '../theme'
+import { colors, radius, text } from '../theme'
 import { GiftIcon, HeartIcon, PinIcon } from './Icons'
 import { Pop, PressScale } from './Motion'
 import { RewardPills } from './Reward'
@@ -15,11 +15,11 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
   const best = MARK_LABELS.map(([k, name]) => [r.marks?.[k] || 0, name]).sort((a, b) => b[0] - a[0])[0]
   const topMark = best && best[0] > 0 ? `${best[1]} ${best[0]}` : null
   return (
-    <PressScale onPress={onPress} accessibilityRole="button" to={0.985} surface="raised" style={[styles.card, (done || r.pending_until) && { opacity: 0.6 }]}>
+    <PressScale onPress={onPress} accessibilityRole="button" to={0.975} style={[styles.card, r.i_am_participating && !done && styles.accepted, (done || r.pending_until) && { opacity: 0.55 }]}>
       <View style={styles.thumb}>
         {img ? <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel="제보 사진" /> : isPartner(r) ? <GiftIcon size={30} /> : <PinIcon size={28} />}
         <View style={styles.codeTag}>
-          <Text style={[text.code, { color: colors.onBlue }]}>{code(r.id)}</Text>
+          <Text style={[text.code, { color: colors.fg }]}>{code(r.id)}</Text>
         </View>
       </View>
       <View style={styles.main}>
@@ -57,16 +57,15 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', gap: 14, backgroundColor: colors.panel, borderRadius: radius.lg, padding: 14, overflow: 'hidden' },
-  // 사진 칸은 카드 안으로 패인 홈(음각)
-  thumb: { width: 88, alignSelf: 'stretch', minHeight: 104, borderRadius: radius.md, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...neu.inset },
-  codeTag: { position: 'absolute', left: 0, bottom: 0, backgroundColor: 'rgba(45,55,72,0.78)', paddingHorizontal: 6, paddingVertical: 3, borderTopRightRadius: 8 },
+  card: { flexDirection: 'row', gap: 12, backgroundColor: colors.panel, borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
+  accepted: { borderColor: colors.blue },
+  thumb: { width: 88, alignSelf: 'stretch', minHeight: 104, borderRadius: radius.md, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  codeTag: { position: 'absolute', left: 0, bottom: 0, backgroundColor: 'rgba(17,19,23,0.72)', paddingHorizontal: 6, paddingVertical: 3, borderTopRightRadius: 8 },
   main: { flex: 1, gap: 6, paddingVertical: 2 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
   bottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 2 },
-  heart: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.panel },
-  mark: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, ...neu.insetSm },
-  heartOn: { backgroundColor: '#ECD9DE' },
-  // 내가 수락한 의뢰: 왼쪽에 파란 띠(예전 표시 유지)
-  edge: { position: 'absolute', left: 0, top: 18, bottom: 18, width: 4, borderTopRightRadius: 4, borderBottomRightRadius: 4, backgroundColor: colors.blue },
+  heart: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.panel2 },
+  mark: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
+  heartOn: { backgroundColor: colors.redSoft },
+  edge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: colors.blue },
 })

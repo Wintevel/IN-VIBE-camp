@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import { remain } from '../lib/format'
-import { colors, neu, radius, text } from '../theme'
+import { colors, radius, text } from '../theme'
 import { Appear, Bar } from './Motion'
 import { RewardIcon } from './Reward'
 
@@ -16,7 +16,7 @@ export default function ClaimStatus({ claims }) {
       <View style={styles.head}>
         <View style={styles.mark} />
         <Text style={text.section}>확인 중인 인증</Text>
-        {waiting > 0 ? <Text style={[text.num, { fontSize: 15, color: colors.tapeText }]}>{waiting}</Text> : null}
+        {waiting > 0 ? <Text style={[text.num, { fontSize: 15, color: colors.tape }]}>{waiting}</Text> : null}
       </View>
       {claims.map((c, i) => (
         <Appear key={c.claim_id} index={i}>
@@ -34,7 +34,7 @@ function Row({ c }) {
   const staff = c.status === 'staff_review'
   const partner = c.kind === 'partner'
   const pct = Math.round(Number(c.ok_percent) || 0)
-  const [label, color] = paid ? ['지급됨', colors.green] : rejected ? ['반려', colors.red] : staff ? ['운영진 검토 중', colors.purple] : ['확인 대기', colors.tapeText]
+  const [label, color] = paid ? ['지급됨', colors.green] : rejected ? ['반려', colors.red] : staff ? ['운영진 검토 중', colors.purple] : ['확인 대기', colors.tape]
   let sub
   if (paid) sub = `이웃이 이의를 남기면 운영진이 다시 확인해요${c.dispute_until ? ` · 이의 기간 ${remain(c.dispute_until)}` : ''}`
   else if (rejected) sub = c.reject_reason || '확인을 통과하지 못했어요. 의뢰는 다시 열렸어요'
@@ -42,7 +42,7 @@ function Row({ c }) {
   else if (partner) sub = '의뢰한 업체 담당자가 확인하면 보상이 지급돼요'
   else sub = `이웃 ${c.voters || 0}명 중 ${c.answered || 0}명이 답했어요${c.verify_deadline ? ` · ${remain(c.verify_deadline)}` : ''}`
   return (
-    <View style={styles.card} accessibilityLabel={`${c.title} ${label}`}>
+    <View style={[styles.card, rejected && { borderColor: colors.line }]} accessibilityLabel={`${c.title} ${label}`}>
       <View style={styles.top}>
         <Text style={[text.cardTitle, { flex: 1 }]} numberOfLines={1}>
           {c.title}
@@ -51,7 +51,7 @@ function Row({ c }) {
       </View>
       {!paid && !rejected && !staff && !partner ? (
         <View style={styles.vote}>
-          <Bar ratio={Math.min(1, pct / THRESHOLD)} color={colors.green} style={{ flex: 1 }} />
+          <Bar ratio={Math.min(1, pct / THRESHOLD)} color={colors.green} track={colors.panel2} style={{ flex: 1 }} />
           <Text style={[text.caption, { color: colors.fg }]}>
             치워졌어요 {pct}% / {THRESHOLD}%
           </Text>
@@ -64,7 +64,7 @@ function Row({ c }) {
           {c.points_pending > 0 ? (
             <View style={styles.pill}>
               <RewardIcon kind="point" size={14} />
-              <Text style={[text.chip, { color: colors.tapeText }]}>{c.points_pending}</Text>
+              <Text style={[text.chip, { color: colors.tape }]}>{c.points_pending}</Text>
             </View>
           ) : null}
           {c.xp_pending > 0 ? (
@@ -80,10 +80,10 @@ function Row({ c }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 16 },
+  wrap: { gap: 10 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  mark: { width: 6, height: 16, borderRadius: 2, backgroundColor: colors.tape, transform: [{ skewX: '-16deg' }] },
-  card: { gap: 10, backgroundColor: colors.panel, borderRadius: radius.lg, padding: 16, borderLeftWidth: 4, borderLeftColor: colors.tape, ...neu.raised },
+  mark: { width: 6, height: 16, backgroundColor: colors.tape, transform: [{ skewX: '-16deg' }] },
+  card: { gap: 8, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.tape, borderRadius: radius.lg, padding: 14 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   vote: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   pending: { flexDirection: 'row', alignItems: 'center', gap: 8 },

@@ -6,7 +6,7 @@ import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
 import { refresher } from '../components/States'
 import { useApp } from '../state/AppState'
-import { colors, neu, radius, text } from '../theme'
+import { colors, text } from '../theme'
 
 const COLOR = { open: colors.tape, in_progress: colors.blue, completed: colors.green }
 const LEGEND = [
@@ -29,9 +29,7 @@ export default function MapScreen() {
   return (
     <Screen refreshControl={refresher(app)}>
       <ScreenHeader title="동네 지도" sub="핀을 누르면 의뢰를 볼 수 있어요" />
-      <View style={styles.map}>
-        <View style={styles.mapIn}>{app.coords ? <MapView center={app.coords} me={app.located ? app.coords : null} markers={markers} onSelect={select} /> : null}</View>
-      </View>
+      <View style={styles.map}>{app.coords ? <MapView center={app.coords} me={app.located ? app.coords : null} markers={markers} onSelect={select} /> : null}</View>
       <View style={styles.legend}>
         {LEGEND.map(([label, color]) => (
           <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -40,13 +38,13 @@ export default function MapScreen() {
           </View>
         ))}
       </View>
-      <View style={{ flexDirection: 'row', gap: 16 }}>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
         {[
           [count('open'), '열린 의뢰'],
           [count('in_progress'), '진행 중'],
           [count('completed'), '치운 곳'],
         ].map(([num, label]) => (
-          <Card key={label} style={{ flex: 1, padding: 14 }}>
+          <Card key={label} style={{ flex: 1, padding: 12, borderRadius: 14 }}>
             <Text style={text.point}>{num}</Text>
             <Text style={[text.caption, { marginTop: 4 }]}>{label}</Text>
           </Card>
@@ -57,8 +55,6 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  // 지도는 패인 창(음각) 안에 들어갑니다.
-  map: { aspectRatio: 1 / 1.05, borderRadius: radius.lg, backgroundColor: colors.panel, ...neu.inset, padding: 8 },
-  mapIn: { flex: 1, borderRadius: radius.lg - 6, overflow: 'hidden' },
+  map: { aspectRatio: 1 / 1.05, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: '#15181D' },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
 })

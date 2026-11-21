@@ -6,7 +6,7 @@ import FilterChips from '../components/FilterChips'
 import Screen from '../components/Screen'
 import { ISSUES, PLACES } from '../lib/format'
 import { useApp } from '../state/AppState'
-import { colors, font, neu, radius, text } from '../theme'
+import { colors, font, radius, text } from '../theme'
 
 // 좌표 → 주소. 웹 등 주소를 못 구하는 환경에서는 비워 둡니다(좌표 숫자는 사람이 읽을 수 없어 보여 주지 않음).
 async function lookup(shot) {
@@ -116,11 +116,10 @@ export default function ReportCreateScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  // 사진 칸: 찍기 전엔 패인 홈, 찍은 뒤엔 솟은 사진 카드
-  photo: { aspectRatio: 4 / 3, borderRadius: radius.lg, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...neu.inset },
-  photoDone: { ...neu.raised },
-  input: { backgroundColor: colors.panel, borderRadius: radius.lg, ...neu.inset, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 18, paddingVertical: 15 },
-  more: { color: colors.blueText, paddingVertical: 6, alignSelf: 'flex-start' },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  stepBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.raisedSm },
+  photo: { aspectRatio: 4 / 3, borderRadius: radius.md, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.line, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  photoDone: { borderStyle: 'solid', borderColor: colors.blue },
+  input: { backgroundColor: colors.panel, borderRadius: radius.cardSm, borderWidth: 1, borderColor: colors.line, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 16, paddingVertical: 14 },
+  more: { color: colors.blue, paddingVertical: 6, alignSelf: 'flex-start' },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  stepBtn: { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
 })

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useFrameSize } from '../lib/frame'
 import { useApp } from '../state/AppState'
-import { colors, font, neu, text } from '../theme'
+import { colors, text } from '../theme'
 import Button from './Button'
 import { Appear, CountUp, ND, reduced } from './Motion'
 import { RewardIcon } from './Reward'
@@ -54,7 +54,7 @@ export default function ClearOverlay() {
         <View style={styles.bands} pointerEvents="none">
           <Animated.View style={[styles.band, { backgroundColor: colors.blue, top: 14, transform: [{ translateX: slide(1) }] }]} />
           <Animated.View style={[styles.band, { backgroundColor: colors.tape, transform: [{ translateX: slide(-1) }] }]}>
-            <Animated.Text style={[text.h1, font.brand, styles.clear, { opacity: slam, transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [2.4, 1] }) }] }]}>{wait ? '인증 제출' : c.self ? '치움 완료' : '의뢰 완료'}</Animated.Text>
+            <Animated.Text style={[text.h1, styles.clear, { opacity: slam, transform: [{ scale: slam.interpolate({ inputRange: [0, 1], outputRange: [2.4, 1] }) }] }]}>{wait ? '인증 제출' : c.self ? '치움 완료' : '의뢰 완료'}</Animated.Text>
           </Animated.View>
         </View>
 
@@ -64,16 +64,16 @@ export default function ClearOverlay() {
         </Appear>
         {c.leveled_up ? (
           <Appear from="bottom" delay={460} style={styles.level}>
-            <Text style={[text.num, { color: colors.onBlue }]}>LEVEL UP · Lv.{c.level}</Text>
+            <Text style={[text.num, { color: colors.ink }]}>LEVEL UP · Lv.{c.level}</Text>
           </Appear>
         ) : null}
 
-        <View style={{ alignSelf: 'stretch', gap: 16 }}>
+        <View style={{ alignSelf: 'stretch', gap: 8 }}>
           {rows.map((r, i) => (
             <Appear key={r.kind} from={i % 2 ? 'left' : 'right'} delay={520 + i * 110} style={styles.row}>
               <RewardIcon kind={r.kind} size={26} />
               <Text style={[text.section, { flex: 1 }]}>{wait ? `${r.name} · 확인 뒤 지급` : r.name}</Text>
-              {r.label ? <Text style={[text.num, { color: colors.tapeText }]}>{r.label}</Text> : <CountUp value={r.value} prefix={wait ? '' : '+'} delay={520 + i * 110} style={[text.point, { color: r.kind === 'point' ? colors.tapeText : r.kind === 'crew' ? colors.purple : colors.blue }]} />}
+              {r.label ? <Text style={[text.num, { color: colors.tape }]}>{r.label}</Text> : <CountUp value={r.value} prefix={wait ? '' : '+'} delay={520 + i * 110} style={[text.point, { color: r.kind === 'point' ? colors.tape : r.kind === 'crew' ? colors.purple : colors.blue }]} />}
             </Appear>
           ))}
         </View>
@@ -87,11 +87,11 @@ export default function ClearOverlay() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(228,233,242,0.96)', zIndex: 50, overflow: 'hidden' },
+  wrap: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,11,13,0.92)', zIndex: 50, overflow: 'hidden' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 18, paddingHorizontal: 24 },
   bands: { alignSelf: 'stretch', height: 110, marginHorizontal: -60, justifyContent: 'center', transform: [{ rotate: '-6deg' }] },
-  band: { position: 'absolute', left: 0, right: 0, height: 76, alignItems: 'center', justifyContent: 'center', boxShadow: '0px 10px 24px rgba(45,55,72,0.22)' },
+  band: { position: 'absolute', left: 0, right: 0, height: 76, alignItems: 'center', justifyContent: 'center' },
   clear: { fontSize: 46, lineHeight: 54, color: colors.tapeInk, letterSpacing: 2 },
-  level: { backgroundColor: colors.green, paddingHorizontal: 16, paddingVertical: 7, borderRadius: 12, transform: [{ rotate: '-3deg' }], ...neu.raisedSm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.panel, borderRadius: 20, paddingHorizontal: 18, paddingVertical: 15, ...neu.raised },
+  level: { backgroundColor: colors.green, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, transform: [{ rotate: '-3deg' }] },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14 },
 })

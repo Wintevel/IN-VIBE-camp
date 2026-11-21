@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Animated, Easing, StyleSheet, View } from 'react-native'
 import { useFrameSize } from '../lib/frame'
 import { useApp } from '../state/AppState'
-import { colors, font, text } from '../theme'
+import { colors, text } from '../theme'
 import { ND, reduced } from './Motion'
 
 // 만화의 속도선처럼 기울어진 줄이 화면을 가로지르며 다음 화면으로 넘깁니다(의뢰 수락 → 인증 화면).
@@ -12,7 +12,7 @@ const LINES = Array.from({ length: 16 }, (_, i) => ({
   h: 6 + ((i * 13) % 4) * 9, // 굵기
   w: 0.5 + ((i * 7) % 5) * 0.16, // 길이(화면 너비 배수)
   lag: ((i * 5) % 7) / 7, // 출발 지연
-  color: i % 5 === 0 ? colors.tape : i % 3 === 0 ? colors.blue : i % 2 === 0 ? colors.fg : '#FFFFFF',
+  color: i % 5 === 0 ? colors.tape : i % 3 === 0 ? colors.blue : colors.fg,
 }))
 const DURATION = 620
 
@@ -47,13 +47,13 @@ export default function SpeedDash() {
               width: width * l.w,
               borderRadius: l.h,
               backgroundColor: l.color,
-              opacity: l.color === colors.fg ? 0.8 : 1,
+              opacity: l.color === colors.fg ? 0.85 : 1,
               transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [width * (1.3 + l.lag), -width * (1.6 + l.lag)] }) }],
             }}
           />
         ))}
       </View>
-      <Animated.Text style={[text.h1, font.brand, styles.word, { opacity: v.interpolate({ inputRange: [0, 0.25, 0.65, 0.85], outputRange: [0, 1, 1, 0] }), transform: [{ translateX: v.interpolate({ inputRange: [0, 0.3, 0.7, 1], outputRange: [120, 0, -12, -160] }) }, { skewX: '-12deg' }] }]}>출동!</Animated.Text>
+      <Animated.Text style={[text.h1, styles.word, { opacity: v.interpolate({ inputRange: [0, 0.25, 0.65, 0.85], outputRange: [0, 1, 1, 0] }), transform: [{ translateX: v.interpolate({ inputRange: [0, 0.3, 0.7, 1], outputRange: [120, 0, -12, -160] }) }, { skewX: '-12deg' }] }]}>출동!</Animated.Text>
     </View>
   )
 }
@@ -61,5 +61,5 @@ export default function SpeedDash() {
 const styles = StyleSheet.create({
   wrap: { ...StyleSheet.absoluteFillObject, zIndex: 60, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   tilt: { ...StyleSheet.absoluteFillObject, transform: [{ rotate: '-8deg' }, { scale: 1.3 }] },
-  word: { fontSize: 64, lineHeight: 76, color: colors.tape, letterSpacing: 2, textShadowColor: colors.fg, textShadowOffset: { width: 3, height: 3 }, textShadowRadius: 0 },
+  word: { fontSize: 64, lineHeight: 76, color: colors.tape, letterSpacing: 2 },
 })

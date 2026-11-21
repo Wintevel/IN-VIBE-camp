@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, Text } from 'react-native'
-import { neu } from '../theme'
+import { colors, neu } from '../theme'
 
-// 움직임 공통: 아래에서 떠오르는 등장, 눌림(양각 → 음각), 숫자 올라가기.
-// 뉴모피즘 개편: 등장은 면이 바탕에서 살짝 떠오르듯(아래 → 제자리, 0.97 → 1) 짧게, 눌림은 솟은 면이 안으로 패이듯 그림자가 뒤집힙니다.
-// 웹은 그림자 바뀜을 CSS 전환으로 부드럽게 잇습니다.
+// 움직임 공통: 살짝 떠오르는 등장, 눌림(솟은 면 → 패인 면), 숫자 올라가기.
+// 등장은 짧은 거리만 움직이며 0.97 → 1 로 커집니다. 눌림은 솟은 면의 그림자가 안쪽으로 뒤집히고, 웹은 그 바뀜을 CSS 전환으로 잇습니다.
 // 기기의 "동작 줄이기"가 켜져 있으면 전부 바로 최종 상태로 보여줍니다.
 export const ND = Platform.OS !== 'web'
 
@@ -139,14 +138,14 @@ export function CountUp({ value = 0, duration = 700, delay = 0, prefix = '', suf
   return <Text style={style}>{`${prefix}${n.toLocaleString()}${suffix}`}</Text>
 }
 
-// 0→1 로 채워지는 막대. 트랙은 음각(패인 홈), 채움은 그 안에서 차오릅니다.
-export function Bar({ ratio = 0, color, height = 8, track, style }) {
+// 0→1 로 채워지는 막대. 트랙은 살짝 패인 홈이고, 채움은 그 안에서 차오릅니다.
+export function Bar({ ratio = 0, color, height = 6, track, style }) {
   const v = useRef(new Animated.Value(reduce ? ratio : 0)).current
   useEffect(() => {
     Animated.timing(v, { toValue: ratio, duration: reduce ? 0 : 900, easing: Easing.bezier(0.22, 1, 0.36, 1), useNativeDriver: false }).start()
   }, [v, ratio])
   return (
-    <Animated.View style={[{ height, borderRadius: 99, backgroundColor: track || '#E4E9F2', overflow: 'hidden', padding: height >= 8 ? 2 : 0 }, neu.insetSm, style]}>
+    <Animated.View style={[{ height, borderRadius: 99, backgroundColor: track || colors.panel2, overflow: 'hidden' }, neu.insetSm, style]}>
       <Animated.View style={{ height: '100%', borderRadius: 99, backgroundColor: color, width: v.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'], extrapolate: 'clamp' }) }} />
     </Animated.View>
   )

@@ -9,7 +9,7 @@ import ScreenHeader from '../components/ScreenHeader'
 import Toast from '../components/Toast'
 import { progress, statsOf } from '../lib/achievements'
 import { useApp } from '../state/AppState'
-import { colors, neu, radius, text } from '../theme'
+import { colors, radius, text } from '../theme'
 
 // 도전과제. 달성하면 포인트·XP(가끔 꾸미기 품목)를 받고, 이름을 칭호로 쓸 수 있습니다. 포인트(노랑)와 구분되게 보라색을 씁니다.
 export default function CollectionScreen({ navigation }) {
@@ -31,7 +31,7 @@ export default function CollectionScreen({ navigation }) {
         <ScreenHeader title="도전과제" sub={`${feats.filter((a) => a.done).length}/${feats.length} 달성 · 달성한 이름은 칭호로 쓸 수 있어요`} action="닫기" onAction={() => navigation.goBack()} />
         {sorted.map((a, i) => (
           <Appear key={a.id} index={i}>
-            <Card style={[styles.feat, a.done && !a.claimed && { borderLeftWidth: 4, borderLeftColor: colors.purple }]}>
+            <Card style={[styles.feat, a.done && !a.claimed && { borderColor: colors.purple, backgroundColor: 'rgba(169,124,255,0.10)' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={[styles.medal, a.done && { backgroundColor: colors.purple }]}>
                   <Text style={[text.num, { color: a.done ? colors.ink : colors.disabled }]}>{a.done ? '✓' : '?'}</Text>
@@ -50,7 +50,7 @@ export default function CollectionScreen({ navigation }) {
               </View>
               {a.done ? null : (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Bar ratio={a.now / a.goal} color={colors.purple} style={{ flex: 1 }} />
+                  <Bar ratio={a.now / a.goal} color={colors.purple} track={colors.panel2} style={{ flex: 1 }} />
                   <Text style={text.caption}>
                     {a.now}/{a.goal}
                   </Text>
@@ -60,14 +60,14 @@ export default function CollectionScreen({ navigation }) {
                 <Text style={text.caption}>보상</Text>
                 <View style={styles.reward}>
                   <PointIcon size={14} />
-                  <Text style={[text.chip, { color: colors.tapeText }]}>{a.points}</Text>
+                  <Text style={[text.chip, { color: colors.tape }]}>{a.points}</Text>
                 </View>
                 <View style={styles.reward}>
                   <XpIcon size={14} />
                   <Text style={[text.chip, { color: colors.blue }]}>{a.xp}XP</Text>
                 </View>
                 {a.gift ? (
-                  <View style={[styles.reward, { backgroundColor: 'rgba(107,63,212,0.10)' }]}>
+                  <View style={[styles.reward, { backgroundColor: 'rgba(169,124,255,0.18)' }]}>
                     <Text style={[text.chip, { color: colors.purple }]}>{a.gift}</Text>
                   </View>
                 ) : null}
@@ -83,8 +83,8 @@ export default function CollectionScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  feat: { gap: 12, padding: 16 },
-  medal: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.inset },
+  feat: { gap: 10, padding: 12 },
+  medal: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
   rewards: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  reward: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.panel, paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill, ...neu.insetSm },
+  reward: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.panel2, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.pill },
 })

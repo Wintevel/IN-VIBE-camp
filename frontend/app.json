@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "plugins": [
       [
         "expo-camera",
@@ -47,7 +47,7 @@
       "bundler": "metro",
       "output": "single",
       "favicon": "./assets/favicon.png",
-      "backgroundColor": "#E4E9F2",
+      "backgroundColor": "#111317",
       "lang": "ko"
     }
   }

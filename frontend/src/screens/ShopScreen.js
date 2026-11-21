@@ -9,7 +9,7 @@ import ScreenHeader from '../components/ScreenHeader'
 import { Empty } from '../components/States'
 import Toast from '../components/Toast'
 import { useApp } from '../state/AppState'
-import { colors, neu, radius, text } from '../theme'
+import { colors, radius, text } from '../theme'
 
 // 포인트 교환 상점. 포인트는 현금이 아니라 앱 안에서 쌓아 상품으로 바꾸는 적립금입니다.
 export default function ShopScreen({ navigation }) {
@@ -38,7 +38,7 @@ export default function ShopScreen({ navigation }) {
             <PointIcon size={34} />
             <View style={{ flex: 1 }}>
               <Text style={text.caption}>내 포인트</Text>
-              <CountUp value={points} style={[text.h1, { color: colors.tapeText }]} />
+              <CountUp value={points} style={[text.h1, { color: colors.tape }]} />
             </View>
           </View>
         </Appear>
@@ -49,7 +49,7 @@ export default function ShopScreen({ navigation }) {
           const on = picked === it.id
           return (
             <Appear key={it.id} index={i}>
-              <Card style={[styles.item, on && { borderLeftWidth: 4, borderLeftColor: colors.tape }]}>
+              <Card style={[styles.item, on && { borderColor: colors.tape }]}>
                 <View style={styles.thumb}>
                   <GiftIcon size={24} color={can ? colors.tape : colors.disabled} />
                 </View>
@@ -57,7 +57,7 @@ export default function ShopScreen({ navigation }) {
                   <Text style={text.section}>{it.name}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <PointIcon size={16} />
-                    <Text style={[text.num, { fontSize: 16, color: colors.tapeText }]}>{it.cost.toLocaleString()}</Text>
+                    <Text style={[text.num, { fontSize: 16, color: colors.tape }]}>{it.cost.toLocaleString()}</Text>
                     {!can ? <Text style={text.caption}>{(it.cost - points).toLocaleString()} 부족</Text> : null}
                   </View>
                 </View>
@@ -84,8 +84,8 @@ export default function ShopScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  wallet: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: radius.lg, backgroundColor: colors.panel, overflow: 'hidden', ...neu.raised },
-  slash: { position: 'absolute', right: 30, top: -30, bottom: -30, width: 60, backgroundColor: 'rgba(255,212,59,0.28)', transform: [{ skewX: '-18deg' }] },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14 },
-  thumb: { width: 50, height: 50, borderRadius: 16, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.inset },
+  wallet: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius.lg, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.tape, overflow: 'hidden' },
+  slash: { position: 'absolute', right: 30, top: -30, bottom: -30, width: 60, backgroundColor: 'rgba(255,212,59,0.12)', transform: [{ skewX: '-18deg' }] },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  thumb: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
 })

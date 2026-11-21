@@ -4,7 +4,7 @@ import { photoUrl } from '../api'
 import { code, dist, isCrew, isPartner, remain, issueLabel, MARK_LABELS, FLAG_REASONS, placeText } from '../lib/format'
 import { navigationRef } from '../navigation/ref'
 import { useApp } from '../state/AppState'
-import { colors, font, neu, radius, text } from '../theme'
+import { colors, font, radius, text } from '../theme'
 import BottomSheet from './BottomSheet'
 import Button from './Button'
 import { HeartIcon } from './Icons'
@@ -80,7 +80,7 @@ export default function QuestSheet() {
       visible={app.sheet.visible}
       onClose={app.hideSheet}
       footer={
-        <View style={{ flexDirection: 'row', gap: 16 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
           {joined && !done ? (
             <Button type="weak" disabled={busy} onPress={cancel}>
               수락 취소
@@ -104,7 +104,7 @@ export default function QuestSheet() {
       <Text style={text.sheetTitle}>{r.title}</Text>
       {app.social && !done ? (
         <View style={styles.react}>
-          <PressScale onPress={() => app.toggleHeart(r.id)} to={0.92} surface="raisedSm" active={!!r.liked_by_me} accessibilityRole="button" accessibilityLabel="하트 누르기" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.chip, r.liked_by_me && { backgroundColor: '#ECD9DE' }]}>
+          <PressScale onPress={() => app.toggleHeart(r.id)} to={0.92} surface="raisedSm" active={!!r.liked_by_me} accessibilityRole="button" accessibilityLabel="하트 누르기" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.chip, r.liked_by_me && { backgroundColor: colors.redSoft }]}>
             <Pop on={!!r.liked_by_me}>
               <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sheetSub} />
             </Pop>
@@ -113,8 +113,8 @@ export default function QuestSheet() {
           {MARK_LABELS.map(([k, name]) => {
             const on = r.my_mark === k
             return (
-              <PressScale key={k} onPress={() => app.mark(r.id, k)} to={0.94} surface="raisedSm" active={on} accessibilityRole="button" accessibilityState={{ selected: on }} style={styles.chip}>
-                <Text style={[text.chip, { color: on ? colors.blueText : colors.sheetSub }]}>
+              <PressScale key={k} onPress={() => app.mark(r.id, k)} to={0.94} surface="raisedSm" active={on} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && { backgroundColor: colors.blueWeak, borderColor: colors.blue }]}>
+                <Text style={[text.chip, { color: on ? colors.blue : colors.sheetSub }]}>
                   {name} {r.marks?.[k] || 0}
                 </Text>
               </PressScale>
@@ -134,7 +134,7 @@ export default function QuestSheet() {
         ))}
       </View>
       {!done && !proving ? (
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 10 }}>
           <Text style={text.section}>완료 인증 방법</Text>
           {steps.map((s, i) => (
             <View key={s} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
@@ -152,7 +152,7 @@ export default function QuestSheet() {
             <Text style={text.section}>신고하는 이유</Text>
             <View style={styles.react}>
               {FLAG_REASONS.map(([k, name]) => (
-                <PressScale key={k} onPress={() => sendFlag(k)} to={0.94} surface="raisedSm" accessibilityRole="button" style={styles.chip}>
+                <PressScale key={k} onPress={() => sendFlag(k)} to={0.92} accessibilityRole="button" style={styles.chip}>
                   <Text style={[text.chip, { color: colors.sheetFg }]}>{name}</Text>
                 </PressScale>
               ))}
@@ -170,11 +170,10 @@ export default function QuestSheet() {
 }
 
 const styles = StyleSheet.create({
-  photo: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.lg, backgroundColor: colors.sheetWeak, ...neu.raised },
-  // 정보 표는 패인 판(음각) 안에 둡니다.
-  kv: { backgroundColor: colors.panel, borderRadius: radius.lg, paddingHorizontal: 18, ...neu.inset },
-  kvRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 13 },
-  step: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.raisedSm },
-  react: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.panel },
+  photo: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.md, backgroundColor: colors.sheetWeak },
+  kv: { backgroundColor: colors.sheetWeak, borderRadius: radius.cardSm, paddingHorizontal: 16 },
+  kvRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 12 },
+  step: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.sheetWeak, alignItems: 'center', justifyContent: 'center' },
+  react: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.sheetWeak, borderWidth: 1, borderColor: 'transparent' },
 })

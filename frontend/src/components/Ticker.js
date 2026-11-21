@@ -12,5 +12,5 @@ export default function Ticker({ children }) {
 }
 
 const styles = StyleSheet.create({
-  box: { backgroundColor: colors.tape, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12, transform: [{ rotate: '-1deg' }], boxShadow: '5px 5px 12px #C2CBD9, -5px -5px 12px #FFFFFF' },
+  box: { backgroundColor: colors.tape, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, transform: [{ rotate: '-1deg' }] },
 })

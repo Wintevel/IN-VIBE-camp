@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { DefaultTheme, NavigationContainer } from '@react-navigation/native'
+import { DarkTheme, NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { View } from 'react-native'
 import { TabIcon } from '../components/Icons'
@@ -30,7 +30,7 @@ import TutorialScreen from '../screens/TutorialScreen'
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
 
-const theme = { ...DefaultTheme, dark: false, colors: { ...DefaultTheme.colors, background: colors.ink, card: colors.ink, border: colors.line, text: colors.fg, primary: colors.blue } }
+const theme = { ...DarkTheme, colors: { ...DarkTheme.colors, background: colors.ink, card: colors.ink, border: colors.line, text: colors.fg, primary: colors.blue } }
 
 const TABS = [
   ['Board', BoardScreen, '의뢰판', 'board'],
