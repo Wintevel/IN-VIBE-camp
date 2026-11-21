@@ -4,7 +4,7 @@ import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
 import { Empty } from '../components/States'
 import { useApp } from '../state/AppState'
-import { colors, radius, text } from '../theme'
+import { colors, neu, radius, text } from '../theme'
 
 // 보관함: 상점에서 바꾼 쿠폰과 제휴 의뢰로 받은 보상을 한곳에서 봅니다(최근 순).
 export default function VaultScreen({ navigation }) {
@@ -43,6 +43,6 @@ export default function VaultScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  ticket: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.tape, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12 },
-  reward: { backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.blue },
+  ticket: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.tape, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 14, ...neu.raised },
+  reward: { backgroundColor: colors.panel, borderLeftWidth: 4, borderLeftColor: colors.blue },
 })

@@ -24,10 +24,10 @@ export default function CaptureScreen({ navigation, route }) {
   if (!camPerm) return <View style={styles.root} />
   if (!camPerm.granted) {
     return (
-      <View style={[styles.root, styles.center, { padding: 24 }]}>
+      <View style={[styles.root, styles.center, { padding: 24, backgroundColor: colors.ink }]}>
         <Text style={[text.sheetTitle, { color: colors.fg, textAlign: 'center' }]}>카메라 권한이 필요해요</Text>
         <Text style={[text.small, { textAlign: 'center', marginVertical: 12 }]}>인증 사진은 앱 카메라로 찍은 것만 쓸 수 있어요.</Text>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 16 }}>
           <Button type="ghost" onPress={close}>
             닫기
           </Button>
@@ -69,16 +69,16 @@ export default function CaptureScreen({ navigation, route }) {
       <CameraView ref={camera} style={StyleSheet.absoluteFill} facing="back" />
       <View style={[styles.top, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={close} accessibilityRole="button" style={styles.chip}>
-          <Text style={[text.chip, { color: colors.fg }]}>닫기</Text>
+          <Text style={[text.chip, { color: '#FFFFFF' }]}>닫기</Text>
         </Pressable>
-        <Text style={[text.button, { color: colors.fg }]}>{title}</Text>
+        <Text style={[text.button, { color: '#FFFFFF' }]}>{title}</Text>
         <View style={{ width: 52 }} />
       </View>
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 24 }]}>
         <Text style={[text.chip, styles.warn]}>사람 얼굴과 차 번호판이 찍히지 않게 해 주세요</Text>
-        {error ? <Text style={[text.small, { color: colors.red, textAlign: 'center' }]}>{error}</Text> : null}
+        {error ? <Text style={[text.small, { color: '#FF8A95', textAlign: 'center' }]}>{error}</Text> : null}
         <Pressable onPress={shoot} disabled={busy} accessibilityRole="button" accessibilityLabel="촬영" style={styles.shutter}>
-          {busy ? <ActivityIndicator color={colors.ink} /> : <View style={styles.shutterInner} />}
+          {busy ? <ActivityIndicator color="#FFFFFF" /> : <View style={styles.shutterInner} />}
         </Pressable>
       </View>
     </View>

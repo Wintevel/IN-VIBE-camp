@@ -8,7 +8,7 @@ export default function MapView({ center, me, markers, onSelect }) {
     <WebView
       originWhitelist={['*']}
       source={{ html }}
-      style={{ flex: 1, backgroundColor: '#15181D' }}
+      style={{ flex: 1, backgroundColor: '#E4E9F2' }}
       onMessage={(e) => {
         try {
           const m = JSON.parse(e.nativeEvent.data)

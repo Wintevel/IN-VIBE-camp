@@ -20,7 +20,7 @@ export default function InstallApp({ card }) {
   const guide = ios ? '사파리 아래 공유 버튼을 누르고 "홈 화면에 추가"를 골라 주세요.' : '브라우저 메뉴(⋮)에서 "앱 설치" 또는 "홈 화면에 추가"를 눌러 주세요.'
 
   const body = (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 16 }}>
       <Button type={card ? 'weak' : 'ghost'} style={fixed} onPress={onInstall}>
         홈 화면에 앱으로 설치
       </Button>

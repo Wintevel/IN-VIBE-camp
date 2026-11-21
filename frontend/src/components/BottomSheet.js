@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Animated, Easing, Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useFrameSize } from '../lib/frame'
-import { colors, radius } from '../theme'
+import { colors, neu, radius } from '../theme'
 import { ND, reduced } from './Motion'
 import Toast from './Toast'
 
 const WEB = Platform.OS === 'web'
 
-// 어두운 토스식 바텀시트. 딤을 누르거나, 손잡이를 아래로 끌거나, Esc 로 닫습니다.
+// 토스식 바텀시트(뉴모피즘: 바탕과 같은 면이 아래에서 떠오릅니다). 딤을 누르거나, 손잡이를 아래로 끌거나, Esc 로 닫습니다.
 // 열 때는 아래에서 올라오고 닫을 때도 내려가며 사라집니다(닫는 움직임이 끝난 뒤에 내용을 치웁니다).
 // 웹에서는 Modal 대신 앱 안의 덮개로 그려서, 데스크톱 폰 틀 밖으로 나가지 않게 합니다.
 export default function BottomSheet({ visible, onClose, children, footer }) {
@@ -30,7 +30,7 @@ export default function BottomSheet({ visible, onClose, children, footer }) {
   useEffect(() => {
     if (!visible || !mounted) return
     drag.setValue(0)
-    Animated.timing(p, { toValue: 1, duration: reduced() ? 0 : 320, easing: Easing.out(Easing.cubic), useNativeDriver: ND }).start()
+    Animated.timing(p, { toValue: 1, duration: reduced() ? 0 : 420, easing: Easing.bezier(0.22, 1, 0.36, 1), useNativeDriver: ND }).start()
   }, [visible, mounted, p, drag])
 
   // Esc 로 닫기(웹)
@@ -75,7 +75,7 @@ export default function BottomSheet({ visible, onClose, children, footer }) {
         <View style={styles.grabZone} {...pan.panHandlers} accessibilityLabel="아래로 끌어서 닫기">
           <View style={styles.grab} />
         </View>
-        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 16 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ gap: 20, padding: 4, paddingBottom: 12 }} style={{ flexShrink: 1, marginHorizontal: -4 }} showsVerticalScrollIndicator={false}>
           {children}
         </ScrollView>
         {footer}
@@ -101,7 +101,7 @@ export default function BottomSheet({ visible, onClose, children, footer }) {
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, zIndex: 40 },
   dim: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.dim },
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '88%', backgroundColor: colors.sheetBg, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: 20, gap: 4 },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '88%', backgroundColor: colors.sheetBg, borderTopLeftRadius: radius.xl + 4, borderTopRightRadius: radius.xl + 4, paddingHorizontal: 20, gap: 8, boxShadow: '0px -14px 36px rgba(45,55,72,0.22), inset 0px 2px 0px #FFFFFF' },
   grabZone: { alignSelf: 'stretch', alignItems: 'center', paddingTop: 12, paddingBottom: 12, ...(WEB ? { cursor: 'grab' } : null) },
-  grab: { width: 40, height: 4, borderRadius: 9, backgroundColor: colors.sheetLine },
+  grab: { width: 44, height: 6, borderRadius: 9, backgroundColor: colors.panel, ...neu.insetSm },
 })

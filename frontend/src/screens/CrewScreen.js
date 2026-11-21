@@ -10,7 +10,7 @@ import ScreenHeader from '../components/ScreenHeader'
 import { Empty, refresher } from '../components/States'
 import { isCrew } from '../lib/format'
 import { useApp } from '../state/AppState'
-import { colors, font, radius, text } from '../theme'
+import { colors, font, neu, radius, text } from '../theme'
 
 const TABS = [
   ['feed', '활동'],
@@ -58,13 +58,13 @@ export default function CrewScreen({ navigation }) {
               <Text style={[text.caption, { marginTop: 2 }]}>{[mine.area, `크루원 ${mine.member_count}명`].filter(Boolean).join(' · ')}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={[text.h1, { color: colors.tape }]}>{mine.rank}위</Text>
+              <Text style={[text.h1, { color: colors.tapeText }]}>{mine.rank}위</Text>
             </View>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <CrewXpIcon size={20} />
             <Text style={[text.num, { color: colors.purple }]}>Lv.{mine.level}</Text>
-            <Bar ratio={mine.xp_in_level / mine.xp_for_next_level} color={colors.purple} track={colors.panel2} height={8} style={{ flex: 1 }} />
+            <Bar ratio={mine.xp_in_level / mine.xp_for_next_level} color={colors.purple} height={10} style={{ flex: 1 }} />
             <Text style={text.caption}>
               {mine.xp_in_level}/{mine.xp_for_next_level}
             </Text>
@@ -77,7 +77,7 @@ export default function CrewScreen({ navigation }) {
           const on = tab === key
           return (
             <Pressable key={key} onPress={() => setTab(key)} accessibilityRole="tab" accessibilityState={{ selected: on }} style={[styles.tab, on && styles.tabOn]}>
-              <Text style={[text.chip, { color: on ? colors.ink : colors.sub }]}>{label}</Text>
+              <Text style={[text.chip, { color: on ? colors.blueText : colors.sub }]}>{label}</Text>
             </Pressable>
           )
         })}
@@ -147,19 +147,19 @@ function Feed({ crew }) {
           ) : (
             <Appear key={e.id} index={i} from="left" style={styles.msg}>
               <View style={styles.face}>
-                <Text style={[text.num, { fontSize: 15, color: colors.tape }]}>{(e.user || '줍').slice(0, 1)}</Text>
+                <Text style={[text.num, { fontSize: 15, color: colors.tapeText }]}>{(e.user || '줍').slice(0, 1)}</Text>
               </View>
               <View style={{ flex: 1, gap: 4 }}>
                 <Text style={text.caption}>
                   {e.user} · {hhmm(e.at)}
                 </Text>
                 <View style={[styles.bubble, e.type === 'complete' && styles.bubbleDone]}>
-                  <Text style={[text.stamp, { color: e.type === 'complete' ? colors.green : colors.tape }]}>{e.type === 'complete' ? (e.is_crew_quest ? '크루 의뢰 해결' : '의뢰 해결') : '크루 의뢰 등록'}</Text>
+                  <Text style={[text.stamp, { color: e.type === 'complete' ? colors.green : colors.tapeText }]}>{e.type === 'complete' ? (e.is_crew_quest ? '크루 의뢰 해결' : '의뢰 해결') : '크루 의뢰 등록'}</Text>
                   <Text style={[text.section, { fontSize: 14 }]}>{e.title}</Text>
                   {e.type === 'complete' ? (
                     <View style={{ flexDirection: 'row', gap: 12, marginTop: 2 }}>
                       <Gain icon={<CrewXpIcon size={16} />} value={e.crew_xp} color={colors.purple} />
-                      {e.points > 0 ? <Gain icon={<PointIcon size={16} />} value={e.points} color={colors.tape} /> : null}
+                      {e.points > 0 ? <Gain icon={<PointIcon size={16} />} value={e.points} color={colors.tapeText} /> : null}
                     </View>
                   ) : (
                     <Text style={text.caption}>함께할 크루원을 기다려요</Text>
@@ -194,14 +194,14 @@ function Members({ crew, onLeave }) {
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {crew.members.map((m, i) => (
           <Appear key={m.id} index={i} style={[styles.row, i > 0 && styles.sep, m.is_me && { backgroundColor: colors.blueWeak }]}>
-            <Text style={[text.point, { width: 28, textAlign: 'center', color: i === 0 && m.contribution > 0 ? colors.tape : colors.sub }]}>{i + 1}</Text>
+            <Text style={[text.point, { width: 28, textAlign: 'center', color: i === 0 && m.contribution > 0 ? colors.tapeText : colors.sub }]}>{i + 1}</Text>
             <View style={{ flex: 1, gap: 6 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={text.section}>{m.nickname}</Text>
                 {m.is_me ? <Text style={[text.stamp, { color: colors.blue }]}>나</Text> : null}
-                {m.is_owner ? <Text style={[text.stamp, { color: colors.tape }]}>크루장</Text> : null}
+                {m.is_owner ? <Text style={[text.stamp, { color: colors.tapeText }]}>크루장</Text> : null}
               </View>
-              <Bar ratio={m.contribution / top} color={colors.purple} track={colors.panel2} />
+              <Bar ratio={m.contribution / top} color={colors.purple} />
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
@@ -214,7 +214,7 @@ function Members({ crew, onLeave }) {
         ))}
       </Card>
       <Text style={text.caption}>기여도는 크루원이 의뢰를 해결해 쌓은 크루 경험치예요. 크루 의뢰는 2배로 쌓여요.</Text>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
+      <View style={{ flexDirection: 'row', gap: 16 }}>
         {confirm ? (
           <>
             <Button type="ghost" onPress={() => setConfirm(false)}>
@@ -241,11 +241,11 @@ function Ranking({ crews, onJoin }) {
     <Card style={{ padding: 0, overflow: 'hidden' }}>
       {crews.map((c, i) => (
         <Appear key={c.id} index={i} style={[styles.row, i > 0 && styles.sep, c.is_mine && { backgroundColor: colors.blueWeak }]}>
-          <Text style={[text.point, { width: 28, textAlign: 'center', color: i === 0 ? colors.tape : colors.sub }]}>{c.rank}</Text>
+          <Text style={[text.point, { width: 28, textAlign: 'center', color: i === 0 ? colors.tapeText : colors.sub }]}>{c.rank}</Text>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={text.section}>{c.name}</Text>
             <Text style={text.caption}>{[`Lv.${c.level}`, c.area, `${c.member_count}명`].filter(Boolean).join(' · ')}</Text>
-            <Bar ratio={c.score / top} color={colors.purple} track={colors.panel2} />
+            <Bar ratio={c.score / top} color={colors.purple} />
           </View>
           {onJoin ? (
             <Button type="weak" compact onPress={() => onJoin(c)}>
@@ -287,24 +287,25 @@ function CreateCrew({ onCreate, level }) {
 }
 
 const styles = StyleSheet.create({
-  banner: { gap: 14, padding: 16, borderRadius: radius.lg, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.purple, overflow: 'hidden' },
-  slash: { position: 'absolute', right: 40, top: -30, bottom: -30, width: 46, backgroundColor: 'rgba(169,124,255,0.14)', transform: [{ skewX: '-18deg' }] },
-  slash2: { position: 'absolute', right: 104, top: -30, bottom: -30, width: 14, backgroundColor: 'rgba(169,124,255,0.14)', transform: [{ skewX: '-18deg' }] },
-  emblem: { width: 48, height: 48, borderRadius: 14, backgroundColor: colors.tape, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-4deg' }] },
-  tabs: { flexDirection: 'row', backgroundColor: colors.panel, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, padding: 4 },
+  banner: { gap: 14, padding: 18, borderRadius: radius.lg, backgroundColor: colors.panel, overflow: 'hidden', ...neu.raised },
+  slash: { position: 'absolute', right: 40, top: -30, bottom: -30, width: 46, backgroundColor: 'rgba(107,63,212,0.10)', transform: [{ skewX: '-18deg' }] },
+  slash2: { position: 'absolute', right: 104, top: -30, bottom: -30, width: 14, backgroundColor: 'rgba(107,63,212,0.10)', transform: [{ skewX: '-18deg' }] },
+  emblem: { width: 48, height: 48, borderRadius: 14, backgroundColor: colors.tape, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-4deg' }], ...neu.raisedSm },
+  // 탭: 패인 트랙 위에 고른 칸만 솟아 있습니다.
+  tabs: { flexDirection: 'row', backgroundColor: colors.panel, borderRadius: radius.pill, padding: 5, ...neu.inset },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: radius.pill },
-  tabOn: { backgroundColor: colors.fg },
-  questHead: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.lg, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
-  room: { borderRadius: radius.lg, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
+  tabOn: { backgroundColor: colors.panel, ...neu.raisedSm },
+  questHead: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: radius.lg, backgroundColor: colors.panel, ...neu.raised },
+  room: { borderRadius: radius.lg, backgroundColor: colors.panel, ...neu.raised },
   roomHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.line },
-  roomFoot: { paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.panel2, alignItems: 'center' },
+  roomFoot: { paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.line, alignItems: 'center', borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg },
   live: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.green },
   sys: { alignSelf: 'center', backgroundColor: colors.panel2, paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.pill },
   msg: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  face: { width: 34, height: 34, borderRadius: 12, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
-  bubble: { alignSelf: 'flex-start', maxWidth: '100%', gap: 3, backgroundColor: colors.panel2, borderRadius: 14, borderTopLeftRadius: 4, paddingHorizontal: 12, paddingVertical: 10 },
-  bubbleDone: { borderWidth: 1, borderColor: 'rgba(61,214,140,0.45)' },
+  face: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.raisedSm },
+  bubble: { alignSelf: 'flex-start', maxWidth: '100%', gap: 3, backgroundColor: colors.panel, borderRadius: 16, borderTopLeftRadius: 4, paddingHorizontal: 13, paddingVertical: 10, ...neu.insetSm },
+  bubbleDone: { backgroundColor: colors.greenSoft },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   sep: { borderTopWidth: 1, borderTopColor: colors.line },
-  input: { backgroundColor: colors.panel2, borderRadius: radius.cardSm, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 16, paddingVertical: 14 },
+  input: { backgroundColor: colors.panel, borderRadius: radius.lg, ...neu.inset, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 18, paddingVertical: 15 },
 })

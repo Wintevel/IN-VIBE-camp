@@ -23,7 +23,9 @@ import {
   titleText,
 } from "../lib/achievements";
 import { useApp } from "../state/AppState";
-import { colors, font, radius, text } from "../theme";
+import { colors, font, neu, radius, text } from "../theme";
+import Dial from "../components/Dial";
+import { nameColor } from "../lib/format";
 
 const day = (t) => {
   const d = new Date(t);
@@ -75,23 +77,24 @@ export default function MeScreen({ navigation }) {
             uri={p.avatar_url}
           />
           {app.canStyle ? (
-            <Pressable
+            <PressScale
               onPress={() => navigation.navigate("Style")}
               accessibilityRole="button"
               accessibilityLabel="프로필 꾸미기 열기"
+              surface="raisedSm"
               style={styles.chip}
             >
               <Text style={[text.chip, { color: colors.fg }]}>꾸미기</Text>
-            </Pressable>
+            </PressScale>
           ) : null}
         </View>
         <View style={{ flex: 1, alignSelf: "flex-start", paddingTop: 8 }}>
           <Text style={[text.cardTitle, { fontSize: 20 }]}>
-            <Text style={p.name_color && { color: p.name_color }}>
+            <Text style={p.name_color && { color: nameColor(p.name_color) }}>
               {p.nickname}
             </Text>
             {title ? (
-              <Text style={[text.chip, { color: colors.tape }]}>
+              <Text style={[text.chip, { color: colors.tapeText }]}>
                 {" · "}
                 {title}
               </Text>
@@ -101,15 +104,16 @@ export default function MeScreen({ navigation }) {
             {app.myCrew ? app.myCrew.name : "크루 없음"}
           </Text>
         </View>
-        <Pressable
+        <PressScale
           onPress={() => navigation.navigate("Settings")}
           accessibilityRole="button"
           accessibilityLabel="설정"
+          surface="raisedSm"
           style={[styles.chip, { alignSelf: "flex-start", marginTop: 6 }]}
         >
           <GearIcon size={15} />
           <Text style={[text.chip, { color: colors.fg }]}>설정</Text>
-        </Pressable>
+        </PressScale>
       </View>
 
       {app.guest ? (
@@ -126,21 +130,30 @@ export default function MeScreen({ navigation }) {
         </Pressable>
       ) : null}
 
-      <Card style={{ gap: 8 }}>
-        <View style={styles.row}>
+      {/* 레벨: 원형 다이얼(솟은 원판 + 도는 진행 링 + 패인 가운데) */}
+      <Card style={styles.level}>
+        <Dial
+          size={112}
+          ratio={progress01}
+          accessibilityLabel={`레벨 ${p.level}, 다음 레벨까지 ${Math.round(progress01 * 100)}%`}
+        >
+          <Text style={[text.caption, { fontSize: 11, lineHeight: 13 }]}>LEVEL</Text>
+          <Text style={[text.point, { fontSize: 28, lineHeight: 32 }]}>{p.level}</Text>
+        </Dial>
+        <View style={{ flex: 1, gap: 10 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <XpIcon size={18} />
-            <Text style={text.small}>레벨</Text>
+            <Text style={text.section}>Lv.{p.level}</Text>
+            <Text style={[text.small, { marginLeft: "auto" }]}>{Math.round(progress01 * 100)}%</Text>
           </View>
-          <Text style={text.num}>Lv.{p.level}</Text>
-        </View>
-        <Bar ratio={progress01} color={colors.blue} track={colors.panel2} />
-        <View style={styles.row}>
+          <Bar ratio={progress01} color={colors.blue} />
           <Text style={text.small}>
             다음 레벨까지{" "}
-            {Math.max(0, (p.xp_for_next_level || 0) - (p.xp_in_level || 0))}XP
+            <Text style={[font.bodyBold, { color: colors.blueText }]}>
+              {Math.max(0, (p.xp_for_next_level || 0) - (p.xp_in_level || 0))}XP
+            </Text>
           </Text>
-          <Text style={text.small}>누적 {(p.xp || 0).toLocaleString()}XP</Text>
+          <Text style={text.caption}>누적 {(p.xp || 0).toLocaleString()}XP</Text>
         </View>
       </Card>
 
@@ -155,7 +168,7 @@ export default function MeScreen({ navigation }) {
               value={p.points || 0}
               style={[
                 text.point,
-                { fontSize: 26, lineHeight: 30, color: colors.tape },
+                { fontSize: 26, lineHeight: 30, color: colors.tapeText },
               ]}
             />
           </View>
@@ -163,6 +176,7 @@ export default function MeScreen({ navigation }) {
             onPress={() => navigation.navigate("Shop")}
             accessibilityRole="button"
             accessibilityLabel="포인트 교환 상점 열기"
+            surface="raisedSm"
             style={styles.shopBtn}
           >
             <Text style={[text.chip, { color: colors.tapeInk }]}>교환 상점</Text>
@@ -175,6 +189,7 @@ export default function MeScreen({ navigation }) {
           onPress={() => navigation.navigate("Collection")}
           accessibilityRole="button"
           accessibilityLabel="도전과제 열기"
+          surface="raised"
           style={styles.feats}
         >
           <BadgeIcon size={24} />
@@ -418,10 +433,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: colors.panel2,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: colors.panel,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: radius.pill,
+  },
+  level: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
   },
   guest: {
     flexDirection: "row",
@@ -429,18 +449,18 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderRadius: radius.lg,
-    backgroundColor: colors.blueWeak,
+    backgroundColor: colors.panel,
+    ...neu.inset,
   },
   wallet: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 16,
+    padding: 18,
     borderRadius: radius.lg,
     backgroundColor: colors.panel,
-    borderWidth: 1,
-    borderColor: colors.tape,
     overflow: "hidden",
+    ...neu.raised,
   },
   slash: {
     position: "absolute",
@@ -448,7 +468,7 @@ const styles = StyleSheet.create({
     top: -30,
     bottom: -30,
     width: 44,
-    backgroundColor: "rgba(255,212,59,0.12)",
+    backgroundColor: "rgba(255,212,59,0.28)",
     transform: [{ skewX: "-18deg" }],
   },
   slash2: {
@@ -457,7 +477,7 @@ const styles = StyleSheet.create({
     top: -30,
     bottom: -30,
     width: 12,
-    backgroundColor: "rgba(255,212,59,0.12)",
+    backgroundColor: "rgba(255,212,59,0.28)",
     transform: [{ skewX: "-18deg" }],
   },
   shopBtn: {
@@ -470,11 +490,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 14,
+    padding: 18,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.purple,
-    backgroundColor: "rgba(169,124,255,0.08)",
+    backgroundColor: colors.panel,
   },
   ready: {
     backgroundColor: colors.purple,

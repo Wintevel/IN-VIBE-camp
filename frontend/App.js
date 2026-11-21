@@ -28,7 +28,7 @@ export default function App() {
               <SpeedDash />
               <ClearOverlay />
             </View>
-            <StatusBar style="light" />
+            <StatusBar style="dark" />
           </AppStateProvider>
         </FrameInsets>
       </SafeAreaProvider>

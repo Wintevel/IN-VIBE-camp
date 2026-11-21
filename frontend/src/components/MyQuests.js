@@ -23,8 +23,8 @@ export default function MyQuests({ reports, photos, onOpen }) {
           const have = (p.before ? 1 : 0) + (need === 2 && p.after ? 1 : 0)
           return (
             <Appear key={r.id} index={i}>
-              <PressScale onPress={() => onOpen(r.id)} accessibilityRole="button" accessibilityLabel={`수락한 의뢰 ${r.title}`} style={[styles.card, reports.length === 1 && { width: 320 }]}>
-                <Text style={[text.caption, { color: started ? colors.tape : colors.sub }]}>{started ? remain(r.deadline_at) : `인원 모집 중 ${r.current_members}/${r.required_members}`}</Text>
+              <PressScale onPress={() => onOpen(r.id)} accessibilityRole="button" accessibilityLabel={`수락한 의뢰 ${r.title}`} surface="raised" style={[styles.card, reports.length === 1 && { width: 320 }]}>
+                <Text style={[text.caption, { color: started ? colors.tapeText : colors.sub }]}>{started ? remain(r.deadline_at) : `인원 모집 중 ${r.current_members}/${r.required_members}`}</Text>
                 <Text style={text.cardTitle} numberOfLines={1}>
                   {r.title}
                 </Text>
@@ -49,12 +49,13 @@ export default function MyQuests({ reports, photos, onOpen }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 10 },
+  wrap: { gap: 0 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  mark: { width: 6, height: 16, backgroundColor: colors.blue, transform: [{ skewX: '-16deg' }] },
+  mark: { width: 6, height: 16, borderRadius: 2, backgroundColor: colors.blue, transform: [{ skewX: '-16deg' }] },
   scroll: { marginHorizontal: -20, flexGrow: 0 },
-  list: { gap: 10, paddingHorizontal: 20 },
-  card: { width: 264, gap: 6, backgroundColor: colors.blueWeak, borderWidth: 1, borderColor: colors.blue, borderRadius: radius.lg, padding: 14 },
+  // 카드 그림자가 잘리지 않게 위아래 여유
+  list: { gap: 18, paddingHorizontal: 20, paddingVertical: 14 },
+  card: { width: 264, gap: 6, backgroundColor: colors.panel, borderRadius: radius.lg, padding: 16, borderLeftWidth: 4, borderLeftColor: colors.blue },
   foot: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  cta: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.blue, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill },
+  cta: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.blue, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, boxShadow: '3px 3px 8px #A9B5CF, -3px -3px 8px #FFFFFF' },
 })

@@ -4,7 +4,7 @@ import Button from '../components/Button'
 import { List, SectionTitle } from '../components/ListRows'
 import Screen from '../components/Screen'
 import { useApp } from '../state/AppState'
-import { colors, font, radius, text } from '../theme'
+import { colors, font, neu, radius, text } from '../theme'
 
 export default function SettingsScreen({ navigation }) {
   const app = useApp()
@@ -21,7 +21,7 @@ export default function SettingsScreen({ navigation }) {
     <Screen>
       <Text style={text.h1}>설정</Text>
       <SectionTitle>닉네임</SectionTitle>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
+      <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
         <TextInput value={nickname} onChangeText={setNickname} placeholder="닉네임" placeholderTextColor={colors.disabled} style={styles.input} maxLength={12} accessibilityLabel="닉네임" />
         <Button style={{ flex: 0, paddingHorizontal: 20 }} disabled={!changed || busy} onPress={save}>
           저장
@@ -45,5 +45,5 @@ export default function SettingsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  input: { flex: 1, backgroundColor: colors.panel, borderRadius: radius.cardSm, borderWidth: 1, borderColor: colors.line, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 16, paddingVertical: 14 },
+  input: { flex: 1, backgroundColor: colors.panel, borderRadius: radius.lg, ...neu.inset, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 18, paddingVertical: 15 },
 })

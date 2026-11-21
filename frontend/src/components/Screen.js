@@ -18,7 +18,7 @@ export default function Screen({ children, top = true, bottomPad = 24, refreshCo
   const v = useRef(new Animated.Value(still ? 1 : 0)).current
   useEffect(() => {
     if (still) return
-    Animated.timing(v, { toValue: 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: ND }).start()
+    Animated.timing(v, { toValue: 1, duration: 340, easing: Easing.bezier(0.22, 1, 0.36, 1), useNativeDriver: ND }).start()
   }, [still, v])
   return (
     <BoardBackground>
@@ -31,4 +31,4 @@ export default function Screen({ children, top = true, bottomPad = 24, refreshCo
   )
 }
 
-const styles = StyleSheet.create({ content: { paddingHorizontal: 20, gap: 16 } })
+const styles = StyleSheet.create({ content: { paddingHorizontal: 20, gap: 22 } })

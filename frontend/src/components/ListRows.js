@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { colors, font, radius, text } from '../theme'
+import { colors, font, neu, radius, text } from '../theme'
 
 export function Card({ children, style }) {
   return <View style={[styles.card, style]}>{children}</View>
@@ -8,7 +8,7 @@ export function Card({ children, style }) {
 export function ListRow({ label, value, onPress, danger, icon }) {
   const Row = onPress ? Pressable : View
   return (
-    <Row onPress={onPress} style={onPress ? ({ pressed, hovered }) => [styles.row, (pressed || hovered) && { backgroundColor: pressed ? colors.panel2 : 'rgba(255,255,255,0.03)' }] : styles.row} accessibilityRole={onPress ? 'button' : undefined}>
+    <Row onPress={onPress} style={onPress ? ({ pressed, hovered }) => [styles.row, pressed ? [neu.inset, { backgroundColor: colors.panel2 }] : hovered ? { backgroundColor: 'rgba(255,255,255,0.35)' } : null] : styles.row} accessibilityRole={onPress ? 'button' : undefined}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         {icon}
         <Text style={[{ ...font.bodyMedium, fontSize: 14, lineHeight: 20, color: danger ? colors.red : colors.fg }]}>{label}</Text>
@@ -35,7 +35,7 @@ export function SectionTitle({ children }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.panel, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 16 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
+  card: { backgroundColor: colors.panel, borderRadius: radius.lg, padding: 18, ...neu.raised },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 15 },
   sep: { borderTopWidth: 1, borderTopColor: colors.line },
 })

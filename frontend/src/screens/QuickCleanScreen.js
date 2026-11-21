@@ -10,7 +10,7 @@ import ScreenHeader from '../components/ScreenHeader'
 import Toast from '../components/Toast'
 import { PLACES } from '../lib/format'
 import { useApp } from '../state/AppState'
-import { colors, font, radius, text } from '../theme'
+import { colors, font, neu, radius, text } from '../theme'
 
 // "바로 치웠어요": 의뢰를 기다리지 않고, 보자마자 치운 것을 전·후 사진으로 기록합니다(2026-11-16 개편).
 // 포인트는 없고 경험치만 받습니다. 가짜 제보를 올려 직접 푸는 악용을 막기 위해서입니다.
@@ -42,7 +42,7 @@ export default function QuickCleanScreen({ navigation }) {
           <RewardIcon kind="xp" size={18} />
           <Text style={[text.small, { flex: 1, color: colors.fg }]}>경험치를 받고, 동네 지도에 내가 치운 곳으로 남아요. 포인트는 의뢰를 해결할 때만 받아요.</Text>
         </Appear>
-        <Appear from="right" index={1} style={{ flexDirection: 'row', gap: 10 }}>
+        <Appear from="right" index={1} style={{ flexDirection: 'row', gap: 20 }}>
           <PhotoSlot n={1} shot={p.before} label="치우기 전" onPress={() => capture('before')} />
           <PhotoSlot n={2} shot={p.after} label="치운 뒤" onPress={() => capture('after')} />
         </Appear>
@@ -63,7 +63,7 @@ export default function QuickCleanScreen({ navigation }) {
         <TextInput value={title} onChangeText={setTitle} placeholder="예) 정류장 의자 밑 꽁초" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} accessibilityLabel="한 줄 기록" />
         <Text style={[text.caption, { color: colors.red }]}>깨진 유리, 주사기처럼 다칠 수 있는 것은 손대지 말고 제보로 알려 주세요.</Text>
 
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 16 }}>
           <Button type="ghost" disabled={busy} onPress={close}>
             취소
           </Button>
@@ -78,7 +78,7 @@ export default function QuickCleanScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  reward: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.panel, borderRadius: radius.cardSm, borderWidth: 1, borderColor: colors.line, padding: 12 },
-  step: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
-  input: { backgroundColor: colors.panel, borderRadius: radius.cardSm, borderWidth: 1, borderColor: colors.line, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 16, paddingVertical: 14 },
+  reward: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.panel, borderRadius: radius.lg, padding: 14, ...neu.inset },
+  step: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.panel, alignItems: 'center', justifyContent: 'center', ...neu.raisedSm },
+  input: { backgroundColor: colors.panel, borderRadius: radius.lg, ...neu.inset, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 18, paddingVertical: 15 },
 })

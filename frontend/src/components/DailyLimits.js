@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native'
-import { colors, radius, text } from '../theme'
+import { colors, neu, radius, text } from '../theme'
 import { HeartIcon, TabIcon } from './Icons'
 
 // 하루 제한 두 가지를 따로 보여줍니다: 의뢰 해결(3개)과 하트(10개). KST 0시에 다시 채워집니다.
@@ -25,9 +25,10 @@ function Gauge({ icon, label, used = 0, limit, color, wide }) {
           <Text style={{ color: colors.disabled }}>/{limit}</Text>
         </Text>
       </View>
+      {/* 음각 트랙 안에 남은 칸만 색으로 채워집니다 */}
       <View style={styles.pips}>
         {Array.from({ length: limit }, (_, i) => (
-          <View key={i} style={[styles.pip, { backgroundColor: i < left ? color : colors.panel2 }]} />
+          <View key={i} style={[styles.pip, { backgroundColor: i < left ? color : 'transparent' }]} />
         ))}
       </View>
     </View>
@@ -35,9 +36,9 @@ function Gauge({ icon, label, used = 0, limit, color, wide }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 8 },
-  box: { flex: 1, gap: 8, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line, borderRadius: radius.cardSm, paddingHorizontal: 12, paddingVertical: 10 },
+  row: { flexDirection: 'row', gap: 20 },
+  box: { flex: 1, gap: 10, backgroundColor: colors.panel, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 12, ...neu.raised },
   head: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  pips: { flexDirection: 'row', gap: 3 },
-  pip: { flex: 1, height: 5, borderRadius: 2, transform: [{ skewX: '-20deg' }] },
+  pips: { flexDirection: 'row', gap: 3, padding: 3, borderRadius: 99, ...neu.insetSm },
+  pip: { flex: 1, height: 6, borderRadius: 3 },
 })

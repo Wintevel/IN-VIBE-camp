@@ -6,6 +6,7 @@
     "@expo-google-fonts/black-han-sans": "^0.4.1",
     "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@expo-google-fonts/noto-sans-kr": "^0.4.4",
+    "@expo-google-fonts/outfit": "^0.4.3",
     "@expo/metro-runtime": "~58.0.17",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-navigation/bottom-tabs": "^7.21.0",

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import { colors, radius, text } from '../theme'
-import { Pressable } from 'react-native'
+import { PressScale } from './Motion'
 
 export default function ScreenHeader({ title, sub, action, onAction }) {
   return (
@@ -10,9 +10,9 @@ export default function ScreenHeader({ title, sub, action, onAction }) {
         {sub ? <Text style={[text.small, { marginTop: 6 }]}>{sub}</Text> : null}
       </View>
       {action ? (
-        <Pressable onPress={onAction} accessibilityRole="button" style={styles.chip}>
+        <PressScale onPress={onAction} accessibilityRole="button" surface="raisedSm" style={styles.chip}>
           <Text style={[text.chip, { color: colors.fg }]}>{action}</Text>
-        </Pressable>
+        </PressScale>
       ) : null}
     </View>
   )
@@ -20,5 +20,5 @@ export default function ScreenHeader({ title, sub, action, onAction }) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingTop: 6 },
-  chip: { backgroundColor: colors.panel2, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill },
+  chip: { backgroundColor: colors.panel, paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.pill },
 })
