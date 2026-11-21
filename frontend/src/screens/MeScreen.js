@@ -88,17 +88,14 @@ export default function MeScreen({ navigation }) {
           ) : null}
         </View>
         <View style={{ flex: 1, alignSelf: "flex-start", paddingTop: 8 }}>
-          <Text style={[text.cardTitle, { fontSize: 20 }]}>
-            <Text style={p.name_color && { color: p.name_color }}>
-              {p.nickname}
-            </Text>
-            {title ? (
-              <Text style={[text.chip, { color: colors.tape }]}>
-                {" · "}
-                {title}
-              </Text>
-            ) : null}
+          <Text style={[text.cardTitle, { fontSize: 20 }, p.name_color && { color: p.name_color }]}>
+            {p.nickname}
           </Text>
+          {title ? (
+            <Text style={[text.chip, { color: colors.tape, marginTop: 2 }]}>
+              {title}
+            </Text>
+          ) : null}
           <Text style={[text.small, { marginTop: 4 }]}>
             {app.myCrew ? app.myCrew.name : "크루 없음"}
           </Text>
@@ -183,30 +180,30 @@ export default function MeScreen({ navigation }) {
         </View>
       </Appear>
 
+      {/* 도전과제: 내 포인트 칸과 같은 모양(보라) */}
       <Appear from="left" index={1}>
-        <PressScale
-          onPress={() => navigation.navigate("Collection")}
-          accessibilityRole="button"
-          accessibilityLabel="도전과제 열기"
-          style={styles.feats}
-        >
-          <BadgeIcon size={24} />
+        <View style={[styles.wallet, styles.featWallet]}>
+          <View style={[styles.slash, styles.featSlash]} />
+          <View style={[styles.slash2, styles.featSlash]} />
+          <BadgeIcon size={30} />
           <View style={{ flex: 1 }}>
-            <Text style={[text.chip, { color: colors.purple }]}>도전과제</Text>
-            <Text style={[text.small, { marginTop: 2 }]}>
-              {feats.filter((a) => a.done).length}/{feats.length} 달성
+            <Text style={text.caption}>도전과제</Text>
+            <Text style={[text.point, { fontSize: 26, lineHeight: 30, color: colors.purple }]}>
+              {feats.filter((a) => a.done).length}
+              <Text style={[text.small, { color: colors.sub }]}> / {feats.length}</Text>
             </Text>
           </View>
-          {ready > 0 ? (
-            <View style={styles.ready}>
-              <Text style={[text.chip, { color: "#fff" }]}>
-                받을 보상 {ready}개
-              </Text>
-            </View>
-          ) : (
-            <Text style={[text.small, { color: colors.sub }]}>보기</Text>
-          )}
-        </PressScale>
+          <PressScale
+            onPress={() => navigation.navigate("Collection")}
+            accessibilityRole="button"
+            accessibilityLabel="도전과제 열기"
+            style={styles.featBtn}
+          >
+            <Text style={[text.chip, { color: "#fff" }]}>
+              {ready > 0 ? `보상 ${ready}개 받기` : "도전과제 보기"}
+            </Text>
+          </PressScale>
+        </View>
       </Appear>
 
       <SectionTitle>내 활동</SectionTitle>
@@ -482,20 +479,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: radius.pill,
   },
-  feats: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 14,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.purple,
-    backgroundColor: "rgba(169,124,255,0.08)",
-  },
-  ready: {
+  featWallet: { borderColor: colors.purple },
+  featSlash: { backgroundColor: "rgba(169,124,255,0.12)" },
+  featBtn: {
     backgroundColor: colors.purple,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: radius.pill,
   },
 });
