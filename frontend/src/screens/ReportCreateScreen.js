@@ -78,10 +78,10 @@ export default function ReportCreateScreen({ navigation, route }) {
       {more ? (
       <>
       <Text style={text.section}>어떤 문제인가요</Text>
-      <FilterChips options={ISSUES} value={issueType} onChange={setIssueType} />
+      <FilterChips wrap options={ISSUES} value={issueType} onChange={setIssueType} />
 
       <Text style={text.section}>장소 종류</Text>
-      <FilterChips options={PLACES} value={placeType} onChange={setPlaceType} />
+      <FilterChips wrap options={PLACES} value={placeType} onChange={setPlaceType} />
 
       <Text style={text.section}>어디쯤인가요 (선택)</Text>
       <TextInput value={spot} onChangeText={setSpot} placeholder="예) ○○편의점 앞 전봇대 밑" placeholderTextColor={colors.disabled} style={styles.input} maxLength={30} accessibilityLabel="위치 설명" />
