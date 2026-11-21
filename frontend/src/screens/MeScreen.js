@@ -100,16 +100,19 @@ export default function MeScreen({ navigation }) {
             {app.myCrew ? app.myCrew.name : "크루 없음"}
           </Text>
         </View>
-        <PressScale
-          onPress={() => navigation.navigate("Settings")}
-          accessibilityRole="button"
-          accessibilityLabel="설정"
-          surface="raisedSm"
-          style={[styles.chip, { alignSelf: "flex-start", marginTop: 6 }]}
-        >
-          <GearIcon size={15} />
-          <Text style={[text.chip, { color: colors.fg }]}>설정</Text>
-        </PressScale>
+        {/* 바깥 줄이 가운데 정렬이라, 감싼 칸을 위로 붙여 이름 줄 높이에 맞춥니다. */}
+        <View style={{ alignSelf: "flex-start" }}>
+          <PressScale
+            onPress={() => navigation.navigate("Settings")}
+            accessibilityRole="button"
+            accessibilityLabel="설정"
+            surface="raisedSm"
+            style={[styles.chip, styles.settings]}
+          >
+            <GearIcon size={19} />
+            <Text style={[text.chip, { fontSize: 15, lineHeight: 18, color: colors.fg }]}>설정</Text>
+          </PressScale>
+        </View>
       </View>
 
       {app.guest ? (
@@ -128,6 +131,11 @@ export default function MeScreen({ navigation }) {
 
       {/* 레벨: 원형 다이얼(살짝 솟은 원판 + 차오르는 진행 링 + 패인 가운데) */}
       <Card style={styles.level}>
+        {/* 평행사변형 무늬: 내 포인트(굵은 띠+가는 띠)와 달리 오른쪽 끝에 넓게 비스듬한 면 + 가는 띠 셋 */}
+        <View style={[styles.levelBand, { right: -30, width: 110 }]} />
+        <View style={[styles.levelBand, { right: 92, width: 6 }]} />
+        <View style={[styles.levelBand, { right: 106, width: 6 }]} />
+        <View style={[styles.levelBand, { right: 120, width: 6 }]} />
         <Dial
           size={96}
           ratio={progress01}
@@ -183,8 +191,10 @@ export default function MeScreen({ navigation }) {
       {/* 도전과제: 내 포인트 칸과 같은 모양(보라). 오른쪽에 보관함 칸 */}
       <Appear from="left" index={1} style={{ flexDirection: "row", gap: 10 }}>
         <View style={[styles.wallet, styles.featWallet, { flex: 1 }]}>
-          <View style={[styles.slash, styles.featSlash]} />
-          <View style={[styles.slash2, styles.featSlash]} />
+          {/* 내 포인트와 반대로 기운 가는 띠 셋 */}
+          <View style={[styles.featSlash, { right: 128 }]} />
+          <View style={[styles.featSlash, { right: 146 }]} />
+          <View style={[styles.featSlash, { right: 164 }]} />
           <BadgeIcon size={30} />
           <View style={{ flex: 1 }}>
             <Text style={text.caption}>도전과제</Text>
@@ -426,6 +436,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 18,
     borderColor: colors.blue,
+    overflow: "hidden",
   },
   chip: {
     flexDirection: "row",
@@ -491,7 +502,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  featSlash: { backgroundColor: "rgba(169,124,255,0.12)" },
+  featSlash: {
+    position: "absolute",
+    top: -30,
+    bottom: -30,
+    width: 8,
+    backgroundColor: "rgba(169,124,255,0.16)",
+    transform: [{ skewX: "18deg" }],
+  },
+  levelBand: {
+    position: "absolute",
+    top: -30,
+    bottom: -30,
+    backgroundColor: "rgba(49,130,246,0.10)",
+    transform: [{ skewX: "-24deg" }],
+  },
+  settings: { paddingHorizontal: 16, paddingVertical: 11, gap: 6 },
   featBtn: {
     backgroundColor: colors.purple,
     paddingHorizontal: 12,
