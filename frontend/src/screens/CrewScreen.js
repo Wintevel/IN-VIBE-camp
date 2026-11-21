@@ -91,7 +91,7 @@ export default function CrewScreen({ navigation }) {
               <View style={styles.questHead}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={text.section}>크루 의뢰는 2명부터</Text>
-                  <Text style={text.caption}>{'인원을 모아 시작해보세요!\n해결하면 포인트와 크루 경험치를 받을 수 있어요!'}</Text>
+                  <Text style={text.caption}>{'인원을 모아 시작해보세요!\n해결하면 포인트와 기여도를 올릴 수 있어요!'}</Text>
                 </View>
                 <Button compact onPress={() => navigation.navigate('ReportCreate', { crew: true })}>
                   올리기

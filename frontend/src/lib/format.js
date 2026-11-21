@@ -42,6 +42,34 @@ export const ISSUES = [
   ['drain', '빗물받이 막힘'],
   ['graffiti', '낙서'],
 ]
+// 제보·바로 치웠어요에서 고르는 칩. [화면 키, 이름, 서버에 보낼 값(없으면 화면 키 그대로)]
+// 빗물받이는 알아보기 어려워 뺐고(예전 기록 표시용 값은 위에 그대로), 서버 값이 모자란 선택지는 가까운 값으로 보내고
+// 이름(또는 '기타'에 직접 적은 말)을 설명·위치 설명에 붙입니다. 서버에 칸이 생기면 docs/backend-requests.md 8-1 로 옮깁니다.
+export const ISSUE_PICK = [
+  ['litter', '쓰레기'],
+  ['butt', '담배꽁초', 'litter'],
+  ['dumping', '무단 투기'],
+  ['bulky', '대형 폐기물', 'dumping'],
+  ['bin', '넘친 쓰레기통'],
+  ['graffiti', '낙서'],
+  ['etc', '기타', 'litter'],
+]
+export const PLACE_PICK = [
+  ['street', '골목·거리'],
+  ['park', '공원'],
+  ['bus_stop', '버스정류장'],
+  ['school', '학교 앞', 'etc'],
+  ['parking', '주차장', 'etc'],
+  ['river', '하천·산책로', 'etc'],
+  ['etc', '기타', 'etc'],
+]
+// 서버에 보낼 값과, 따로 붙일 말(서버 값으로 다 나타나지 않는 선택지만)
+export const pickValue = (list, key) => (list.find(([k]) => k === key) || [])[2] || key
+export const pickNote = (list, key, typed = '') => {
+  const o = list.find(([k]) => k === key)
+  if (!o || !o[2]) return ''
+  return key === 'etc' ? typed.trim() : o[1]
+}
 export const issueLabel = (key) => (ISSUES.find(([k]) => k === key) || [])[1] || null
 
 // 레벨 칭호. 업적 이름처럼 가볍게 붙입니다(프론트 표시용, 서버 값과 무관).

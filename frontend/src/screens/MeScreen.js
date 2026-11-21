@@ -180,9 +180,9 @@ export default function MeScreen({ navigation }) {
         </View>
       </Appear>
 
-      {/* 도전과제: 내 포인트 칸과 같은 모양(보라) */}
-      <Appear from="left" index={1}>
-        <View style={[styles.wallet, styles.featWallet]}>
+      {/* 도전과제: 내 포인트 칸과 같은 모양(보라). 오른쪽에 보관함 칸 */}
+      <Appear from="left" index={1} style={{ flexDirection: "row", gap: 10 }}>
+        <View style={[styles.wallet, styles.featWallet, { flex: 1 }]}>
           <View style={[styles.slash, styles.featSlash]} />
           <View style={[styles.slash2, styles.featSlash]} />
           <BadgeIcon size={30} />
@@ -204,6 +204,16 @@ export default function MeScreen({ navigation }) {
             </Text>
           </PressScale>
         </View>
+        <PressScale
+          onPress={() => navigation.navigate("Vault")}
+          accessibilityRole="button"
+          accessibilityLabel={`보관함 열기, 쿠폰·제휴 보상 ${vault}개`}
+          style={styles.vault}
+        >
+          <BackpackIcon size={26} />
+          <Text style={[text.chip, { color: colors.fg }]}>보관함</Text>
+          <Text style={[text.caption, { fontSize: 11 }]}>{vault}개</Text>
+        </PressScale>
       </Appear>
 
       <SectionTitle>내 활동</SectionTitle>
@@ -231,17 +241,6 @@ export default function MeScreen({ navigation }) {
 
       <SectionTitle>오늘 남은 횟수</SectionTitle>
       <DailyLimits profile={p} />
-
-      <List
-        rows={[
-          {
-            label: "보관함",
-            icon: <BackpackIcon />,
-            value: vault > 0 ? `쿠폰·제휴 보상 ${vault}개` : "쿠폰·제휴 보상",
-            onPress: () => navigation.navigate("Vault"),
-          },
-        ]}
-      />
 
       {p.cleaned?.length > 0 ? (
         <>
@@ -426,6 +425,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 18,
+    borderColor: colors.blue,
   },
   chip: {
     flexDirection: "row",
@@ -479,11 +479,22 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: radius.pill,
   },
-  featWallet: { borderColor: colors.purple },
+  featWallet: { borderColor: colors.purple, paddingHorizontal: 14, gap: 10 },
+  vault: {
+    width: 84,
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    borderRadius: radius.lg,
+    backgroundColor: colors.panel,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
   featSlash: { backgroundColor: "rgba(169,124,255,0.12)" },
   featBtn: {
     backgroundColor: colors.purple,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: radius.pill,
   },

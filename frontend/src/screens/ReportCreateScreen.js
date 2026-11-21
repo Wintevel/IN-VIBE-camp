@@ -4,7 +4,7 @@ import * as Location from 'expo-location'
 import Button from '../components/Button'
 import FilterChips from '../components/FilterChips'
 import Screen from '../components/Screen'
-import { ISSUES, PLACES } from '../lib/format'
+import { ISSUE_PICK, PLACE_PICK, pickNote, pickValue } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
 
@@ -30,6 +30,8 @@ export default function ReportCreateScreen({ navigation, route }) {
   const [spot, setSpot] = useState('')
   const [placeType, setPlaceType] = useState('street')
   const [issueType, setIssueType] = useState('litter')
+  const [issueNote, setIssueNote] = useState('')
+  const [placeNote, setPlaceNote] = useState('')
   const [members, setMembers] = useState(crew ? 2 : 1)
   const [busy, setBusy] = useState(false)
   // 길에서 바로 올릴 수 있게 사진과 제목만 받고, 나머지는 펼쳐야 보입니다(2026-11-16 개편). 크루 의뢰는 인원이 필요해 펼쳐 둡니다.
@@ -40,7 +42,19 @@ export default function ReportCreateScreen({ navigation, route }) {
   const submit = async () => {
     setBusy(true)
     const where = await lookup(shot)
-    const ok = await app.createReport({ title: title.trim(), description: description.trim(), placeType, issueType, requiredMembers: members, shot, spot: spot.trim(), ...where })
+    // 서버 값으로 다 나타나지 않는 선택지(담배꽁초, 학교 앞, 기타에 적은 말)는 설명과 위치 설명 앞에 붙입니다.
+    const iNote = pickNote(ISSUE_PICK, issueType, issueNote)
+    const pNote = pickNote(PLACE_PICK, placeType, placeNote)
+    const ok = await app.createReport({
+      title: title.trim(),
+      description: [iNote && `문제: ${iNote}`, description.trim()].filter(Boolean).join('\n'),
+      placeType: pickValue(PLACE_PICK, placeType),
+      issueType: pickValue(ISSUE_PICK, issueType),
+      requiredMembers: members,
+      shot,
+      spot: [pNote, spot.trim()].filter(Boolean).join(' · '),
+      ...where,
+    })
     setBusy(false)
     if (!ok) return
     app.setDraftPhoto(null)
@@ -78,10 +92,16 @@ export default function ReportCreateScreen({ navigation, route }) {
       {more ? (
       <>
       <Text style={text.section}>어떤 문제인가요</Text>
-      <FilterChips wrap options={ISSUES} value={issueType} onChange={setIssueType} />
+      <FilterChips wrap options={ISSUE_PICK} value={issueType} onChange={setIssueType} />
+      {issueType === 'etc' ? (
+        <TextInput value={issueNote} onChangeText={setIssueNote} placeholder="어떤 문제인지 적어 주세요. 예) 담배꽁초, 대형 폐기물" placeholderTextColor={colors.disabled} style={styles.input} maxLength={20} autoFocus accessibilityLabel="문제 직접 적기" />
+      ) : null}
 
       <Text style={text.section}>장소 종류</Text>
-      <FilterChips wrap options={PLACES} value={placeType} onChange={setPlaceType} />
+      <FilterChips wrap options={PLACE_PICK} value={placeType} onChange={setPlaceType} />
+      {placeType === 'etc' ? (
+        <TextInput value={placeNote} onChangeText={setPlaceNote} placeholder="어떤 곳인지 적어 주세요. 예) 학교 앞, 주차장, 하천 산책로" placeholderTextColor={colors.disabled} style={styles.input} maxLength={20} autoFocus accessibilityLabel="장소 직접 적기" />
+      ) : null}
 
       <Text style={text.section}>어디쯤인가요 (선택)</Text>
       <TextInput value={spot} onChangeText={setSpot} placeholder="예) ○○편의점 앞 전봇대 밑" placeholderTextColor={colors.disabled} style={styles.input} maxLength={30} accessibilityLabel="위치 설명" />

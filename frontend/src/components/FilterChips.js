@@ -1,9 +1,11 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { colors, radius, text } from '../theme'
 import { PressScale } from './Motion'
+import useDragScroll from './useDragScroll'
 
 // wrap: 입력 화면처럼 모든 선택지를 한눈에 봐야 할 때 가로 스크롤 대신 줄바꿈으로 늘어놓습니다.
 export default function FilterChips({ options, value, onChange, wrap }) {
+  const drag = useDragScroll()
   const chips = options.map(([key, label]) => {
     const on = key === value
     return (
@@ -14,7 +16,7 @@ export default function FilterChips({ options, value, onChange, wrap }) {
   })
   if (wrap) return <View style={styles.wrap}>{chips}</View>
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} style={styles.scroll}>
+    <ScrollView ref={drag} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} style={styles.scroll}>
       {chips}
     </ScrollView>
   )
