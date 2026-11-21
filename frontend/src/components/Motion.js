@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, Text } from 'react-native'
+import { colors, neu } from '../theme'
 
-// 움직임 공통: 짧게 미끄러져 들어오는 등장, 눌림, 숫자 올라가기.
-// 등장은 튕김(오버슈트) 없이 짧은 거리만 움직입니다. 화면 전환과 겹쳐도 정신없지 않게 하려는 것입니다.
+// 움직임 공통: 살짝 떠오르는 등장, 눌림(솟은 면 → 패인 면), 숫자 올라가기.
+// 등장은 짧은 거리만 움직이며 0.97 → 1 로 커집니다. 눌림은 솟은 면의 그림자가 안쪽으로 뒤집히고, 웹은 그 바뀜을 CSS 전환으로 잇습니다.
 // 기기의 "동작 줄이기"가 켜져 있으면 전부 바로 최종 상태로 보여줍니다.
 export const ND = Platform.OS !== 'web'
 
@@ -15,13 +16,13 @@ try {
 } catch {}
 export const reduced = () => reduce
 
-const OFFSET = { right: [12, 0], left: [-12, 0], bottom: [0, 10], top: [0, -10] }
+const OFFSET = { right: [10, 4], left: [-10, 4], bottom: [0, 12], top: [0, -10] }
 
 export function Appear({ index = 0, from = 'right', delay = 0, children, style }) {
   const v = useRef(new Animated.Value(reduce ? 1 : 0)).current
   useEffect(() => {
     if (reduce) return
-    Animated.timing(v, { toValue: 1, duration: 260, delay: delay + Math.min(index, 6) * 35, easing: Easing.out(Easing.cubic), useNativeDriver: ND }).start()
+    Animated.timing(v, { toValue: 1, duration: 380, delay: delay + Math.min(index, 6) * 45, easing: Easing.bezier(0.22, 1, 0.36, 1), useNativeDriver: ND }).start()
   }, [v, index, delay])
   const [dx, dy] = OFFSET[from] || OFFSET.right
   return (
@@ -30,7 +31,7 @@ export function Appear({ index = 0, from = 'right', delay = 0, children, style }
         style,
         {
           opacity: v.interpolate({ inputRange: [0, 0.7], outputRange: [0, 1], extrapolate: 'clamp' }),
-          transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [dx, 0] }) }, { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [dy, 0] }) }],
+          transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [dx, 0] }) }, { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [dy, 0] }) }, { scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) }],
         },
       ]}
     >
@@ -39,28 +40,58 @@ export function Appear({ index = 0, from = 'right', delay = 0, children, style }
   )
 }
 
-// 누르면 살짝 줄었다가 튕겨 돌아오는 Pressable. 웹에서는 마우스를 올리면 살짝 옅어집니다.
-export function PressScale({ children, style, to = 0.96, ...rest }) {
-  const { s, hover, props } = usePress(to)
+// 눌림 효과가 있는 Pressable.
+// surface 를 주면 뉴모피즘 면이 됩니다: 평소 양각(raised/raisedSm), 마우스 올리면 조금 더 솟고, 누르는 동안·active(선택됨)면 음각으로 패입니다.
+export function PressScale({ children, style, to = 0.97, surface, active, ...rest }) {
+  const { s, hover, down, over, props } = usePress(to)
   return (
     <Pressable {...props} {...rest}>
-      <Animated.View style={[style, { opacity: hover, transform: [{ scale: s }] }]}>{children}</Animated.View>
+      <Animated.View style={[style, surface ? [surfaceStyle(surface, { down, over, active }), SHADOW_EASE] : null, { opacity: surface ? 1 : hover, transform: [{ scale: s }] }]}>{children}</Animated.View>
     </Pressable>
   )
 }
 
-// 눌림(줄었다 돌아옴)과 마우스 올림(웹)을 공통으로 처리하는 훅. Button·PressScale 이 같이 씁니다.
-export function usePress(to = 0.96) {
+// 면 상태 → 그림자. raised(큰 면)는 눌리면 inset, raisedSm(작은 면)은 insetSm.
+export function surfaceStyle(kind = 'raised', { down, over, active } = {}) {
+  const small = kind === 'raisedSm'
+  if (down || active) return small ? neu.insetSm : neu.inset
+  if (over && !small) return neu.raisedHi
+  return small ? neu.raisedSm : neu.raised
+}
+// 웹: 그림자가 바뀔 때 끊기지 않게 이어 줍니다(네이티브는 무시).
+export const SHADOW_EASE = Platform.OS === 'web' ? { transitionProperty: 'box-shadow, background-color', transitionDuration: '180ms', transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)' } : null
+
+// 눌림(줄었다 돌아옴)·눌린 상태(down)·마우스 올림(over, 웹)을 공통으로 처리하는 훅. Button·PressScale 이 같이 씁니다.
+export function usePress(to = 0.97) {
   const s = useRef(new Animated.Value(1)).current
   const hover = useRef(new Animated.Value(1)).current
-  const go = (toValue) => Animated.spring(s, { toValue, speed: 40, bounciness: toValue === 1 ? 10 : 0, useNativeDriver: ND }).start()
+  const [down, setDown] = useState(false)
+  const [over, setOver] = useState(false)
+  const go = (toValue) => Animated.spring(s, { toValue, speed: 40, bounciness: toValue === 1 ? 8 : 0, useNativeDriver: ND }).start()
   const fade = (toValue) => Animated.timing(hover, { toValue, duration: 120, useNativeDriver: ND }).start()
   const props = {
-    onPressIn: () => !reduce && go(to),
-    onPressOut: () => go(1),
-    ...(ND ? null : { onHoverIn: () => fade(0.88), onHoverOut: () => fade(1) }),
+    onPressIn: () => {
+      setDown(true)
+      if (!reduce) go(to)
+    },
+    onPressOut: () => {
+      setDown(false)
+      go(1)
+    },
+    ...(ND
+      ? null
+      : {
+          onHoverIn: () => {
+            setOver(true)
+            fade(0.92)
+          },
+          onHoverOut: () => {
+            setOver(false)
+            fade(1)
+          },
+        }),
   }
-  return { s, hover, props }
+  return { s, hover, down, over, props }
 }
 
 // on 이 켜질 때(하트 누름 등) 한 번 통통 튀는 아이콘 틀. 처음 그릴 때는 움직이지 않습니다.
@@ -107,14 +138,14 @@ export function CountUp({ value = 0, duration = 700, delay = 0, prefix = '', suf
   return <Text style={style}>{`${prefix}${n.toLocaleString()}${suffix}`}</Text>
 }
 
-// 0→1 로 채워지는 막대
+// 0→1 로 채워지는 막대. 트랙은 살짝 패인 홈이고, 채움은 그 안에서 차오릅니다.
 export function Bar({ ratio = 0, color, height = 6, track, style }) {
   const v = useRef(new Animated.Value(reduce ? ratio : 0)).current
   useEffect(() => {
-    Animated.timing(v, { toValue: ratio, duration: reduce ? 0 : 700, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start()
+    Animated.timing(v, { toValue: ratio, duration: reduce ? 0 : 900, easing: Easing.bezier(0.22, 1, 0.36, 1), useNativeDriver: false }).start()
   }, [v, ratio])
   return (
-    <Animated.View style={[{ height, borderRadius: 99, backgroundColor: track, overflow: 'hidden' }, style]}>
+    <Animated.View style={[{ height, borderRadius: 99, backgroundColor: track || colors.panel2, overflow: 'hidden' }, neu.insetSm, style]}>
       <Animated.View style={{ height: '100%', borderRadius: 99, backgroundColor: color, width: v.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'], extrapolate: 'clamp' }) }} />
     </Animated.View>
   )

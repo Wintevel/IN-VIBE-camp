@@ -43,7 +43,7 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
               <Text style={[text.chip, { color: colors.sub }]}>{topMark}</Text>
             </View>
           ) : null}
-          <PressScale onPress={onHeart} hitSlop={6} to={0.88} accessibilityRole="button" accessibilityLabel="하트" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.heart, r.liked_by_me && styles.heartOn]}>
+          <PressScale onPress={onHeart} hitSlop={6} to={0.9} surface="raisedSm" active={!!r.liked_by_me} accessibilityRole="button" accessibilityLabel="하트" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.heart, r.liked_by_me && styles.heartOn]}>
             <Pop on={!!r.liked_by_me}>
               <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sub} />
             </Pop>

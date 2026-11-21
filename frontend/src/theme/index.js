@@ -36,6 +36,19 @@ export const colors = {
   sheetToast: '#333D4B',
 }
 
+// 뉴모피즘 촉감(2026-11-21): 화면 전체가 아니라 누르는 곳에만 약하게 씁니다.
+// 버튼·탭바·필터 칩·하트 칩·레벨 다이얼은 위로 살짝 솟은 면(raised), 누르거나 고른 상태는 안으로 패인 면(inset)입니다.
+// 카드·목록·입력창은 원래 어두운 의뢰판 스타일(면 + 얇은 테두리) 그대로입니다. 그림자는 어느 면 색에서도 맞도록 반투명 검정·흰색을 씁니다.
+const DARK = 'rgba(0,0,0,0.5)'
+const LIGHT = 'rgba(255,255,255,0.05)'
+export const neu = {
+  raised: { boxShadow: `4px 4px 10px ${DARK}, -3px -3px 8px ${LIGHT}` },
+  raisedHi: { boxShadow: `6px 6px 14px ${DARK}, -4px -4px 10px ${LIGHT}` },
+  raisedSm: { boxShadow: `2px 2px 6px ${DARK}, -2px -2px 5px ${LIGHT}` },
+  inset: { boxShadow: `inset 3px 3px 7px ${DARK}, inset -2px -2px 6px ${LIGHT}` },
+  insetSm: { boxShadow: `inset 2px 2px 4px ${DARK}, inset -1px -1px 3px ${LIGHT}` },
+}
+
 export const radius = { sm: 6, md: 12, cardSm: 14, lg: 16, xl: 24, pill: 999 }
 export const space = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24 }
 

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import { colors, radius, text } from '../theme'
-import { Pressable } from 'react-native'
+import { PressScale } from './Motion'
 
 export default function ScreenHeader({ title, sub, action, onAction }) {
   return (
@@ -10,9 +10,9 @@ export default function ScreenHeader({ title, sub, action, onAction }) {
         {sub ? <Text style={[text.small, { marginTop: 6 }]}>{sub}</Text> : null}
       </View>
       {action ? (
-        <Pressable onPress={onAction} accessibilityRole="button" style={styles.chip}>
+        <PressScale onPress={onAction} accessibilityRole="button" surface="raisedSm" style={styles.chip}>
           <Text style={[text.chip, { color: colors.fg }]}>{action}</Text>
-        </Pressable>
+        </PressScale>
       ) : null}
     </View>
   )

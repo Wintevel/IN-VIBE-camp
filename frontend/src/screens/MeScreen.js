@@ -24,6 +24,7 @@ import {
 } from "../lib/achievements";
 import { useApp } from "../state/AppState";
 import { colors, font, radius, text } from "../theme";
+import Dial from "../components/Dial";
 
 const day = (t) => {
   const d = new Date(t);
@@ -75,14 +76,15 @@ export default function MeScreen({ navigation }) {
             uri={p.avatar_url}
           />
           {app.canStyle ? (
-            <Pressable
+            <PressScale
               onPress={() => navigation.navigate("Style")}
               accessibilityRole="button"
               accessibilityLabel="프로필 꾸미기 열기"
+              surface="raisedSm"
               style={styles.chip}
             >
               <Text style={[text.chip, { color: colors.fg }]}>꾸미기</Text>
-            </Pressable>
+            </PressScale>
           ) : null}
         </View>
         <View style={{ flex: 1, alignSelf: "flex-start", paddingTop: 8 }}>
@@ -101,15 +103,16 @@ export default function MeScreen({ navigation }) {
             {app.myCrew ? app.myCrew.name : "크루 없음"}
           </Text>
         </View>
-        <Pressable
+        <PressScale
           onPress={() => navigation.navigate("Settings")}
           accessibilityRole="button"
           accessibilityLabel="설정"
+          surface="raisedSm"
           style={[styles.chip, { alignSelf: "flex-start", marginTop: 6 }]}
         >
           <GearIcon size={15} />
           <Text style={[text.chip, { color: colors.fg }]}>설정</Text>
-        </Pressable>
+        </PressScale>
       </View>
 
       {app.guest ? (
@@ -126,21 +129,31 @@ export default function MeScreen({ navigation }) {
         </Pressable>
       ) : null}
 
-      <Card style={{ gap: 8 }}>
-        <View style={styles.row}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <XpIcon size={18} />
-            <Text style={text.small}>레벨</Text>
+      {/* 레벨: 원형 다이얼(살짝 솟은 원판 + 차오르는 진행 링 + 패인 가운데) */}
+      <Card style={styles.level}>
+        <Dial
+          size={96}
+          ratio={progress01}
+          stroke={8}
+          accessibilityLabel={`레벨 ${p.level}, 다음 레벨까지 ${Math.round(progress01 * 100)}%`}
+        >
+          <Text style={[text.caption, { fontSize: 10, lineHeight: 12 }]}>LEVEL</Text>
+          <Text style={[text.point, { fontSize: 24, lineHeight: 28 }]}>{p.level}</Text>
+        </Dial>
+        <View style={{ flex: 1, gap: 8 }}>
+          <View style={styles.row}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <XpIcon size={18} />
+              <Text style={text.num}>Lv.{p.level}</Text>
+            </View>
+            <Text style={text.small}>{Math.round(progress01 * 100)}%</Text>
           </View>
-          <Text style={text.num}>Lv.{p.level}</Text>
-        </View>
-        <Bar ratio={progress01} color={colors.blue} track={colors.panel2} />
-        <View style={styles.row}>
+          <Bar ratio={progress01} color={colors.blue} track={colors.panel2} />
           <Text style={text.small}>
             다음 레벨까지{" "}
             {Math.max(0, (p.xp_for_next_level || 0) - (p.xp_in_level || 0))}XP
           </Text>
-          <Text style={text.small}>누적 {(p.xp || 0).toLocaleString()}XP</Text>
+          <Text style={text.caption}>누적 {(p.xp || 0).toLocaleString()}XP</Text>
         </View>
       </Card>
 
@@ -413,6 +426,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  level: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 18,
   },
   chip: {
     flexDirection: "row",

@@ -104,7 +104,7 @@ export default function QuestSheet() {
       <Text style={text.sheetTitle}>{r.title}</Text>
       {app.social && !done ? (
         <View style={styles.react}>
-          <PressScale onPress={() => app.toggleHeart(r.id)} to={0.9} accessibilityRole="button" accessibilityLabel="하트 누르기" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.chip, r.liked_by_me && { backgroundColor: colors.redSoft }]}>
+          <PressScale onPress={() => app.toggleHeart(r.id)} to={0.92} surface="raisedSm" active={!!r.liked_by_me} accessibilityRole="button" accessibilityLabel="하트 누르기" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.chip, r.liked_by_me && { backgroundColor: colors.redSoft }]}>
             <Pop on={!!r.liked_by_me}>
               <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sheetSub} />
             </Pop>
@@ -113,7 +113,7 @@ export default function QuestSheet() {
           {MARK_LABELS.map(([k, name]) => {
             const on = r.my_mark === k
             return (
-              <PressScale key={k} onPress={() => app.mark(r.id, k)} to={0.92} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && { backgroundColor: colors.blueWeak, borderColor: colors.blue }]}>
+              <PressScale key={k} onPress={() => app.mark(r.id, k)} to={0.94} surface="raisedSm" active={on} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && { backgroundColor: colors.blueWeak, borderColor: colors.blue }]}>
                 <Text style={[text.chip, { color: on ? colors.blue : colors.sheetSub }]}>
                   {name} {r.marks?.[k] || 0}
                 </Text>

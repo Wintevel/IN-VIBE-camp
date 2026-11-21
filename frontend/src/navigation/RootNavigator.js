@@ -1,12 +1,13 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { DarkTheme, NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
 import { TabIcon } from '../components/Icons'
+import TabBar from '../components/TabBar'
 import { Pop, reduced } from '../components/Motion'
 import { navigationRef } from './ref'
 import { useApp } from '../state/AppState'
-import { colors, text } from '../theme'
+import { colors } from '../theme'
 import BoardScreen from '../screens/BoardScreen'
 import CaptureScreen from '../screens/CaptureScreen'
 import CollectionScreen from '../screens/CollectionScreen'
@@ -41,12 +42,9 @@ const TABS = [
 function Tabs() {
   return (
     <Tab.Navigator
+      tabBar={(props) => <TabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.fg,
-        tabBarInactiveTintColor: colors.disabled,
-        tabBarStyle: { backgroundColor: colors.ink, borderTopColor: colors.line },
-        tabBarLabel: ({ children, color }) => <Text style={[text.tab, { color }]}>{children}</Text>,
         // 탭을 바꿀 때 화면이 부드럽게 교차합니다(탭 안의 화면은 다시 등장 효과를 재생하지 않음).
         animation: reduced() ? 'none' : 'fade',
         transitionSpec: { animation: 'timing', config: { duration: 180 } },
