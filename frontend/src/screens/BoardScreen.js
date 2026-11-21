@@ -9,7 +9,6 @@ import ReportCard from '../components/ReportCard'
 import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
 import { Empty, Loading, refresher } from '../components/States'
-import Ticker from '../components/Ticker'
 import { isCrew, isPartner } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, radius, text } from '../theme'
@@ -34,7 +33,6 @@ export default function BoardScreen({ navigation }) {
   const app = useApp()
   const [filter, setFilter] = useState('all')
   const list = app.reports.filter(match[filter])
-  const open = app.reports.filter((r) => r.status === 'open').length
   const going = app.reports.filter((r) => r.status === 'in_progress').length
   const accepted = app.reports.filter((r) => r.i_am_participating && r.status !== 'completed')
   const done = app.reports.filter((r) => r.status === 'completed').length
@@ -54,7 +52,14 @@ export default function BoardScreen({ navigation }) {
         ) : null}
         <MyQuests reports={accepted} photos={app.photos} onOpen={(id) => (app.reports.find((x) => x.id === id)?.status === 'in_progress' ? navigation.navigate('Proof', { reportId: id }) : app.openSheet(id))} />
         <ClaimStatus claims={app.claims} />
-        {app.reports.length > 0 ? <Ticker>{`주변 의뢰 ${open}건 · 진행 중 ${going}건 · 완료 ${done}건`}</Ticker> : null}
+        {app.reports.length > 0 ? (
+          <View style={styles.head}>
+            <View style={styles.mark} />
+            <Text style={text.section}>전체 의뢰</Text>
+            <Text style={[text.num, { fontSize: 15, color: colors.tape }]}>{app.reports.length - done}</Text>
+            <Text style={[text.caption, styles.tally]}>{`진행 중 ${going} · 완료 ${done}`}</Text>
+          </View>
+        ) : null}
         <FilterChips options={FILTERS} value={filter} onChange={setFilter} />
         <View key={filter} style={{ gap: 12 }}>
           {list.map((r, i) => (
@@ -83,6 +88,9 @@ export default function BoardScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  mark: { width: 6, height: 16, backgroundColor: colors.tape, transform: [{ skewX: '-16deg' }] },
+  tally: { marginLeft: 'auto' },
   notice: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.tape, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 14 },
   fabWrap: { position: 'absolute', right: 20, bottom: 16, flexDirection: 'row', gap: 8 },
   fabQuick: { backgroundColor: colors.green },
