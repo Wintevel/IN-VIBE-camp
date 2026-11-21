@@ -36,7 +36,6 @@ export default function SettingsScreen({ navigation }) {
             : []),
         ]}
       />
-      <Text style={text.caption}>로그아웃해도 기록은 이 기기에 남아 있어, 다시 시작하면 그대로 이어져요. 기록을 지우면 다시 불러올 수 없어요.</Text>
       <Button type="ghost" style={{ flex: 0 }} onPress={() => navigation.goBack()}>
         돌아가기
       </Button>
