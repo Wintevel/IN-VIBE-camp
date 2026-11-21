@@ -1,4 +1,4 @@
-import { TITLES } from './format'
+import { TITLES, ga } from './format'
 
 // 도전과제. 달성하면 보상(포인트·XP, 일부는 꾸미기 품목)을 받고, 이름을 칭호로 쓸 수 있습니다.
 // 조건과 보상 숫자는 임시값입니다. 꾸미기 보상은 api/local.js 의 COSMETICS 에서 feat 로 연결합니다.
@@ -31,8 +31,8 @@ export function titleOptions(s) {
   const levels = [...TITLES]
     .reverse()
     .filter(([min]) => min >= 2)
-    .map(([min, label]) => ({ key: `lv:${min}`, label, open: s.level >= min, how: `레벨 ${min}이 되면 열려요` }))
-  const feats = progress(s).map((a) => ({ key: `ach:${a.id}`, label: a.name, open: a.done, how: `도전과제: ${a.desc}` }))
+    .map(([min, label]) => ({ key: `lv:${min}`, label, open: s.level >= min, how: `레벨 ${min}${ga(min)} 되면 열려요` }))
+  const feats = progress(s).map((a) => ({ key: `ach:${a.id}`, label: a.name, open: a.done, how: `도전과제 · ${a.desc}` }))
   return [...levels, ...feats]
 }
 // 화면에 보일 칭호. 고르지 않았거나 더는 쓸 수 없으면 빈 문자열(칭호 없음).

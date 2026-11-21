@@ -10,6 +10,8 @@ import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
 import Toast from '../components/Toast'
 import { ACHIEVEMENTS, statsOf, titleOptions, titleText } from '../lib/achievements'
+import { ga } from '../lib/format'
+import { Points } from '../components/GuideParts'
 import { useApp } from '../state/AppState'
 import { colors, radius, text } from '../theme'
 
@@ -43,7 +45,7 @@ export default function StylePickScreen({ navigation, route }) {
       .filter((c) => c.kind === kind)
       .map((c) => {
         const feat = c.feat && ACHIEVEMENTS.find((a) => a.id === c.feat)
-        const how = c.owned ? '가지고 있어요' : feat ? `도전과제 "${feat.name}" 보상` : c.locked ? `레벨 ${c.level}이 되면 열려요` : `${c.cost.toLocaleString()} 포인트로 살 수 있어요`
+        const how = c.owned ? '가지고 있어요' : feat ? `도전과제 "${feat.name}" 보상` : c.locked ? `레벨 ${c.level}${ga(c.level)} 되면 열려요` : `${c.cost.toLocaleString()} 포인트로 살 수 있어요`
         return { key: c.id, label: c.name, open: c.owned, on: c.equipped, how, cost: !c.owned && !c.locked && c.cost > 0 ? c.cost : 0, item: c }
       })
   }
@@ -127,10 +129,8 @@ export default function StylePickScreen({ navigation, route }) {
         <Card style={styles.preview}>
           <Animated.View style={{ alignItems: 'center', transform: [{ scale: pop }] }}>
             <AvatarFrame frame={frame} size={96} letter={letter} uri={uri} />
-            <Text style={[text.cardTitle, { fontSize: 20, marginTop: 14 }, nameColor && { color: nameColor }]}>
-              {p.nickname}
-              {title ? <Text style={[text.chip, { color: colors.tape }]}> · {title}</Text> : null}
-            </Text>
+            <Text style={[text.cardTitle, { fontSize: 20, marginTop: 14 }, nameColor && { color: nameColor }]}>{p.nickname}</Text>
+            {title ? <Text style={[text.chip, { color: colors.tape, marginTop: 4 }]}>{title}</Text> : null}
           </Animated.View>
           <View style={styles.info}>
             <Text style={text.section}>{sel.label}</Text>
@@ -154,15 +154,37 @@ export default function StylePickScreen({ navigation, route }) {
             <View style={styles.grid}>{locked.map(Cell)}</View>
           </>
         ) : null}
-        {kind === 'photo' ? <Text style={text.caption}>사진은 다른 이웃에게도 보여요. 얼굴이 나온 사진은 신중하게 골라 주세요.</Text> : null}
+        {kind === 'photo' ? (
+          <Points
+            points={[
+              ['me', '프로필 사진은 이웃에게도 보여요.'],
+              ['alert', '얼굴 사진은 신중하게 골라 주세요.'],
+            ]}
+          />
+        ) : null}
       </Screen>
       <View style={styles.bar}>
         <Button type="ghost" onPress={() => navigation.goBack()}>
           취소
         </Button>
-        <Button disabled={!can || busy} onPress={apply} style={{ flex: 2 }}>
-          {busy ? '적용하는 중…' : label}
-        </Button>
+        {/* 잠긴 칸(포인트로 못 사는 것)을 고르면 버튼 자리에 여는 조건을 바로 보여 줍니다. */}
+        {!sel.open && !sel.cost ? (
+          <View style={styles.lockInfo} accessibilityLabel={`잠겨 있어요. ${sel.how}`}>
+            <View style={styles.lockBig}>
+              <LockIcon size={14} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[text.caption, { fontSize: 11 }]}>잠겨 있어요</Text>
+              <Text style={[text.chip, { color: colors.fg }]} numberOfLines={2}>
+                {sel.how}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <Button disabled={!can || busy} onPress={apply} style={{ flex: 2 }}>
+            {busy ? '적용하는 중…' : label}
+          </Button>
+        )}
       </View>
       <Toast />
     </View>
@@ -181,5 +203,7 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', top: 6, right: 6, fontSize: 10, lineHeight: 14, color: colors.tapeInk, backgroundColor: colors.tape, paddingHorizontal: 6, borderRadius: radius.pill, overflow: 'hidden', fontWeight: '700' },
   lockDot: { position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.disabled, alignItems: 'center', justifyContent: 'center' },
   lock: { color: colors.fg, backgroundColor: colors.disabled },
+  lockInfo: { flex: 2, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.cardSm, backgroundColor: colors.panel2, borderWidth: 1, borderColor: colors.line },
+  lockBig: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.disabled, alignItems: 'center', justifyContent: 'center' },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: 8, padding: 16, paddingBottom: 24, backgroundColor: colors.ink, borderTopWidth: 1, borderTopColor: colors.line },
 })
