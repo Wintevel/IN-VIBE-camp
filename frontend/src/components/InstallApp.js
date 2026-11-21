@@ -36,10 +36,7 @@ export default function InstallApp({ card }) {
   if (!card) return body
   return (
     <Card style={{ gap: 12 }}>
-      <View style={{ gap: 2 }}>
-        <Text style={text.cardTitle}>앱으로 설치하기</Text>
-        <Text style={text.small}>주소창 없이 앱처럼 열고, 홈 화면에서 바로 실행해요.</Text>
-      </View>
+      <Text style={text.cardTitle}>앱으로 설치하기</Text>
       {body}
     </Card>
   )

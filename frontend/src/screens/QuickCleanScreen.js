@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { StyleSheet, Text, TextInput, View } from 'react-native'
 import Button from '../components/Button'
 import FilterChips from '../components/FilterChips'
+import { PinIcon } from '../components/Icons'
 import { Appear } from '../components/Motion'
 import PhotoSlot from '../components/PhotoSlot'
 import { RewardIcon } from '../components/Reward'
@@ -38,9 +39,22 @@ export default function QuickCleanScreen({ navigation }) {
     <View style={{ flex: 1 }}>
       <Screen bottomPad={32}>
         <ScreenHeader title="바로 치웠어요" sub="의뢰가 없어도 괜찮아요. 보자마자 치운 곳을 기록해요" action="닫기" onAction={close} />
-        <Appear from="right" style={styles.reward}>
-          <RewardIcon kind="xp" size={18} />
-          <Text style={[text.small, { flex: 1, color: colors.fg }]}>경험치를 받고, 동네 지도에 내가 치운 곳으로 남아요. 포인트는 의뢰를 해결할 때만 받아요.</Text>
+        <Appear from="right" style={styles.gains}>
+          <View style={[styles.gain, { borderColor: colors.blue + '55' }]} accessibilityLabel="경험치를 받아요">
+            <RewardIcon kind="xp" size={24} />
+            <Text style={[text.caption, { color: colors.blue }]}>경험치</Text>
+          </View>
+          <View style={[styles.gain, { borderColor: colors.green + '55' }]} accessibilityLabel="동네 지도에 남아요">
+            <PinIcon size={24} color={colors.green} />
+            <Text style={[text.caption, { color: colors.green }]}>지도에 기록</Text>
+          </View>
+          <View style={[styles.gain, styles.none]} accessibilityLabel="포인트는 없어요">
+            <View style={{ opacity: 0.35 }}>
+              <RewardIcon kind="point" size={24} />
+            </View>
+            <View style={styles.slash} />
+            <Text style={[text.caption, { color: colors.disabled }]}>포인트 없음</Text>
+          </View>
         </Appear>
         <Appear from="right" index={1} style={{ flexDirection: 'row', gap: 10 }}>
           <PhotoSlot n={1} shot={p.before} label="치우기 전" onPress={() => capture('before')} />
@@ -58,7 +72,7 @@ export default function QuickCleanScreen({ navigation }) {
         </View>
 
         <Text style={text.section}>장소 종류</Text>
-        <FilterChips options={PLACES} value={placeType} onChange={setPlaceType} />
+        <FilterChips wrap options={PLACES} value={placeType} onChange={setPlaceType} />
         <Text style={text.section}>한 줄 기록 (선택)</Text>
         <TextInput value={title} onChangeText={setTitle} placeholder="예) 정류장 의자 밑 꽁초" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} accessibilityLabel="한 줄 기록" />
         <Text style={[text.caption, { color: colors.red }]}>깨진 유리, 주사기처럼 다칠 수 있는 것은 손대지 말고 제보로 알려 주세요.</Text>
@@ -78,7 +92,11 @@ export default function QuickCleanScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  reward: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.panel, borderRadius: radius.cardSm, borderWidth: 1, borderColor: colors.line, padding: 12 },
+  // 받는 것(경험치·지도 기록)과 못 받는 것(포인트)을 글 대신 칸으로 보여 줍니다.
+  gains: { flexDirection: 'row', gap: 8 },
+  gain: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: radius.cardSm, backgroundColor: colors.panel, borderWidth: 1 },
+  none: { borderColor: colors.line, borderStyle: 'dashed' },
+  slash: { position: 'absolute', top: 22, width: 30, height: 2, borderRadius: 1, backgroundColor: colors.disabled, transform: [{ rotate: '-35deg' }] },
   step: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
   input: { backgroundColor: colors.panel, borderRadius: radius.cardSm, borderWidth: 1, borderColor: colors.line, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 16, paddingVertical: 14 },
 })

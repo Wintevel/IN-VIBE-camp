@@ -42,7 +42,7 @@ export default function CrewScreen({ navigation }) {
 
   return (
     <Screen refreshControl={refresher(app)}>
-      <ScreenHeader title="크루" sub="크루원이 의뢰를 해결하면 크루 경험치가 쌓여요" />
+      <ScreenHeader title="크루" />
       <Appear from="left">
         <View style={styles.banner}>
           <View style={styles.slash} />
@@ -91,7 +91,7 @@ export default function CrewScreen({ navigation }) {
               <View style={styles.questHead}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={text.section}>크루 의뢰는 2명부터</Text>
-                  <Text style={text.caption}>인원이 모이면 시작되고, 해결하면 포인트와 크루 경험치 2배를 받아요</Text>
+                  <Text style={text.caption}>{'인원을 모아 시작해보세요!\n해결하면 포인트와 크루 경험치를 받을 수 있어요!'}</Text>
                 </View>
                 <Button compact onPress={() => navigation.navigate('ReportCreate', { crew: true })}>
                   올리기
@@ -213,7 +213,6 @@ function Members({ crew, onLeave }) {
           </Appear>
         ))}
       </Card>
-      <Text style={text.caption}>기여도는 크루원이 의뢰를 해결해 쌓은 크루 경험치예요. 크루 의뢰는 2배로 쌓여요.</Text>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {confirm ? (
           <>

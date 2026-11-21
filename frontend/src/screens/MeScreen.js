@@ -227,11 +227,9 @@ export default function MeScreen({ navigation }) {
           ))}
         </View>
         <WeekLine weekly={weekly} streak={streakLen} />
-        <Text style={text.caption}>
-          {p.streak_weeks > 0
-            ? `초록 선이 이어진 ${p.streak_weeks}주예요. ${p.active_this_week ? "이번 주도 이어 갔어요" : "이번 주에 한 건만 해결하면 이어져요"}`
-            : "한 주에 한 건만 해결해도 연속 활동이 시작돼요"}
-        </Text>
+        {p.streak_weeks > 0 ? (
+          <Text style={text.caption}>{`초록 선이 이어진 ${p.streak_weeks}주예요. ${p.active_this_week ? "이번 주도 이어 갔어요" : "이번 주에 한 건만 해결하면 이어져요"}`}</Text>
+        ) : null}
       </Card>
 
       <SectionTitle>오늘 남은 횟수</SectionTitle>
