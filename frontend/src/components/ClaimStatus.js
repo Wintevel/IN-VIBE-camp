@@ -16,7 +16,7 @@ export default function ClaimStatus({ claims }) {
       <View style={styles.head}>
         <View style={styles.mark} />
         <Text style={text.section}>확인 중인 인증</Text>
-        {waiting > 0 ? <Text style={[text.num, { fontSize: 15, color: colors.tape }]}>{waiting}</Text> : null}
+        {waiting > 0 ? <Text style={[text.num, { fontSize: 15, color: colors.tapeText }]}>{waiting}</Text> : null}
       </View>
       {claims.map((c, i) => (
         <Appear key={c.claim_id} index={i}>
@@ -34,7 +34,7 @@ function Row({ c }) {
   const staff = c.status === 'staff_review'
   const partner = c.kind === 'partner'
   const pct = Math.round(Number(c.ok_percent) || 0)
-  const [label, color] = paid ? ['지급됨', colors.green] : rejected ? ['반려', colors.red] : staff ? ['운영진 검토 중', colors.purple] : ['확인 대기', colors.tape]
+  const [label, color] = paid ? ['지급됨', colors.green] : rejected ? ['반려', colors.red] : staff ? ['운영진 검토 중', colors.purple] : ['확인 대기', colors.tapeText]
   let sub
   if (paid) sub = `이웃이 이의를 남기면 운영진이 다시 확인해요${c.dispute_until ? ` · 이의 기간 ${remain(c.dispute_until)}` : ''}`
   else if (rejected) sub = c.reject_reason || '확인을 통과하지 못했어요. 의뢰는 다시 열렸어요'
@@ -64,7 +64,7 @@ function Row({ c }) {
           {c.points_pending > 0 ? (
             <View style={styles.pill}>
               <RewardIcon kind="point" size={14} />
-              <Text style={[text.chip, { color: colors.tape }]}>{c.points_pending}</Text>
+              <Text style={[text.chip, { color: colors.tapeText }]}>{c.points_pending}</Text>
             </View>
           ) : null}
           {c.xp_pending > 0 ? (

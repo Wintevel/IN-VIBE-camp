@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native'
-import Svg, { Circle, Defs, G, LinearGradient, Path, RadialGradient, Stop, Text as SvgText } from 'react-native-svg'
+import Svg, { Circle, Defs, G, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg'
 import { colors, font, text } from '../theme'
 import { ND, reduced } from './Motion'
 
@@ -124,194 +124,50 @@ function Ring({ frame: f, size, letter, letterColor, uri }) {
 }
 
 // ── 시즌 순위 테두리(crest) ─────────────────────────────
-// 200×200 칸에 그립니다. 가운데 반지름 50 원이 프로필 사진 자리입니다(실제로는 size 의 74% 로 줄여 장식이 덜 튀어나오게).
-// 구성: 뒤(숨 쉬는 후광, 천천히 도는 룬 고리, 겹 날개) → 사진 → 앞(겹 금속 고리와 장식 못, 위 장식과 보석, 아래 순위 문장, 도는 빛, 반짝임)
-const P = (n) => Math.round(n * 10) / 10
-// 깃털 하나: 뿌리(bx,by)에서 각도 deg(위=0, 시계 방향) 로 len 만큼, 폭 w
-function feather(bx, by, deg, len, w) {
-  const a = (deg * Math.PI) / 180
-  const dx = Math.sin(a)
-  const dy = -Math.cos(a)
-  const tx = bx + dx * len
-  const ty = by + dy * len
-  const mx = bx + dx * len * 0.55
-  const my = by + dy * len * 0.55
-  const px = -dy
-  const py = dx
-  return `M${P(bx)} ${P(by)} Q${P(mx + px * w)} ${P(my + py * w)} ${P(tx)} ${P(ty)} Q${P(mx - px * w * 0.45)} ${P(my - py * w * 0.45)} ${P(bx)} ${P(by)}Z`
-}
-// 왼쪽 날개 실루엣: 고리 왼쪽 위 뿌리에서 위·바깥으로 뻗고, 아래 가장자리는 깃 끝처럼 물결집니다. 오른쪽은 좌우 반전.
-// 같은 모양을 크기를 줄여 2~3겹 겹쳐 깊이를 냅니다. 순위가 높을수록 날개가 크고 겹이 많습니다.
-const WING_PATH = 'M62 84 C50 66 34 48 10 30 C14 44 17 52 22 60 C14 62 9 67 6 74 C15 76 22 79 27 84 C20 88 15 94 13 101 C22 101 30 102 37 106 C32 111 30 116 30 122 C40 120 50 117 60 114 Z'
-const WING = { 1: { scale: 1, layers: [1, 0.74, 0.5] }, 2: { scale: 0.86, layers: [1, 0.68] }, 3: { scale: 0.7, layers: [1, 0.62] } }
-const STUDS = [30, 60, 120, 150, 210, 240, 300, 330]
-const SPARKS = [
-  [34, 40, 5],
-  [166, 44, 4],
-  [28, 132, 3.5],
-  [172, 128, 4.5],
-]
-const at = (deg, r) => [100 + Math.sin((deg * Math.PI) / 180) * r, 100 - Math.cos((deg * Math.PI) / 180) * r]
-// 깎은 보석(겉 마름모 + 면 나눔 선)
-function Gem({ x, y, r, color, dark, light }) {
-  return (
-    <G>
-      <Path d={`M${x} ${y - r} L${x + r * 0.7} ${y} L${x} ${y + r} L${x - r * 0.7} ${y}Z`} fill={color} stroke={dark} strokeWidth={1.2} strokeLinejoin="round" />
-      <Path d={`M${x - r * 0.7} ${y} L${x + r * 0.7} ${y} M${x} ${y - r} L${x - r * 0.25} ${y} L${x} ${y + r} M${x} ${y - r} L${x + r * 0.25} ${y}`} stroke={light} strokeOpacity={0.55} strokeWidth={0.8} fill="none" />
-      <Path d={`M${x - r * 0.2} ${y - r * 0.55} L${x - r * 0.42} ${y - r * 0.1}`} stroke="#FFFFFF" strokeWidth={1.2} strokeLinecap="round" strokeOpacity={0.9} />
-    </G>
-  )
-}
-
+// 파스텔 두 겹 고리 + 위의 작은 순위 장식(1위 왕관, 2위 티아라, 3위 잎) + 아래 순위 숫자 배지. 움직이는 장식은 넣지 않습니다.
+// 200×200 칸에 그리고, 가운데 사진 원은 size 의 76% 입니다. colors = [밝은 면, 본색, 선, 포인트]
 function Crest({ frame: f, size, letter, letterColor, uri }) {
-  const [light, mid, dark, gemColor] = f.colors?.length >= 4 ? f.colors : ['#FFF6C8', '#FFD43B', '#B07A0A', '#F04452']
+  const [light, mid, dark, accent] = f.colors?.length >= 4 ? f.colors : ['#FFF6DA', '#F5DC97', '#B89350', '#F4C7C3']
   const rank = f.rank || 1
-  const id = `c${useId().replace(/[^a-zA-Z0-9]/g, '')}`
-  const turn = useLoop(4200, true)
-  const slow = useLoop(16000, true)
-  const blink = useLoop(2200, true)
-  // 장식이 다른 테두리만큼만 밖으로 나가도록 사진 원을 74% 로 줄이고 장식을 그 둘레에 그립니다.
-  const inner = size * 0.74
+  const inner = size * 0.76
   const big = inner * 2
   const off = (size - big) / 2
   const layer = { position: 'absolute', left: off, top: off, width: big, height: big }
-  const glow = blink.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.5, 0.9, 0.5] })
-  const wing = WING[rank] || WING[3]
   return (
     <View style={{ width: size, height: size }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <View style={layer} pointerEvents="none">
-        <Animated.View style={[styles.fill, { opacity: glow }]}>
-          <Svg width={big} height={big} viewBox="0 0 200 200">
-            <Defs>
-              <RadialGradient id={`${id}-h`} cx="100" cy="100" r="90" gradientUnits="userSpaceOnUse">
-                <Stop offset="0.52" stopColor={mid} stopOpacity="0.5" />
-                <Stop offset="1" stopColor={mid} stopOpacity="0" />
-              </RadialGradient>
-            </Defs>
-            <Circle cx="100" cy="100" r="90" fill={`url(#${id}-h)`} />
-          </Svg>
-        </Animated.View>
-        {/* 천천히 도는 룬 고리 */}
-        <Animated.View style={[styles.fill, { opacity: 0.55, transform: [{ rotate: slow.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-360deg'] }) }] }]}>
-          <Svg width={big} height={big} viewBox="0 0 200 200">
-            <Circle cx="100" cy="100" r="66" stroke={light} strokeOpacity={0.6} strokeWidth={0.8} strokeDasharray="2 5 9 5" fill="none" />
-            <Circle cx="100" cy="100" r="71" stroke={mid} strokeOpacity={0.35} strokeWidth={0.6} fill="none" />
-          </Svg>
-        </Animated.View>
-        <Svg width={big} height={big} viewBox="0 0 200 200" style={styles.fill}>
-          <Defs>
-            <LinearGradient id={`${id}-w`} x1="1" y1="1" x2="0" y2="0">
-              <Stop offset="0" stopColor={mid} stopOpacity="1" />
-              <Stop offset="0.55" stopColor={light} stopOpacity="1" />
-              <Stop offset="1" stopColor="#FFFFFF" stopOpacity="1" />
-            </LinearGradient>
-            <LinearGradient id={`${id}-w2`} x1="1" y1="1" x2="0" y2="0">
-              <Stop offset="0" stopColor={dark} stopOpacity="1" />
-              <Stop offset="0.6" stopColor={mid} stopOpacity="1" />
-              <Stop offset="1" stopColor={light} stopOpacity="1" />
-            </LinearGradient>
-          </Defs>
-          {[false, true].map((flip) => (
-            <G key={String(flip)} transform={flip ? 'translate(200 0) scale(-1 1)' : undefined}>
-              <G transform={`translate(62 100) scale(${wing.scale}) translate(-62 -100)`}>
-                {wing.layers.map((k, i) => (
-                  <G key={k} transform={`translate(62 100) scale(${k}) translate(-62 -100)`}>
-                    <Path d={WING_PATH} fill={i === 0 ? `url(#${id}-w)` : i === 1 ? `url(#${id}-w2)` : mid} stroke={dark} strokeWidth={1.1 / k} strokeLinejoin="round" />
-                  </G>
-                ))}
-              </G>
-            </G>
-          ))}
-        </Svg>
-      </View>
-      {/* 프로필 사진 */}
       <View style={{ position: 'absolute', left: (size - inner) / 2, top: (size - inner) / 2, width: inner, height: inner, borderRadius: inner / 2, overflow: 'hidden', backgroundColor: colors.panel2 }}>
         {uri ? (
           <Image source={{ uri }} style={{ width: inner, height: inner }} resizeMode="cover" />
         ) : (
           <View style={styles.center}>
-            <Text style={[text.h1, { fontSize: inner * 0.42, lineHeight: inner * 0.52, color: letterColor || mid }]}>{letter}</Text>
+            <Text style={[text.h1, { fontSize: inner * 0.42, lineHeight: inner * 0.52, color: letterColor || dark }]}>{letter}</Text>
           </View>
         )}
       </View>
       <View style={layer} pointerEvents="none">
         <Svg width={big} height={big} viewBox="0 0 200 200" style={styles.fill}>
-          <Defs>
-            <LinearGradient id={`${id}-m`} x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#FFFFFF" stopOpacity="1" />
-              <Stop offset="0.25" stopColor={light} stopOpacity="1" />
-              <Stop offset="0.55" stopColor={mid} stopOpacity="1" />
-              <Stop offset="0.8" stopColor={dark} stopOpacity="1" />
-              <Stop offset="1" stopColor={mid} stopOpacity="1" />
-            </LinearGradient>
-            <LinearGradient id={`${id}-v`} x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={light} stopOpacity="1" />
-              <Stop offset="0.6" stopColor={mid} stopOpacity="1" />
-              <Stop offset="1" stopColor={dark} stopOpacity="1" />
-            </LinearGradient>
-          </Defs>
-          {/* 겹 금속 고리 */}
-          <Circle cx="100" cy="100" r="55.5" stroke={dark} strokeWidth={2} fill="none" />
-          <Circle cx="100" cy="100" r="52.5" stroke={`url(#${id}-m)`} strokeWidth={5} fill="none" />
-          <Circle cx="100" cy="100" r="49.6" stroke={dark} strokeWidth={1} fill="none" />
-          <Circle cx="100" cy="100" r="48.6" stroke={light} strokeOpacity={0.8} strokeWidth={0.8} fill="none" />
-          {STUDS.map((deg) => {
-            const [x, y] = at(deg, 52.5)
-            return <Circle key={deg} cx={x} cy={y} r={1.8} fill={light} stroke={dark} strokeWidth={0.7} />
-          })}
-          {/* 위 장식 */}
+          <Circle cx="100" cy="100" r="54" stroke={mid} strokeWidth={6} fill="none" />
+          <Circle cx="100" cy="100" r="57.5" stroke={dark} strokeOpacity={0.35} strokeWidth={0.8} fill="none" />
+          <Circle cx="100" cy="100" r="50.2" stroke={light} strokeWidth={1.2} fill="none" />
           {rank === 1 ? (
-            <G>
-              <Path d="M70 47 C72 36 78 30 84 34 L88 22 L95 32 L100 12 L105 32 L112 22 L116 34 C122 30 128 36 130 47 C118 42 82 42 70 47Z" fill={`url(#${id}-v)`} stroke={dark} strokeWidth={1.3} strokeLinejoin="round" />
-              <Path d="M76 44 C88 40 112 40 124 44" stroke={light} strokeWidth={1} fill="none" strokeOpacity={0.9} />
-              <Circle cx="88" cy="22" r="2.4" fill="#FFFFFF" stroke={dark} strokeWidth={0.8} />
-              <Circle cx="100" cy="12" r="2.8" fill="#FFFFFF" stroke={dark} strokeWidth={0.8} />
-              <Circle cx="112" cy="22" r="2.4" fill="#FFFFFF" stroke={dark} strokeWidth={0.8} />
-              <Gem x={100} y={36} r={8} color={gemColor} dark={dark} light={light} />
-            </G>
+            <Path d="M84 46 L82 30 L92 38 L100 26 L108 38 L118 30 L116 46 Z" fill={light} stroke={dark} strokeWidth={1.2} strokeLinejoin="round" />
           ) : rank === 2 ? (
             <G>
-              <Path d="M76 48 C82 38 90 33 100 26 C110 33 118 38 124 48 C114 44 86 44 76 48Z" fill={`url(#${id}-v)`} stroke={dark} strokeWidth={1.3} strokeLinejoin="round" />
-              <Path d="M84 44 C92 39 108 39 116 44" stroke={light} strokeWidth={0.9} fill="none" />
-              <Gem x={100} y={34} r={8.5} color={gemColor} dark={dark} light={light} />
+              <Path d="M82 47 C88 38 94 34 100 32 C106 34 112 38 118 47 C110 44 90 44 82 47 Z" fill={light} stroke={dark} strokeWidth={1.2} strokeLinejoin="round" />
+              <Circle cx="100" cy="37" r="3" fill={accent} stroke={dark} strokeWidth={0.8} />
             </G>
           ) : (
             <G>
-              {[-1, 1].map((s) => (
-                <G key={s} transform={s < 0 ? undefined : 'translate(200 0) scale(-1 1)'}>
-                  {[0, 1, 2].map((i) => (
-                    <Path key={i} d={feather(96 - i * 7, 46 + i * 1.5, 300 - i * 14, 13, 3.6)} fill={`url(#${id}-v)`} stroke={dark} strokeWidth={0.8} />
-                  ))}
-                </G>
-              ))}
-              <Gem x={100} y={42} r={7.5} color={gemColor} dark={dark} light={light} />
+              <Path d="M99 46 C92 44 86 38 86 31 C93 33 98 39 99 46 Z" fill={light} stroke={dark} strokeWidth={1.1} strokeLinejoin="round" />
+              <Path d="M101 46 C108 44 114 38 114 31 C107 33 102 39 101 46 Z" fill={light} stroke={dark} strokeWidth={1.1} strokeLinejoin="round" />
             </G>
           )}
-          {/* 아래 순위 문장: 양쪽 두루마리 + 육각 판 */}
-          <Path d="M66 154 C74 160 80 160 84 156 M134 154 C126 160 120 160 116 156" stroke={`url(#${id}-v)`} strokeWidth={3} strokeLinecap="round" fill="none" />
-          <Path d="M66 154 C74 160 80 160 84 156 M134 154 C126 160 120 160 116 156" stroke={dark} strokeWidth={0.7} strokeLinecap="round" fill="none" />
-          <Path d="M88 147 L112 147 L120 158 L112 169 L88 169 L80 158Z" fill={`url(#${id}-m)`} stroke={dark} strokeWidth={1.4} strokeLinejoin="round" />
-          <Path d="M90.5 150.5 L109.5 150.5 L115.6 158 L109.5 165.5 L90.5 165.5 L84.4 158Z" fill={dark} fillOpacity={0.8} stroke={light} strokeWidth={0.8} strokeLinejoin="round" />
-          <SvgText x="100" y="164" fontSize="16" fontFamily={font.display.fontFamily} fill={light} textAnchor="middle">
+          {rank === 1 ? <Circle cx="100" cy="40" r="2.6" fill={accent} stroke={dark} strokeWidth={0.8} /> : null}
+          <Circle cx="100" cy="156" r="11" fill={light} stroke={dark} strokeWidth={1.2} />
+          <SvgText x="100" y="161.5" fontSize="15" fontFamily={font.display.fontFamily} fill={dark} textAnchor="middle">
             {String(rank)}
           </SvgText>
         </Svg>
-        {/* 고리를 따라 도는 빛줄기 */}
-        <Animated.View style={[styles.fill, { transform: [{ rotate: turn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }]}>
-          <Svg width={big} height={big} viewBox="0 0 200 200">
-            <Circle cx="100" cy="100" r="52.5" stroke="#FFFFFF" strokeOpacity={0.85} strokeWidth={2.4} strokeDasharray="26 304" strokeLinecap="round" fill="none" />
-          </Svg>
-        </Animated.View>
-        {SPARKS.map(([x, y, r], i) => {
-          const phase = i / SPARKS.length
-          return (
-            <Animated.View key={i} style={[styles.fill, { opacity: blink.interpolate({ inputRange: [0, phase * 0.7 + 0.05, phase * 0.7 + 0.25, 1], outputRange: [0.15, 1, 0.15, 0.15] }) }]}>
-              <Svg width={big} height={big} viewBox="0 0 200 200">
-                <Path d={star(x, y, r)} fill="#FFFFFF" />
-              </Svg>
-            </Animated.View>
-          )
-        })}
       </View>
     </View>
   )

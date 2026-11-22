@@ -21,7 +21,7 @@ export default function Toast() {
         <Text style={[text.button, { color: colors.onBlue, fontSize: 14, flexShrink: 1 }]}>{shown.message}</Text>
         {shown.action ? (
           <Pressable onPress={shown.action.onPress} hitSlop={10} accessibilityRole="button" style={styles.action}>
-            <Text style={[text.button, { color: colors.tape, fontSize: 14 }]}>{shown.action.label}</Text>
+            <Text style={[text.button, { color: colors.tapeText, fontSize: 14 }]}>{shown.action.label}</Text>
           </Pressable>
         ) : null}
       </FadeUp>

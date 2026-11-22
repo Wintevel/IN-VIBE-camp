@@ -55,6 +55,6 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  map: { aspectRatio: 1 / 1.05, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: '#15181D' },
+  map: { aspectRatio: 1 / 1.05, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.panel2 },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
 })

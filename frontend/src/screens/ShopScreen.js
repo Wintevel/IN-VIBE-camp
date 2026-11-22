@@ -38,7 +38,7 @@ export default function ShopScreen({ navigation }) {
             <PointIcon size={34} />
             <View style={{ flex: 1 }}>
               <Text style={text.caption}>내 포인트</Text>
-              <CountUp value={points} style={[text.h1, { color: colors.tape }]} />
+              <CountUp value={points} style={[text.h1, { color: colors.tapeText }]} />
             </View>
           </View>
         </Appear>
@@ -51,13 +51,13 @@ export default function ShopScreen({ navigation }) {
             <Appear key={it.id} index={i}>
               <Card style={[styles.item, on && { borderColor: colors.tape }]}>
                 <View style={styles.thumb}>
-                  <GiftIcon size={24} color={can ? colors.tape : colors.disabled} />
+                  <GiftIcon size={24} color={can ? colors.tapeText : colors.disabled} />
                 </View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={text.section}>{it.name}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <PointIcon size={16} />
-                    <Text style={[text.num, { fontSize: 16, color: colors.tape }]}>{it.cost.toLocaleString()}</Text>
+                    <Text style={[text.num, { fontSize: 16, color: colors.tapeText }]}>{it.cost.toLocaleString()}</Text>
                     {!can ? <Text style={text.caption}>{(it.cost - points).toLocaleString()} 부족</Text> : null}
                   </View>
                 </View>

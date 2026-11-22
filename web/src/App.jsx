@@ -228,12 +228,12 @@ function Start({ onDone }) {
   if (!signedIn)
     return (
       <section className="tile narrow">
-        <h2>{mode === 'in' ? '로그인' : '가입'}</h2>
+        <h2>{mode === 'in' ? '로그인' : '회원 가입'}</h2>
         <p className="sub">업체 계정 하나에 업체 하나가 연결됩니다.</p>
         <div className="seg" role="radiogroup" aria-label="로그인 또는 가입">
           {[
             ['in', '로그인'],
-            ['up', '가입'],
+            ['up', '회원 가입'],
           ].map(([k, label]) => (
             <label key={k} className={mode === k ? 'on' : ''}>
               <input type="radio" name="mode" checked={mode === k} onChange={() => setMode(k)} />

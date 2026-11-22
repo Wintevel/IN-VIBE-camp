@@ -23,7 +23,7 @@ export default function NoticesScreen({ navigation }) {
         {app.notices.map((n) => (
           <Card key={n.id} style={{ gap: 12 }}>
             <View>
-              {ROLE[n.role] ? <Text style={[text.caption, { color: colors.tape, marginBottom: 2 }]}>{ROLE[n.role]}</Text> : null}
+              {ROLE[n.role] ? <Text style={[text.caption, { color: colors.tapeText, marginBottom: 2 }]}>{ROLE[n.role]}</Text> : null}
               <Text style={text.cardTitle}>{n.title}</Text>
               <Text style={[text.small, { marginTop: 2 }]}>{n.solver} 님이 해결했다고 올렸어요</Text>
             </View>
@@ -32,7 +32,7 @@ export default function NoticesScreen({ navigation }) {
                 <View key={label} style={styles.photo}>
                   {photoUrl(path) ? <Image source={{ uri: photoUrl(path) }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={`${label} 사진`} /> : null}
                   <View style={styles.tag}>
-                    <Text style={[text.chip, { color: colors.fg }]}>{label}</Text>
+                    <Text style={[text.chip, { color: colors.onBlue }]}>{label}</Text>
                   </View>
                 </View>
               ))}

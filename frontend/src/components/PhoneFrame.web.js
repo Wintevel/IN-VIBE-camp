@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 import { FrameContext } from '../lib/frame'
-import { colors, text } from '../theme'
+import { colors, text, theme } from '../theme'
 import Logo from './Logo'
 
 // 데스크톱(노트북) 브라우저에서 열어도 폰 화면처럼 보이게, 가운데에 폰 크기 틀을 둡니다.
@@ -45,6 +45,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.line,
-    boxShadow: '0 28px 80px rgba(0,0,0,0.6), 0 0 0 8px #15171c, 0 0 0 9px #2a2f38',
+    boxShadow: theme.scheme === 'light' ? '0 24px 60px rgba(0,0,0,0.16), 0 0 0 8px #15171c, 0 0 0 9px #2a2f38' : '0 28px 80px rgba(0,0,0,0.6), 0 0 0 8px #15171c, 0 0 0 9px #2a2f38',
   },
 })

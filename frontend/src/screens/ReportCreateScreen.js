@@ -77,11 +77,6 @@ export default function ReportCreateScreen({ navigation, route }) {
         {shot ? <Image source={{ uri: shot.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <Text style={[text.chip, { color: colors.sub }]}>사진 찍기 (앱 카메라만 가능)</Text>}
       </Pressable>
       {shot ? <Text style={text.caption}>촬영한 위치가 제보 위치로 기록돼요</Text> : null}
-      {!crew ? (
-        <Text onPress={() => navigation.replace('QuickClean')} accessibilityRole="button" style={[text.caption, { color: colors.green }]}>
-          직접 치웠다면 "바로 치웠어요"로 기록 →
-        </Text>
-      ) : null}
 
       <Text style={text.section}>제목</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="예) 후문 골목에 꽁초가 가득해요" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} />

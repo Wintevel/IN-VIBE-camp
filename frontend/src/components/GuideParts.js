@@ -29,7 +29,7 @@ export function Glyph({ name, size = 18 }) {
     case 'me':
       return <TabIcon name="me" color={colors.blue} size={size} />
     case 'clock':
-      return <LineIcon name="clock" size={size} color={colors.tape} />
+      return <LineIcon name="clock" size={size} color={colors.tapeText} />
     case 'check':
       return <LineIcon name="check" size={size} color={colors.green} />
     case 'no':

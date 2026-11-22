@@ -23,7 +23,7 @@ import {
   titleText,
 } from "../lib/achievements";
 import { useApp } from "../state/AppState";
-import { colors, font, radius, text } from "../theme";
+import { colors, font, radius, text, readable } from "../theme";
 import Dial from "../components/Dial";
 
 const day = (t) => {
@@ -88,11 +88,11 @@ export default function MeScreen({ navigation }) {
           ) : null}
         </View>
         <View style={{ flex: 1, alignSelf: "flex-start", paddingTop: 8 }}>
-          <Text style={[text.cardTitle, { fontSize: 20 }, p.name_color && { color: p.name_color }]}>
+          <Text style={[text.cardTitle, { fontSize: 20 }, p.name_color && { color: readable(p.name_color) }]}>
             {p.nickname}
           </Text>
           {title ? (
-            <Text style={[text.chip, { color: colors.tape, marginTop: 2 }]}>
+            <Text style={[text.chip, { color: colors.tapeText, marginTop: 2 }]}>
               {title}
             </Text>
           ) : null}
@@ -173,7 +173,7 @@ export default function MeScreen({ navigation }) {
               value={p.points || 0}
               style={[
                 text.point,
-                { fontSize: 26, lineHeight: 30, color: colors.tape },
+                { fontSize: 26, lineHeight: 30, color: colors.tapeText },
               ]}
             />
           </View>

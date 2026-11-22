@@ -89,7 +89,7 @@ export function CrewPointIcon({ size = 18 }) {
   )
 }
 
-export function GiftIcon({ size = 18, color = colors.tape }) {
+export function GiftIcon({ size = 18, color = colors.tapeText }) {
   const p = { ...base, stroke: color }
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -156,7 +156,7 @@ export function LockIcon({ size = 12, color = colors.fg }) {
 }
 
 // 보관함: 배낭
-export function BackpackIcon({ size = 20, color = colors.tape }) {
+export function BackpackIcon({ size = 20, color = colors.tapeText }) {
   const p = { ...base, stroke: color }
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -199,6 +199,9 @@ export function LineIcon({ name, size = 18, color = colors.fg }) {
       )}
       {name === 'x' && <Path d="M6 6l12 12M18 6 6 18" {...p} />}
       {name === 'edit' && <Path d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4" {...p} />}
+      {name === 'refresh' && <Path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4" {...p} />}
+      {name === 'plus' && <Path d="M12 5v14M5 12h14" {...p} />}
+      {name === 'chev' && <Path d="m9 6 6 6-6 6" {...p} />}
     </Svg>
   )
 }

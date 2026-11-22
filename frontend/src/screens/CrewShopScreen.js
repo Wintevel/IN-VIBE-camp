@@ -12,7 +12,7 @@ import Toast from '../components/Toast'
 import { titleText } from '../lib/achievements'
 import { CREW_TIERS } from '../lib/cosmetics'
 import { useApp } from '../state/AppState'
-import { colors, radius, text } from '../theme'
+import { colors, radius, text, readable } from '../theme'
 
 // 크루 상점: 크루 포인트(크루 경험치를 얻은 만큼 쌓이는 개인 재화)로 꾸미기를 삽니다.
 // 크루 레벨이 오를수록 살 수 있는 단계가 열립니다. 지금은 전부 치장용입니다.
@@ -84,8 +84,8 @@ export default function CrewShopScreen({ navigation }) {
           <Card style={styles.preview}>
             <Animated.View style={{ alignItems: 'center', transform: [{ scale: pop }] }}>
               <AvatarFrame frame={frame} size={84} letter={letter} uri={p.avatar_url} />
-              <Text style={[text.cardTitle, { fontSize: 20, marginTop: 14 }, nameColor && { color: nameColor }]}>{p.nickname}</Text>
-              {title ? <Text style={[text.chip, { color: colors.tape, marginTop: 4 }]}>{title}</Text> : null}
+              <Text style={[text.cardTitle, { fontSize: 20, marginTop: 14 }, nameColor && { color: readable(nameColor) }]}>{p.nickname}</Text>
+              {title ? <Text style={[text.chip, { color: colors.tapeText, marginTop: 4 }]}>{title}</Text> : null}
             </Animated.View>
             <View style={styles.info}>
               <Text style={text.section}>{sel.name}</Text>

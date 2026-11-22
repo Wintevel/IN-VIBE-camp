@@ -60,7 +60,7 @@ export default function CollectionScreen({ navigation }) {
                 <Text style={text.caption}>보상</Text>
                 <View style={styles.reward}>
                   <PointIcon size={14} />
-                  <Text style={[text.chip, { color: colors.tape }]}>{a.points}</Text>
+                  <Text style={[text.chip, { color: colors.tapeText }]}>{a.points}</Text>
                 </View>
                 <View style={styles.reward}>
                   <XpIcon size={14} />

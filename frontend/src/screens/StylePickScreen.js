@@ -12,7 +12,7 @@ import Toast from '../components/Toast'
 import { ACHIEVEMENTS, statsOf, titleOptions, titleText } from '../lib/achievements'
 import { Points } from '../components/GuideParts'
 import { useApp } from '../state/AppState'
-import { colors, radius, text } from '../theme'
+import { colors, radius, text, readable } from '../theme'
 
 const NAMES = { photo: '프로필 사진', frame: '테두리', title: '칭호', name: '닉네임 색' }
 
@@ -130,8 +130,8 @@ export default function StylePickScreen({ navigation, route }) {
         <Card style={styles.preview}>
           <Animated.View style={{ alignItems: 'center', transform: [{ scale: pop }] }}>
             <AvatarFrame frame={frame} size={96} letter={letter} uri={uri} />
-            <Text style={[text.cardTitle, { fontSize: 20, marginTop: 14 }, nameColor && { color: nameColor }]}>{p.nickname}</Text>
-            {title ? <Text style={[text.chip, { color: colors.tape, marginTop: 4 }]}>{title}</Text> : null}
+            <Text style={[text.cardTitle, { fontSize: 20, marginTop: 14 }, nameColor && { color: readable(nameColor) }]}>{p.nickname}</Text>
+            {title ? <Text style={[text.chip, { color: colors.tapeText, marginTop: 4 }]}>{title}</Text> : null}
           </Animated.View>
           <View style={styles.info}>
             <Text style={text.section}>{sel.label}</Text>

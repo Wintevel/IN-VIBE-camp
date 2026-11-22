@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { DarkTheme, NavigationContainer } from '@react-navigation/native'
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { View } from 'react-native'
 import { TabIcon } from '../components/Icons'
@@ -7,7 +7,7 @@ import TabBar from '../components/TabBar'
 import { Pop, reduced } from '../components/Motion'
 import { navigationRef } from './ref'
 import { useApp } from '../state/AppState'
-import { colors } from '../theme'
+import { colors, theme as scheme } from '../theme'
 import BoardScreen from '../screens/BoardScreen'
 import CaptureScreen from '../screens/CaptureScreen'
 import CollectionScreen from '../screens/CollectionScreen'
@@ -31,7 +31,8 @@ import TutorialScreen from '../screens/TutorialScreen'
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
 
-const theme = { ...DarkTheme, colors: { ...DarkTheme.colors, background: colors.ink, card: colors.ink, border: colors.line, text: colors.fg, primary: colors.blue } }
+const base = scheme.scheme === 'light' ? DefaultTheme : DarkTheme
+const theme = { ...base, colors: { ...base.colors, background: colors.ink, card: colors.ink, border: colors.line, text: colors.fg, primary: colors.blue } }
 
 const TABS = [
   ['Board', BoardScreen, '의뢰판', 'board'],
