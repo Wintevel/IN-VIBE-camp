@@ -36,9 +36,14 @@ export async function signInEmail(email, password) {
   return data.session
 }
 // 메일 확인을 켜 둔 서버에서는 session 이 없이 돌아옵니다(메일의 링크를 누른 뒤 로그인).
-export async function signUpEmail(email, password) {
-  const { data, error } = await supabase.auth.signUp({ email, password })
+// nickname: 아이디로 가입하면 아이디를 첫 닉네임으로 씁니다(2026-11-23). 가입 정보(user_metadata)에도 남겨 서버가 쓸 수 있게 합니다.
+export async function signUpEmail(email, password, nickname) {
+  const { data, error } = await supabase.auth.signUp({ email, password, ...(nickname ? { options: { data: { nickname } } } : {}) })
   check(error)
+  if (nickname && data.session) {
+    // 닉네임 저장이 실패해도 가입은 된 것이므로 기본 닉네임으로 둡니다.
+    await supabase.from('profiles').update({ nickname }).eq('id', data.session.user.id)
+  }
   return data.session
 }
 export const signOut = () => supabase.auth.signOut()

@@ -255,7 +255,7 @@ const { data, error } = await supabase.rpc('quick_clean', {
 
 ### 로그인·가입 동의 (2-12, 2-13)
 - 로그인 수단은 카카오·구글·이메일(Supabase Auth). 제공자 설정(클라이언트 ID 등)은 백엔드 담당이 대시보드에서 합니다.
-- **아이디 로그인**(2026-11-23 추가): 앱이 아이디를 `아이디@id.jipgepyo.example.com` 이메일로 바꿔 같은 이메일·비밀번호 로그인(`signUp`·`signInWithPassword`)으로 보냅니다. 아이디는 영문 소문자·숫자·`_` 4~20자. 이 주소로는 메일이 가지 않으므로 Auth 의 Confirm email 을 꺼야 아이디 가입이 됩니다(`docs/backend-requests.md` 10-2). 운영 웹에서는 이 도메인의 계정을 아이디 계정으로 보면 됩니다.
+- **아이디 로그인**(2026-11-23 추가): 앱이 아이디를 `아이디@id.jipgepyo.example.com` 이메일로 바꿔 같은 이메일·비밀번호 로그인(`signUp`·`signInWithPassword`)으로 보냅니다. 아이디는 영문 소문자·숫자·`_` 4~20자. 이 주소로는 메일이 가지 않으므로 Auth 의 Confirm email 을 꺼야 아이디 가입이 됩니다(`docs/backend-requests.md` 10-2). 운영 웹에서는 이 도메인의 계정을 아이디 계정으로 보면 됩니다. 아이디로 가입하면 첫 닉네임은 아이디입니다(가입 직후 `profiles.nickname` 갱신, `user_metadata.nickname` 에도 저장).
 - **익명(둘러보기) 계정**은 의뢰판·지도·랭킹 읽기만 됩니다. 제보·하트·상태 버튼·신고·수락·인증·크루 가입·크루 의뢰·상점·꾸미기 구매는 `LOGIN_REQUIRED`.
 - **필수 동의**(만 14세 이상·이용약관·개인정보·위치정보)가 서버에 없는 계정도 같은 기능이 `CONSENT_REQUIRED`.
 - 두 검사는 `app_settings.block_anonymous_writes`, `require_consent` 로 끌 수 있습니다(서버 설정, 백엔드 담당).
