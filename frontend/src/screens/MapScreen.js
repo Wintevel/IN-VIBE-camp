@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { Card } from '../components/ListRows'
 import MapView from '../components/MapView'
 import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
@@ -8,53 +7,38 @@ import { refresher } from '../components/States'
 import { useApp } from '../state/AppState'
 import { colors, text } from '../theme'
 
-const COLOR = { open: colors.tape, in_progress: colors.blue, completed: colors.green }
-const LEGEND = [
-  ['의뢰 있음', colors.tape],
-  ['진행 중', colors.blue],
-  ['치운 곳', colors.green],
+// 동네 지도: 아직 안 끝난 주변 의뢰만 찍습니다(노랑 = 열림, 파랑 = 진행 중). 핀을 누르면 의뢰 시트가 열립니다.
+// 끝난 의뢰·바로 치운 곳은 찍지 않습니다(2026-11-23 결정).
+const KINDS = [
+  ['open', '의뢰', colors.tape],
+  ['in_progress', '진행 중', colors.blue],
 ]
 
-// 동네 지도: 서버에서 받은 주변 의뢰를 위치에 찍습니다. 핀을 누르면 의뢰 시트가 열립니다.
 export default function MapScreen() {
   const app = useApp()
-  // "바로 치웠어요" 기록은 의뢰가 아니라서 내 정보의 치운 곳 목록(cleaned)에서 가져와 같은 초록 핀으로 찍습니다.
-  const selfs = useMemo(() => (app.profile?.cleaned || []).filter((c) => c.self && c.lat && c.lng), [app.profile])
-  const markers = useMemo(
-    () => [...app.reports.filter((r) => r.lat && r.lng).map((r) => ({ id: r.id, lat: r.lat, lng: r.lng, color: COLOR[r.status] || colors.tape })), ...selfs.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng, color: colors.green }))],
-    [app.reports, selfs],
-  )
-  const count = (s) => app.reports.filter((r) => r.status === s).length + (s === 'completed' ? selfs.length : 0)
-  const select = (id) => (String(id).startsWith('self-') ? null : app.openSheet(id))
+  const live = useMemo(() => app.reports.filter((r) => r.lat && r.lng && (r.status === 'open' || r.status === 'in_progress')), [app.reports])
+  const markers = useMemo(() => live.map((r) => ({ id: r.id, lat: r.lat, lng: r.lng, color: r.status === 'in_progress' ? colors.blue : colors.tape })), [live])
   return (
     <Screen refreshControl={refresher(app)}>
       <ScreenHeader title="동네 지도" />
-      <View style={styles.map}>{app.coords ? <MapView center={app.coords} me={app.located ? app.coords : null} markers={markers} onSelect={select} /> : null}</View>
       <View style={styles.legend}>
-        {LEGEND.map(([label, color]) => (
-          <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color }} />
-            <Text style={text.caption}>{label}</Text>
+        {KINDS.map(([k, label, color]) => (
+          <View key={k} style={styles.item}>
+            <View style={[styles.dot, { backgroundColor: color }]} />
+            <Text style={text.small}>
+              {label} <Text style={{ color: colors.fg }}>{live.filter((r) => r.status === k).length}</Text>
+            </Text>
           </View>
         ))}
       </View>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        {[
-          [count('open'), '열린 의뢰'],
-          [count('in_progress'), '진행 중'],
-          [count('completed'), '치운 곳'],
-        ].map(([num, label]) => (
-          <Card key={label} style={{ flex: 1, padding: 12, borderRadius: 14 }}>
-            <Text style={text.point}>{num}</Text>
-            <Text style={[text.caption, { marginTop: 4 }]}>{label}</Text>
-          </Card>
-        ))}
-      </View>
+      <View style={styles.map}>{app.coords ? <MapView center={app.coords} me={app.located ? app.coords : null} markers={markers} onSelect={app.openSheet} /> : null}</View>
     </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  map: { aspectRatio: 1 / 1.05, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.panel2 },
-  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+  legend: { flexDirection: 'row', gap: 16, marginTop: -6 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  map: { aspectRatio: 1 / 1.55, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.panel2 },
 })
