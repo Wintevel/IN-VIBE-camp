@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
 import AvatarFrame from "../components/AvatarFrame";
-import DailyLimits, { ResetIn } from "../components/DailyLimits";
 import InstallApp from "../components/InstallApp";
 import {
   BackpackIcon,
@@ -14,7 +13,6 @@ import {
 } from "../components/Icons";
 import { Appear, Bar, CountUp, PressScale } from "../components/Motion";
 import { Card, List, SectionTitle } from "../components/ListRows";
-import ReportCard from "../components/ReportCard";
 import Screen from "../components/Screen";
 import { Empty, Loading, refresher } from "../components/States";
 import {
@@ -25,11 +23,6 @@ import {
 import { useApp } from "../state/AppState";
 import { colors, font, radius, text, readable } from "../theme";
 import Dial from "../components/Dial";
-
-const day = (t) => {
-  const d = new Date(t);
-  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
-};
 
 export default function MeScreen({ navigation }) {
   const app = useApp();
@@ -52,9 +45,6 @@ export default function MeScreen({ navigation }) {
   const progress01 = p.xp_for_next_level
     ? Math.min(1, (p.xp_in_level || 0) / p.xp_for_next_level)
     : 0;
-  const mine = app.reports.filter(
-    (r) => r.i_am_participating && r.status !== "completed",
-  );
   const s = statsOf(p, app.myCrew);
   const feats = progress(s, p.feats_claimed || []);
   const ready = feats.filter((a) => a.done && !a.claimed).length;
@@ -63,7 +53,6 @@ export default function MeScreen({ navigation }) {
   const streakLen =
     (p.streak_weeks || 0) + (weekly[weekly.length - 1] ? 0 : 1);
   const vault = (p.coupons || []).length + (p.rewards || []).length;
-  const waiting = app.notices.filter((n) => !n.answer && (!n.claim_status || n.claim_status === 'submitted')).length;
   const title = titleText(p, app.myCrew);
   return (
     <Screen refreshControl={refresher(app)}>
@@ -246,61 +235,8 @@ export default function MeScreen({ navigation }) {
         <WeekLine weekly={weekly} streak={streakLen} />
       </Card>
 
-      <View style={styles.row}>
-        <SectionTitle>오늘 남은 횟수</SectionTitle>
-        <ResetIn />
-      </View>
-      <DailyLimits profile={p} />
-
-      {p.cleaned?.length > 0 ? (
-        <>
-          <SectionTitle>내가 치운 곳</SectionTitle>
-          <List
-            rows={p.cleaned
-              .slice(0, 10)
-              .map((c) => ({
-                label: c.title,
-                value: [c.self ? "바로 치움" : null, c.place_label, day(c.at)].filter(Boolean).join(" · "),
-                key: `${c.id}-${c.at}`,
-              }))}
-          />
-        </>
-      ) : null}
-
-      <SectionTitle>진행 중인 내 의뢰</SectionTitle>
-      <View style={{ gap: 14 }}>
-        {mine.map((r) => (
-          <ReportCard
-            key={r.id}
-            report={r}
-            onPress={() => app.openSheet(r.id)}
-            onHeart={() => app.toggleHeart(r.id)}
-          />
-        ))}
-        {mine.length === 0 ? (
-          <List
-            rows={[
-              {
-                label: "수락한 의뢰가 없어요",
-                value: "의뢰판에서 골라 보세요",
-                onPress: () => navigation.navigate("Board"),
-              },
-            ]}
-          />
-        ) : null}
-      </View>
-
       <List
         rows={[
-          ...(app.social
-            ? [
-                {
-                  label: "해결 확인",
-                  value: `${waiting}건 대기`,
-                  onPress: () => navigation.navigate("Notices"),
-                },
-              ]
-            : []),
           {
             label: "도움말",
             icon: <HelpIcon />,
