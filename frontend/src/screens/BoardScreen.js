@@ -46,7 +46,7 @@ export default function BoardScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen refreshControl={refresher(app)} bottomPad={110}>
-        <ScreenHeader title="의뢰판" sub={app.located ? '내 위치 · 반경 1.5km' : '위치를 못 받아 인하대 주변을 보여줘요 · 반경 1.5km'} action="새로고침" onAction={() => app.refresh({ relocate: true })} />
+        <ScreenHeader title="의뢰판" sub={app.located ? '내 위치 · 반경 1.5km' : '위치 없음 · 인하대 주변 1.5km'} action="새로고침" onAction={() => app.refresh({ relocate: true })} />
         <DailyLimits profile={app.profile} />
         {waiting > 0 ? (
           <PressScale onPress={() => navigation.navigate('Notices')} accessibilityRole="button" style={styles.notice}>
@@ -109,7 +109,6 @@ export default function BoardScreen({ navigation }) {
           </View>
           <View style={{ flex: 1 }}>
           <PressScale onPress={() => navigation.navigate('ReportCreate')} accessibilityRole="button" accessibilityLabel="주민 제보 올리기" surface="raised" style={styles.report} to={0.95}>
-            <View style={styles.reportSlash} />
             <CameraIcon size={20} color={colors.onBlue} />
             <Text style={[text.button, { fontSize: 16, color: colors.onBlue }]}>제보하기</Text>
           </PressScale>
@@ -154,5 +153,4 @@ const styles = StyleSheet.create({
   quick: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 8, paddingVertical: 8, borderRadius: 18 },
   quickIcon: { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
   report: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 18, backgroundColor: colors.blue, overflow: 'hidden' },
-  reportSlash: { position: 'absolute', right: 18, top: -20, bottom: -20, width: 18, backgroundColor: 'rgba(255,255,255,0.12)', transform: [{ skewX: '-18deg' }] },
 })

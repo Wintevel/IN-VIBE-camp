@@ -30,7 +30,7 @@ export default function CrewScreen({ navigation }) {
   if (!mine) {
     return (
       <Screen refreshControl={refresher(app)}>
-        <ScreenHeader title="크루" sub="함께 줍는 크루를 만들거나 가입해요" />
+        <ScreenHeader title="크루" />
         <Appear>
           <CreateCrew onCreate={app.createCrew} level={app.profile?.level || 1} />
         </Appear>
@@ -105,7 +105,7 @@ export default function CrewScreen({ navigation }) {
               <View style={styles.questHead}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={text.section}>크루 의뢰는 2명부터</Text>
-                  <Text style={text.caption}>{'인원을 모아 시작해보세요!\n해결하면 포인트와 기여도를 올릴 수 있어요!'}</Text>
+                  <Text style={text.caption}>인원이 모이면 시작돼요</Text>
                 </View>
                 <Button compact onPress={() => navigation.navigate('ReportCreate', { crew: true })}>
                   올리기
@@ -179,7 +179,7 @@ function SeasonCard({ season, myRank }) {
   )
 }
 
-const LocalNote = ({ app }) => (app.localMode ? <Text style={text.caption}>지금은 서버가 없어 이 기기에서 만든 크루와 활동만 보여요. 서버가 연결되면 다른 사람의 크루와 순위를 겨뤄요.</Text> : null)
+const LocalNote = ({ app }) => (app.localMode ? <Text style={text.caption}>시연 모드 · 이 기기에서 만든 크루만 보여요</Text> : null)
 
 const hhmm = (at) => {
   const d = new Date(at)
@@ -342,9 +342,9 @@ function CreateCrew({ onCreate, level }) {
       <Text style={text.section}>크루 만들기</Text>
       <TextInput value={name} onChangeText={setName} placeholder="크루 이름" placeholderTextColor={colors.disabled} style={styles.input} maxLength={16} accessibilityLabel="크루 이름" />
       <TextInput value={area} onChangeText={setArea} placeholder="활동 동네 (선택)" placeholderTextColor={colors.disabled} style={styles.input} maxLength={16} accessibilityLabel="활동 동네" />
-      {locked ? <Text style={text.caption}>크루는 레벨 3부터 만들 수 있어요. 지금은 Lv.{level}이에요. 다른 크루에 들어가는 건 바로 할 수 있어요.</Text> : null}
+      {locked ? <Text style={text.caption}>지금 Lv.{level} · 다른 크루 가입은 바로 가능</Text> : null}
       <Button style={{ flex: 0 }} disabled={locked || busy || name.trim().length < 2} onPress={submit}>
-        {busy ? '만드는 중…' : locked ? '레벨 3부터 만들 수 있어요' : '크루 만들기'}
+        {busy ? '만드는 중…' : locked ? 'Lv.3 달성 시 해제' : '크루 만들기'}
       </Button>
     </Card>
   )

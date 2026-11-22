@@ -78,7 +78,7 @@ export default function CrewShopScreen({ navigation }) {
             </View>
           </View>
         </Appear>
-        <Text style={text.caption}>크루 경험치를 얻은 만큼 크루 포인트가 쌓여요. 크루 레벨이 오를수록 살 수 있는 상품이 늘어나요.</Text>
+        <Text style={text.caption}>크루 경험치 1 = 크루 포인트 1</Text>
 
         {sel ? (
           <Card style={styles.preview}>
@@ -139,7 +139,7 @@ export default function CrewShopScreen({ navigation }) {
             </Appear>
           )
         })}
-        {!shop.ready ? <Text style={text.caption}>서버에 크루 상점이 열리면 살 수 있어요. 지금은 둘러보기만 돼요.</Text> : null}
+        {!shop.ready ? <Text style={text.caption}>준비 중 · 지금은 둘러보기만 가능</Text> : null}
       </Screen>
       <View style={styles.bar}>
         <Button type="ghost" onPress={() => navigation.goBack()}>

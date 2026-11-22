@@ -25,7 +25,7 @@ export default function StyleScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="프로필 꾸미기" sub="바꿀 항목을 눌러 주세요" action="닫기" onAction={() => navigation.goBack()} />
+        <ScreenHeader title="프로필 꾸미기" action="닫기" onAction={() => navigation.goBack()} />
         <Card style={styles.preview}>
           <AvatarFrame frame={p.frame} size={84} letter={letter} uri={p.avatar_url} />
           <View style={{ flex: 1, gap: 4 }}>

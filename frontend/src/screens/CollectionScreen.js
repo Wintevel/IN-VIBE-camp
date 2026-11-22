@@ -28,7 +28,7 @@ export default function CollectionScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="도전과제" sub={`${feats.filter((a) => a.done).length}/${feats.length} 달성 · 달성한 이름은 칭호로 쓸 수 있어요`} action="닫기" onAction={() => navigation.goBack()} />
+        <ScreenHeader title="도전과제" sub={`${feats.filter((a) => a.done).length}/${feats.length} 달성`} action="닫기" onAction={() => navigation.goBack()} />
         {sorted.map((a, i) => (
           <Appear key={a.id} index={i}>
             <Card style={[styles.feat, a.done && !a.claimed && { borderColor: colors.purple, backgroundColor: 'rgba(169,124,255,0.10)' }]}>
@@ -75,7 +75,7 @@ export default function CollectionScreen({ navigation }) {
             </Card>
           </Appear>
         ))}
-        {app.localMode ? <Text style={text.caption}>조건과 보상 숫자는 예시예요.</Text> : null}
+        {app.localMode ? <Text style={text.caption}>시연 모드 · 조건과 보상 값은 임시</Text> : null}
       </Screen>
       <Toast />
     </View>

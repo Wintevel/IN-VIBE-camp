@@ -23,8 +23,8 @@ export default function PhoneFrame({ children }) {
           <View style={styles.aside} pointerEvents="none">
             <Logo size={56} />
             <Text style={[text.h1, { fontSize: 34, lineHeight: 42 }]}>집게표</Text>
-            <Text style={[text.regular, { color: colors.sub }]}>동네의 치울 곳을 이웃이 알리고, 근처 사람이 해결하는 환경 미화 의뢰 앱이에요.</Text>
-            <Text style={[text.small, { marginTop: 4 }]}>폰 화면 크기로 보여 드려요. 폰에서 열면 화면 전체로 쓸 수 있고, 홈 화면에 설치할 수도 있어요.</Text>
+            <Text style={[text.regular, { color: colors.sub }]}>동네 환경 미화 의뢰판</Text>
+            <Text style={[text.small, { marginTop: 4 }]}>폰에서 열면 전체 화면으로 쓰고, 홈 화면에 설치할 수 있어요.</Text>
           </View>
         ) : null}
         <View style={[styles.phone, { width: FRAME_W, height: h }]}>
@@ -36,7 +36,7 @@ export default function PhoneFrame({ children }) {
 }
 
 const styles = StyleSheet.create({
-  stage: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.page, backgroundImage: 'radial-gradient(ellipse at 50% 45%, rgba(49,130,246,0.16), rgba(10,11,13,0) 62%)', overflow: 'hidden' },
+  stage: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.page, overflow: 'hidden' },
   row: { alignItems: 'center', justifyContent: 'center' },
   aside: { position: 'absolute', right: FRAME_W + 80, top: 0, bottom: 0, width: 300, justifyContent: 'center', gap: 14 },
   phone: {

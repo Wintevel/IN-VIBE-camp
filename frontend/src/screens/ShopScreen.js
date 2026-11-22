@@ -31,7 +31,7 @@ export default function ShopScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="포인트 상점" sub="모은 포인트로 상품을 바꿔요" action="닫기" onAction={() => navigation.goBack()} />
+        <ScreenHeader title="포인트 상점" action="닫기" onAction={() => navigation.goBack()} />
         <Appear from="left">
           <View style={styles.wallet}>
             <View style={styles.slash} />
@@ -76,7 +76,7 @@ export default function ShopScreen({ navigation }) {
             <ListRow label="보관함" value={`쿠폰·제휴 보상 ${coupons.length + (app.profile?.rewards || []).length}개`} onPress={() => navigation.navigate('Vault')} />
           </View>
         </Card>
-        {app.localMode ? <Text style={text.caption}>상품과 가격은 예시예요. 실제 쿠폰 발급은 아직 연결되어 있지 않아요.</Text> : null}
+        {app.localMode ? <Text style={text.caption}>시연 모드 · 쿠폰은 실제로 발급되지 않아요</Text> : null}
       </Screen>
       <Toast />
     </View>

@@ -220,7 +220,7 @@ export function AppStateProvider({ children }) {
           const d = await api.socialApi.answer(id, answer)
           await loadProfile()
           // 내 답으로 결론이 났으면 결과를, 아니면 고맙다는 말만 보여 줍니다.
-          showToast(d?.claim_status === 'approved' ? '확인 완료 · 해결한 이웃에게 보상이 지급됐어요' : d?.claim_status === 'rejected' ? '아직이라는 의견이 많아 의뢰가 다시 열렸어요' : '답해 주셔서 고마워요')
+          showToast(d?.claim_status === 'approved' ? '확인 완료 · 해결한 이웃에게 보상이 지급됐어요' : d?.claim_status === 'rejected' ? '아직이라는 의견이 많아 의뢰가 다시 열렸어요' : '답했어요')
         }),
       flag: (id, reason) =>
         run(async () => {
@@ -289,7 +289,7 @@ export function AppStateProvider({ children }) {
         run(async () => {
           const d = await api.acceptReport(id)
           patch(id, { i_am_participating: true, status: d.status, current_members: d.current_members, required_members: d.required_members, deadline_at: d.deadline_at })
-          showToast(d.status === 'in_progress' ? '의뢰를 수락했어요. 현장에서 사진을 찍어 주세요' : '참여했어요. 인원이 모이면 시작돼요')
+          showToast(d.status === 'in_progress' ? '수락했어요. 현장에서 사진을 찍어 주세요' : '참여했어요. 인원이 모이면 시작돼요')
           return d
         }),
       cancel: (id) =>

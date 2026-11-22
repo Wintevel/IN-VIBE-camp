@@ -24,7 +24,7 @@ export const GUIDE = [
     key: 'heart',
     icon: 'heart',
     title: '급한 곳엔 하트',
-    lead: '빨리 치워야 할 제보에 힘을 실어 주세요.',
+    lead: '하트가 모인 제보일수록 보상이 커져요.',
     facts: [
       ['heart', '10개', '하루 하트'],
       ['point', '10P', '치우면 기본'],

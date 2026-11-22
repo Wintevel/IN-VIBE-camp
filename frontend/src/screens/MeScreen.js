@@ -435,7 +435,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 18,
-    borderColor: colors.blue,
     overflow: "hidden",
   },
   chip: {
@@ -490,7 +489,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: radius.pill,
   },
-  featWallet: { borderColor: colors.purple, paddingHorizontal: 14, gap: 10 },
+  featWallet: { borderColor: colors.line, paddingHorizontal: 14, gap: 10 },
   vault: {
     width: 84,
     flex: 1,
