@@ -1,7 +1,7 @@
 // 운영 웹(/dev): 제휴 의뢰 검토, 인증 검토, 신고·숨김 제보, 계정(포인트·정지)
 import { useCallback, useEffect, useState } from 'react'
 import { dev, CATEGORY, FLAG_REASON, ACTION_LABEL } from './devApi.js'
-import { won, num, day, today, when, useRoute, Icon, Field, Shots, Decide, Stat, mapLink } from './ui.jsx'
+import { won, num, day, today, when, useRoute, Icon, Field, Shots, Decide, Stats, mapLink } from './ui.jsx'
 
 const TABS = [
   ['home', '요약'],
@@ -52,8 +52,9 @@ export default function Dev() {
         <div className="top-in">
           <a className="brand" href="#/home">
             <img src="./icon.png" alt="" />
-            <span>집게표</span>
-            <em className="dev">운영</em>
+            <span>
+              집게표 <em>운영</em>
+            </span>
           </a>
           {ok ? (
             <nav aria-label="메뉴">
@@ -69,11 +70,11 @@ export default function Dev() {
               <b>{me.name || '운영진'}</b>
               {dev.remote ? (
                 <button className="link" onClick={async () => (await dev.leave(), setMe({ signedIn: false }))}>
-                  나가기
+                  로그아웃
                 </button>
               ) : (
                 <button className="link" onClick={() => (dev.reset(), setTick((t) => t + 1))}>
-                  시연 데이터 초기화
+                  시연 데이터 되돌리기
                 </button>
               )}
             </div>
@@ -82,7 +83,7 @@ export default function Dev() {
       </header>
       {dev.remote ? null : (
         <div className="demo" role="note">
-          시연용 운영 화면이에요. 서버에 연결되지 않아 처리 결과는 이 브라우저에만 남아요.
+          시연 화면입니다. 처리 결과는 이 브라우저에만 저장됩니다.
         </div>
       )}
 
@@ -94,12 +95,9 @@ export default function Dev() {
         ) : !me.signedIn ? (
           <Login onDone={setMe} note={me.error} />
         ) : !me.staff ? (
-          <section className="tile narrow center">
-            <span className="ico red">
-              <Icon name="shield" />
-            </span>
-            <h2>운영진 계정이 아니에요</h2>
-            <p className="sub">운영진 목록(staff_members)에 이 계정을 넣은 뒤 다시 들어와 주세요.</p>
+          <section className="tile narrow center" style={{ padding: 40 }}>
+            <h2>운영진 계정이 아닙니다.</h2>
+            <p className="sub">staff_members 에 이 계정을 추가한 뒤 다시 로그인하세요.</p>
             <button className="btn ghost small" onClick={async () => (await dev.leave(), setMe({ signedIn: false }))}>
               다른 계정으로 로그인
             </button>
@@ -116,7 +114,9 @@ export default function Dev() {
           <Overview />
         )}
       </main>
-      <footer>집게표 운영 · 처리한 일은 모두 기록에 남아요</footer>
+      <footer>
+        <div>집게표 운영 · 모든 처리는 기록에 남습니다.</div>
+      </footer>
     </div>
   )
 }
@@ -128,11 +128,8 @@ function Login({ onDone, note }) {
   const [msg, setMsg] = useState(note || null)
   return (
     <section className="tile narrow">
-      <span className="ico">
-        <Icon name="shield" />
-      </span>
       <h2>운영진 로그인</h2>
-      <p className="sub">운영진으로 등록된 계정만 들어올 수 있어요.</p>
+      <p className="sub">등록된 운영진 계정만 들어올 수 있습니다.</p>
       <form
         onSubmit={async (e) => {
           e.preventDefault()
@@ -178,56 +175,59 @@ function Overview() {
     <>
       <div className="head">
         <div>
-          <h2>운영 요약</h2>
+          <h2>{todo ? `처리할 일 ${todo}건` : '처리할 일 없음'}</h2>
           <p className="sub">{today()} 기준</p>
         </div>
       </div>
-      <section className="bento">
-        <div className="tile dark s2 r2 end">
-          <span className="k">처리할 일</span>
-          <div style={{ display: 'grid', gap: 14 }}>
-            <span className="big" style={{ fontSize: 'clamp(3rem, 6vw, 4.4rem)' }}>
-              {todo}
-              <small>건</small>
+      <div className="list">
+        {[
+          ['quests', '제휴 의뢰 검토', o.quest_review],
+          ['claims', '인증 검토', o.claim_review],
+          ['reports', '신고·숨김 제보', o.flagged],
+        ].map(([k, t, n]) => (
+          <a key={k} href={`#/${k}`}>
+            <span>{t}</span>
+            <span className="row" style={{ gap: 8 }}>
+              <span className="num" style={n ? { color: 'var(--ink)', fontWeight: 600 } : null}>
+                {n}
+              </span>
+              <span className="chev">
+                <Icon name="chev" size={16} stroke={2} />
+              </span>
             </span>
-            <div className="stack" style={{ gap: 8 }}>
-              {[
-                ['quests', '제휴 의뢰 검토', o.quest_review],
-                ['claims', '인증 검토', o.claim_review],
-                ['reports', '신고·숨김 제보', o.flagged],
-              ].map(([k, t, n]) => (
-                <a key={k} href={`#/${k}`} className="inner row" style={{ justifyContent: 'space-between' }}>
-                  <span>{t}</span>
-                  <b>{n}</b>
-                </a>
-              ))}
-            </div>
+          </a>
+        ))}
+      </div>
+      <h3 className="section-title">오늘</h3>
+      <Stats
+        items={[
+          ['올라온 인증', num(o.today_claims), '건'],
+          ['올라온 제보', num(o.today_reports), '건'],
+          ['전체 계정', num(o.users), '명'],
+          ['정지 중', num(o.banned), '명'],
+        ]}
+      />
+      <h3 className="section-title">최근 처리</h3>
+      <section className="tile" style={{ paddingTop: 12, paddingBottom: 12 }}>
+        {o.recent?.length ? (
+          <div className="log">
+            {o.recent.map((a, i) => (
+              <div key={i}>
+                <span>
+                  {ACTION_LABEL[a.action] || a.action} · <span className="mono">{a.target}</span>
+                  {a.detail?.reason ? ` · ${a.detail.reason}` : ''}
+                </span>
+                <span>
+                  {a.by || '운영진'} · {when(a.at)}
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
-        <Stat cls="s2 m1" k="오늘 올라온 인증" icon="camera" v={num(o.today_claims)} unit="건" />
-        <Stat cls="s2 m1" k="오늘 올라온 제보" icon="pin" v={num(o.today_reports)} unit="건" />
-        <Stat cls="s2 m1" k="전체 계정" icon="users" v={num(o.users)} unit="명" />
-        <Stat cls="s2 m1" k="정지 중" icon="ban" v={num(o.banned)} unit="명" />
-        <div className="tile s6">
-          <span className="k">최근 처리 기록</span>
-          {o.recent?.length ? (
-            <div className="log">
-              {o.recent.map((a, i) => (
-                <div key={i}>
-                  <span>
-                    <b>{ACTION_LABEL[a.action] || a.action}</b> · <span className="mono">{a.target}</span>
-                    {a.detail?.reason ? ` · ${a.detail.reason}` : ''}
-                  </span>
-                  <span>
-                    {a.by || '운영진'} · {when(a.at)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="d">아직 기록이 없어요.</p>
-          )}
-        </div>
+        ) : (
+          <p className="d" style={{ padding: '12px 0' }}>
+            기록 없음
+          </p>
+        )}
       </section>
     </>
   )
@@ -246,13 +246,10 @@ function Filter({ value, onChange, options }) {
   )
 }
 
-function Empty({ icon, title }) {
+function Empty({ title }) {
   return (
     <section className="tile center" style={{ padding: 40 }}>
-      <span className="ico">
-        <Icon name={icon} />
-      </span>
-      <h3>{title}</h3>
+      <p className="sub">{title}</p>
     </section>
   )
 }
@@ -276,12 +273,12 @@ function Quests() {
       <div className="head">
         <div>
           <h2>제휴 의뢰 검토</h2>
-          <p className="sub">승인하면 시작일에 맞춰 앱에 공개되고, 반려 사유는 업체에 보여요.</p>
+          <p className="sub">승인하면 시작일에 공개됩니다. 반려 사유는 업체에 표시됩니다.</p>
         </div>
         <Filter value={status} onChange={setStatus} options={[['review', '검토 대기'], ['all', '최근 60일']]} />
       </div>
       <Problem err={err} />
-      {list && !list.length ? <Empty icon="inbox" title="검토할 의뢰가 없어요" /> : null}
+      {list && !list.length ? <Empty title="검토할 의뢰 없음" /> : null}
       <section className="cards">
         {(list || []).map((q) => {
           const [label, tone] = Q_STATUS[q.status] || [q.status, '']
@@ -289,23 +286,30 @@ function Quests() {
             <article key={q.id} className="tile">
               <div>
                 <span className={`badge ${tone}`}>{label}</span>
-                <span className="badge">{q.org_name}</span>
+                <span className="badge plain">{q.org_name}</span>
               </div>
               <h3>{q.title}</h3>
               {q.description ? <p className="d">{q.description}</p> : null}
-              <div className="inner" style={{ display: 'grid', gap: 6 }}>
-                <span className="d">
-                  <Icon name="pin" size={14} /> {q.place_name} · {PLACE[q.place_type] || q.place_type} · {q.address}
-                </span>
-                <span className="d">
-                  <Icon name="clock" size={14} /> {day(q.starts_on)} ~ {day(q.ends_on)} · {q.proof_mode === 'single' ? '사진 1장' : '전·뒤 사진 2장'}
-                </span>
-                <span className="d">
-                  <Icon name="gift" size={14} /> {REWARD[q.reward_type] || q.reward_type} {q.reward_type === 'point' ? `${num(q.reward_amount)}P` : won(q.reward_amount)} × {q.capacity}명
-                </span>
-              </div>
+              <dl className="cost" style={{ marginTop: 4 }}>
+                <dt>장소</dt>
+                <dd>
+                  {q.place_name} · {PLACE[q.place_type] || q.place_type}
+                </dd>
+                <dt>주소</dt>
+                <dd>{q.address}</dd>
+                <dt>기간</dt>
+                <dd>
+                  {day(q.starts_on)} ~ {day(q.ends_on)}
+                </dd>
+                <dt>인증</dt>
+                <dd>{q.proof_mode === 'single' ? '사진 1장' : '전·후 사진 2장'}</dd>
+                <dt>보상</dt>
+                <dd>
+                  {REWARD[q.reward_type] || q.reward_type} {q.reward_type === 'point' ? `${num(q.reward_amount)}P` : won(q.reward_amount)} × {q.capacity}명
+                </dd>
+              </dl>
               {q.status === 'review' ? (
-                <Decide busy={busy === q.id} approveLabel="승인하고 공개" rejectHint="예: 장소가 차도와 붙어 있어 위험해요 (업체에 보여요)" onDecide={(ok, why) => decide(q, ok, why)} />
+                <Decide busy={busy === q.id} approveLabel="승인하고 공개" rejectHint="예: 차도와 붙어 있어 위험함 (업체에 표시됨)" onDecide={(ok, why) => decide(q, ok, why)} />
               ) : q.status === 'rejected' ? (
                 <p className="d">반려 · {q.reject_reason}</p>
               ) : (
@@ -340,12 +344,12 @@ function Claims() {
       <div className="head">
         <div>
           <h2>인증 검토</h2>
-          <p className="sub">이의가 모였거나 확인해 줄 사람이 없는 인증이에요. 승인하면 보상이 다시 지급돼요.</p>
+          <p className="sub">이의가 모였거나 확인할 주민이 없던 인증입니다. 승인하면 보상이 지급됩니다.</p>
         </div>
         <Filter value={status} onChange={setStatus} options={[['staff_review', '운영진 검토'], ['all', '최근 14일']]} />
       </div>
       <Problem err={err} />
-      {list && !list.length ? <Empty icon="camera" title="검토할 인증이 없어요" /> : null}
+      {list && !list.length ? <Empty title="검토할 인증 없음" /> : null}
       <section className="stack">
         {(list || []).map((c) => {
           const [label, tone] = C_STATUS[c.status] || [c.status, '']
@@ -353,16 +357,16 @@ function Claims() {
             <article key={c.id} className="tile">
               <div>
                 <span className={`badge ${tone}`}>{label}</span>
-                <span className="badge">{CATEGORY[c.kind] || c.kind}</span>
+                <span className="badge plain">{CATEGORY[c.kind] || c.kind}</span>
                 {c.disputed_at ? <span className="badge bad">이의 {when(c.disputed_at)}</span> : null}
               </div>
               <h3>{c.title}</h3>
               <p className="sub">
-                {c.user || '이웃'} · {when(c.submitted_at)} 제출 · <span className="mono">#{c.id}</span>
+                {c.user || '주민'} · {when(c.submitted_at)} 제출 · <span className="mono">#{c.id}</span>
                 {c.lat != null && c.lng != null ? (
                   <>
                     {' · '}
-                    <a className="more" href={mapLink(c.lat, c.lng)} target="_blank" rel="noreferrer">
+                    <a className="link" style={{ fontSize: 15 }} href={mapLink(c.lat, c.lng)} target="_blank" rel="noreferrer">
                       촬영 위치
                     </a>
                   </>
@@ -370,11 +374,11 @@ function Claims() {
               </p>
               <Shots c={c} />
               {c.status === 'staff_review' ? (
-                <Decide busy={busy === c.id} approveLabel="승인하고 보상 지급" rejectHint="예: 같은 사진을 다시 올렸어요 (해결한 이웃에게 보여요)" onDecide={(ok, why) => decide(c, ok, why)} />
+                <Decide busy={busy === c.id} approveLabel="승인하고 보상 지급" rejectHint="예: 같은 사진 재사용 (해결한 주민에게 표시됨)" onDecide={(ok, why) => decide(c, ok, why)} />
               ) : (
                 <p className="d">
                   {when(c.decided_at)} {c.status === 'approved' ? '승인' : c.status === 'rejected' ? `반려${c.reject_reason ? ` · ${c.reject_reason}` : ''}` : ''}
-                  {c.decided_by ? ` · ${{ auto: '자동', vote: '이웃 확인', partner: '업체', staff: '운영진' }[c.decided_by] || c.decided_by}` : ''}
+                  {c.decided_by ? ` · ${{ auto: '자동', vote: '주민 확인', partner: '업체', staff: '운영진' }[c.decided_by] || c.decided_by}` : ''}
                 </p>
               )}
             </article>
@@ -403,23 +407,23 @@ function Reports() {
       <div className="head">
         <div>
           <h2>신고·숨김 제보</h2>
-          <p className="sub">신고가 쌓이면 자동으로 숨겨져요. 확인 뒤 숨김을 확정하거나 다시 보이게 해요.</p>
+          <p className="sub">신고가 쌓이면 자동으로 숨겨집니다. 확인 후 확정하거나 되돌립니다.</p>
         </div>
       </div>
       <Problem err={err} />
-      {list && !list.length ? <Empty icon="flag" title="확인할 신고가 없어요" /> : null}
+      {list && !list.length ? <Empty title="확인할 신고 없음" /> : null}
       <section className="cards">
         {(list || []).map((r) => (
           <article key={r.id} className="tile">
             <div>
               {r.hidden_at ? <span className="badge bad">숨김</span> : null}
               {r.flags ? <span className="badge wait">신고 {r.flags}</span> : null}
-              {r.gone_flagged_at ? <span className="badge blue">치워졌어요 표시</span> : null}
+              {r.gone_flagged_at ? <span className="badge blue">치워짐 표시</span> : null}
             </div>
             <div className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
               {r.photo ? (
                 <a href={r.photo} target="_blank" rel="noreferrer">
-                  <img src={r.photo} alt="제보 사진" style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 14, display: 'block' }} />
+                  <img src={r.photo} alt="제보 사진" style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 12, display: 'block' }} />
                 </a>
               ) : (
                 <div className="noshot" style={{ width: 84, height: 84, flex: 'none', aspectRatio: 'auto' }}>
@@ -438,9 +442,9 @@ function Reports() {
               </div>
             </div>
             {r.reasons?.length ? (
-              <div className="chips">
+              <div>
                 {Object.entries(r.reasons.reduce((m, x) => ((m[x] = (m[x] || 0) + 1), m), {})).map(([k, n]) => (
-                  <span key={k} className="chip">
+                  <span key={k} className="badge plain">
                     {FLAG_REASON[k] || k} {n}
                   </span>
                 ))}
@@ -489,7 +493,7 @@ function Users() {
       <div className="head">
         <div>
           <h2>계정</h2>
-          <p className="sub">닉네임 일부나 이메일 전체로 찾아요. 이메일은 가려서 보여요.</p>
+          <p className="sub">닉네임 일부 또는 이메일 전체로 찾습니다.</p>
         </div>
         <form
           className="search"
@@ -505,7 +509,7 @@ function Users() {
         </form>
       </div>
       <Problem err={err} />
-      {list && !list.length ? <Empty icon="user" title="찾는 계정이 없어요" /> : null}
+      {list && !list.length ? <Empty title="일치하는 계정 없음" /> : null}
       <section className="stack">
         {(list || []).map((u) => (
           <article key={u.id} className="tile">
@@ -516,7 +520,7 @@ function Users() {
                   <h3>{u.nickname || '(닉네임 없음)'}</h3>
                   {u.staff ? <span className="badge dark">운영진</span> : null}
                   {u.banned_until ? <span className="badge bad">{day(u.banned_until)}까지 정지</span> : null}
-                  {u.anonymous ? <span className="badge">익명</span> : null}
+                  {u.anonymous ? <span className="badge plain">익명</span> : null}
                 </div>
                 <div className="kv">
                   <span>{u.email || '이메일 없음'}</span>
@@ -570,23 +574,19 @@ function Manage({ u, onDone }) {
   return (
     <div className="cards" style={{ gap: 10 }}>
       <div className="inner" style={{ display: 'grid', gap: 10 }}>
-        <span className="k">
-          <Icon name="coin" size={14} /> 포인트 조정
-        </span>
+        <span className="k">포인트 조정</span>
         <div className="grid2" style={{ gap: 8 }}>
           <input type="number" value={delta} onChange={(e) => setDelta(e.target.value)} placeholder="예: 100 또는 -50" aria-label="더하거나 뺄 포인트" />
           <input value={why} onChange={(e) => setWhy(e.target.value)} placeholder="사유" maxLength={60} aria-label="조정 사유" />
         </div>
-        <button className="btn small" disabled={busy || !d || why.trim().length < 2} onClick={() => run(() => dev.adjustPoints(u.id, d, why.trim()), `${d > 0 ? '+' : ''}${d}P 반영했어요`)}>
-          반영하기
+        <button className="btn small" disabled={busy || !d || why.trim().length < 2} onClick={() => run(() => dev.adjustPoints(u.id, d, why.trim()), `${d > 0 ? '+' : ''}${d}P 반영됨`)}>
+          반영
         </button>
       </div>
       <div className="inner" style={{ display: 'grid', gap: 10 }}>
-        <span className="k">
-          <Icon name="ban" size={14} /> 로그인 정지
-        </span>
+        <span className="k">로그인 정지</span>
         {u.banned_until ? (
-          <button className="btn ghost small" disabled={busy || u.staff} onClick={() => run(() => dev.ban(u.id, 0, '정지 해제'), '정지를 풀었어요')}>
+          <button className="btn ghost small" disabled={busy || u.staff} onClick={() => run(() => dev.ban(u.id, 0, '정지 해제'), '정지 해제됨')}>
             정지 풀기
           </button>
         ) : (
@@ -601,8 +601,8 @@ function Manage({ u, onDone }) {
               </select>
               <input value={banWhy} onChange={(e) => setBanWhy(e.target.value)} placeholder="사유" maxLength={60} aria-label="정지 사유" />
             </div>
-            <button className="btn small danger" disabled={busy || u.staff || banWhy.trim().length < 2} onClick={() => run(() => dev.ban(u.id, days, banWhy.trim()), `${days}일 정지했어요`)}>
-              {u.staff ? '운영진은 정지할 수 없어요' : '정지하기'}
+            <button className="btn small danger" disabled={busy || u.staff || banWhy.trim().length < 2} onClick={() => run(() => dev.ban(u.id, days, banWhy.trim()), `${days}일 정지됨`)}>
+              {u.staff ? '운영진은 정지 불가' : '정지'}
             </button>
           </>
         )}

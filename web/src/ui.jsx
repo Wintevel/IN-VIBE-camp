@@ -44,6 +44,7 @@ const P = {
   users: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 4.3a3.5 3.5 0 0 1 0 6.4M18.5 14.2A6.5 6.5 0 0 1 21.5 20',
   gift: 'M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7S10.5 3 8 3.5 7.5 7 12 7zM12 7s1.5-4 4-3.5S16.5 7 12 7z',
   search: 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM20 20l-4.8-4.8',
+  chev: 'm9 6 6 6-6 6',
   eye: 'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
 }
 
@@ -71,7 +72,9 @@ export function QuestCard({ q, placeLabel }) {
   return (
     <div className="phone" aria-label="앱 카드 미리보기">
       <div className="qc">
-        <div className="thumb">🎁</div>
+        <div className="thumb">
+          <Icon name="gift" size={26} stroke={1.6} />
+        </div>
         <div>
           <span className="tag">제휴 의뢰</span>
           <strong>{q.title || '의뢰 제목'}</strong>
@@ -140,24 +143,29 @@ export function Decide({ busy, onDecide, approveLabel = '승인', rejectHint, mi
   )
 }
 
-export function Stat({ k, v, unit, d, tone = '', cls = 's2', icon }) {
+// 숫자 줄: [이름, 값, 단위, 강조] 목록을 아이콘 없이 한 줄로 보여 줍니다.
+export function Stats({ items, plain }) {
   return (
-    <div className={`tile end ${tone} ${cls}`}>
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <span className="k">{k}</span>
-        {icon ? (
-          <span className="ico">
-            <Icon name={icon} />
+    <div className={`stats${plain ? ' plain' : ''}`} style={{ '--n': items.length }}>
+      {items.map(([k, v, unit, hot]) => (
+        <div key={k}>
+          <span className="k">{k}</span>
+          <span className={`v${hot ? ' hot' : ''}`}>
+            {v}
+            {unit ? <small>{unit}</small> : null}
           </span>
-        ) : null}
-      </div>
-      <div style={{ display: 'grid', gap: 6 }}>
-        <span className="big">
-          {v}
-          {unit ? <small>{unit}</small> : null}
-        </span>
-        {d ? <p className="d">{d}</p> : null}
-      </div>
+        </div>
+      ))}
     </div>
+  )
+}
+
+// 오른쪽 꺾쇠가 붙은 파란 글자 링크
+export function More({ href, children, small }) {
+  return (
+    <a className={`more${small ? ' small' : ''}`} href={href}>
+      {children}
+      <Icon name="chev" size={small ? 14 : 16} stroke={2} />
+    </a>
   )
 }
