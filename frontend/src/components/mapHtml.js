@@ -2,13 +2,15 @@ import { colors, theme } from '../theme'
 
 // 지도 문서(Leaflet + CARTO 기본 지도, OpenStreetMap 데이터). 네이티브는 WebView, 웹은 iframe 에 넣습니다.
 // 네이버지도 SDK 는 개발 빌드와 키가 필요해, 그 전까지 키 없이 동작하는 지도로 둡니다.
-// 2026-11-23: OSM 타일을 필터로 어둡게 뒤집던 방식(위성 사진처럼 탁해 보임)을 빼고, 화면 모드에 맞는 CARTO 다크·라이트 지도를 씁니다.
+// 2026-11-23: OSM 타일을 색 반전 필터로 어둡게 만들던 방식(위성 사진처럼 탁해 보임)을 뺐습니다.
+// CARTO 지도는 키를 요구해서(api key required) 키 없이 되는 OSM 기본 지도를 그대로 쓰고, 다크 모드에서는 밝기만 조금 낮춥니다.
 export function buildMapHtml({ center, me, markers }) {
-  const style = theme.scheme === 'light' ? 'light_all' : 'dark_all'
+  const dim = theme.scheme === 'light' ? '' : '.leaflet-tile-pane{filter:brightness(.82) saturate(.85)}'
   const data = JSON.stringify({ center, me, markers }).replace(/</g, '\\u003c')
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>html,body,#m{height:100%;margin:0;background:${colors.panel2}}
+${dim}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:${colors.panel};color:${colors.fg}}
 .leaflet-popup-content{margin:10px 12px;font:700 13px 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif}
 .leaflet-popup-content small{display:block;font-weight:500;color:${colors.sub};margin-top:2px}
@@ -18,7 +20,7 @@ export function buildMapHtml({ center, me, markers }) {
 var d=${data};
 var send=function(id){var s=JSON.stringify({type:'report',id:id});if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(s);else window.parent.postMessage(s,'*')};
 var map=L.map('m',{zoomControl:false}).setView([d.center.lat,d.center.lng],15);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
 d.markers.forEach(function(k){
   var c=L.circleMarker([k.lat,k.lng],{radius:9,color:'${colors.ink}',weight:2,fillColor:k.color,fillOpacity:.95}).addTo(map);
   c.on('click',function(){send(k.id)});
