@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Animated, Easing, Platform, StyleSheet, Text, View } from 'react-native'
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg'
-import DailyLimits from '../components/DailyLimits'
+import DailyLimits, { ResetIn } from '../components/DailyLimits'
 import FilterChips from '../components/FilterChips'
 import { CameraIcon, LineIcon } from '../components/Icons'
 import { Appear, ND, PressScale, reduced } from '../components/Motion'
@@ -61,7 +61,12 @@ export default function BoardScreen({ navigation }) {
             </View>
           }
         />
-        <DailyLimits profile={app.profile} />
+        <View style={{ gap: 8 }}>
+          <DailyLimits profile={app.profile} />
+          <View style={{ alignItems: 'flex-end' }}>
+            <ResetIn />
+          </View>
+        </View>
         {waiting > 0 ? (
           <PressScale onPress={() => navigation.navigate('Notices')} accessibilityRole="button" style={styles.notice}>
             <Text style={[text.section, { flex: 1 }]}>치워졌는지 확인해 주세요</Text>

@@ -15,7 +15,7 @@ export default function DailyLimits({ profile: p }) {
   )
 }
 
-// "오늘 남은 횟수" 오른쪽에 붙는 리셋 안내. 1분마다 남은 시간을 고칩니다.
+// 의뢰판 남은 횟수 아래에 붙는 리셋 안내. 1분마다 남은 시간을 고칩니다.
 export function ResetIn() {
   const [left, setLeft] = useState(msToKstMidnight())
   useEffect(() => {

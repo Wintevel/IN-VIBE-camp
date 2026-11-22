@@ -189,7 +189,14 @@ export function AppStateProvider({ children }) {
       emailAuth: !!api.authApi,
       signInEmail: (email, password) => run(() => api.authApi.signIn(email, password)),
       // 메일 확인이 켜진 서버에서는 가입 직후 로그인되지 않습니다. 그때는 'confirm' 을 돌려줍니다.
-      signUpEmail: (email, password) => run(async () => (await api.authApi.signUp(email, password)) || 'confirm'),
+      signUpEmail: (email, password, nickname) =>
+        run(async () => {
+          const s = await api.authApi.signUp(email, password, nickname)
+          if (!s) return 'confirm'
+          // 로그인 이벤트가 닉네임 저장보다 먼저 프로필을 읽었을 수 있어 한 번 더 읽습니다.
+          if (nickname) loadProfile().catch(() => {})
+          return s
+        }),
       coords,
       located,
       reports,

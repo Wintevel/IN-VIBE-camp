@@ -282,4 +282,7 @@
   앱 로그인 화면에 "아이디 / 이메일" 탭을 나눴습니다. 아이디는 `아이디@id.jipgepyo.example.com` 으로 바꿔 Supabase Auth 이메일 로그인으로 보냅니다(`frontend/src/screens/LoginScreen.js` 의 `ID_DOMAIN`). 이 주소로는 확인 메일을 받을 수 없으니 **Authentication → Sign In / Providers → Email 의 Confirm email 을 꺼** 주세요. 켜져 있으면 아이디 가입 뒤 로그인이 안 되고, 앱은 "아이디 가입은 아직 서버 설정이 필요해요"라고 안내합니다.
   끄면 이메일 가입도 확인 메일 없이 바로 로그인됩니다. 이메일 가입만 확인을 유지하려면 `auth` 훅 등 별도 처리가 필요하니, 지금은 끄는 쪽을 권합니다.
 
+- [ ] **10-3. 아이디 가입 시 첫 닉네임 = 아이디**
+  앱이 아이디로 가입할 때 `signUp` 의 `options.data.nickname` 에 아이디를 넣고, 가입 직후 세션이 있으면 `profiles.nickname` 을 아이디로 바꿉니다(지금 권한으로 가능). 메일 확인이 켜져 세션이 없을 때도 맞추려면 `handle_new_user()` 에서 `coalesce(nullif(new.raw_user_meta_data ->> 'nickname', ''), '줍퀘러' || …)` 를 써 주세요. 급하지 않습니다.
+
 - 참고: 시즌 보상 테두리 이름·색이 바뀌었습니다(9-3, `Season Beta · 버터/라일락/피치`, 파스텔). 넣을 때 `lib/cosmetics.js` 의 `SEASON_REWARDS` 를 그대로 써 주세요.

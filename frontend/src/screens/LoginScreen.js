@@ -60,7 +60,7 @@ export default function LoginScreen() {
   const sendMail = async () => {
     setBusy(true)
     setNote(null)
-    const d = mode === 'in' ? await signInEmail(account, pw) : await signUpEmail(account, pw)
+    const d = mode === 'in' ? await signInEmail(account, pw) : await signUpEmail(account, pw, how === 'id' ? idKey : undefined)
     setBusy(false)
     if (d === 'confirm') {
       setMode('in')
