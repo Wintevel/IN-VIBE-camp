@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform } from 'react-native'
 import { errorText } from './errors'
 import { ACHIEVEMENTS, statsOf } from '../lib/achievements'
+import { CREW_POINT_RATE, CREW_SHOP, SEASON_REWARDS, seasonRewards } from '../lib/cosmetics'
 
 // 기기 저장소 구현. 서버가 준비되기 전까지 앱 기능을 이 기기 안에서 실제로 동작시킵니다.
 // 응답 모양은 백엔드 API 가이드와 같게 맞췄고, 규칙은 docs/api.md 를 따릅니다
@@ -60,10 +61,13 @@ const COSMETICS = [
   { id: 'name-tape', kind: 'name', name: '노란 닉네임', colors: ['#FFD43B'], cost: 80, level: 1 },
   { id: 'name-mint', kind: 'name', name: '민트 닉네임', colors: ['#7DF9FF'], cost: 0, level: 4 },
   { id: 'name-rose', kind: 'name', name: '장미 닉네임', colors: ['#FF7EB6'], cost: 0, level: 1, feat: 'places' },
+  // 시즌 순위 보상(살 수 없음)과 크루 상점 품목(크루 포인트로 삼). lib/cosmetics.js
+  ...SEASON_REWARDS,
+  ...CREW_SHOP,
 ]
 const MARKS = ['still', 'gone', 'worse']
 // 내 것인지: 도전과제 보상·구매 품목은 보유 목록에 있어야 하고, 레벨 품목은 레벨이 되면 내 것입니다.
-const has = (me, c) => (c.feat || c.cost > 0 ? (me.cosmetics || []).includes(c.id) : levelOf(me.xp) >= c.level)
+const has = (me, c) => (c.feat || c.cost > 0 || c.season || c.shop ? (me.cosmetics || []).includes(c.id) : levelOf(me.xp) >= c.level)
 const DEFAULT_LOOK = { frame: 'frame-tape', name: 'name-white' }
 const item = (id) => COSMETICS.find((c) => c.id === id)
 // 저장된 착용 품목이 목록에서 빠졌으면 기본으로 돌아갑니다.
@@ -74,7 +78,7 @@ const lookOf = (me) => {
 }
 const frameOf = (me) => {
   const c = item(lookOf(me).frame)
-  return { style: c.style, colors: c.colors }
+  return { style: c.style, colors: c.colors, rank: c.rank }
 }
 
 // 제휴 의뢰 예시 1건. 서버가 없어 제휴처가 올릴 경로가 없으므로 앱이 하나를 넣어 둡니다.
@@ -104,7 +108,51 @@ async function load() {
     cache = cache || { user: null, reports: [], nextId: 1 }
     cache.crews = cache.crews || []
   }
+  if (cache.user) rollSeason(cache)
   return cache
+}
+
+// ── 시즌 ─────────────────────────────────────────────
+// 시즌은 한국 시간 매달 1일 0시에 바뀝니다. 크루 순위는 이번 시즌에 모은 크루 경험치(season_score)로 매기고,
+// 크루 레벨은 지금까지 모은 전체 경험치(score)로 셉니다. 시즌이 끝나면 1·2·3위 크루의 크루원이 시즌 테두리를 받습니다.
+// 기기 저장소 모드에는 다른 사람이 없어 이 기기에서 만든 크루끼리만 겨룹니다.
+const KST = 9 * 3600 * 1000
+function nextMonthStart(t) {
+  const d = new Date(t + KST)
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1) - KST).toISOString()
+}
+// 첫 시즌은 Season Beta(2026-11-22 한재준 결정), 그다음부터 SEASON 1, 2 …
+const seasonLabel = (no) => (no === 1 ? 'Season Beta' : `SEASON ${no - 1}`)
+function rollSeason(db) {
+  if (!db.season) {
+    // 첫 시즌: 지금부터 다음 달 1일 0시까지. 이전에 쌓인 크루 점수는 레벨로만 남고 순위는 0부터 시작합니다.
+    db.season = { no: 1, starts_at: new Date().toISOString(), ends_at: nextMonthStart(Date.now()) }
+    for (const c of db.crews) if (c.season_score == null) c.season_score = 0
+  }
+  while (new Date(db.season.ends_at).getTime() <= Date.now()) {
+    const ranked = [...db.crews].filter((c) => (c.season_score || 0) > 0).sort((a, b) => b.season_score - a.season_score || a.id - b.id)
+    const mineAt = ranked.findIndex((c) => c.members.includes(db.user.id))
+    const reward = mineAt >= 0 && mineAt < 3 ? seasonRewards(db.season.no).find((x) => x.rank === mineAt + 1) : null
+    if (reward) (db.user.cosmetics = db.user.cosmetics || []).includes(reward.id) || db.user.cosmetics.push(reward.id)
+    db.seasonLast = { no: db.season.no, label: seasonLabel(db.season.no), my_rank: mineAt >= 0 ? mineAt + 1 : null, reward: reward ? reward.name : null, top: ranked.slice(0, 3).map((c) => c.name), seen: false }
+    for (const c of db.crews) c.season_score = 0
+    db.season = { no: db.season.no + 1, starts_at: db.season.ends_at, ends_at: nextMonthStart(new Date(db.season.ends_at).getTime()) }
+  }
+}
+
+export async function getSeason() {
+  const db = await load()
+  const s = db.season
+  const left = new Date(s.ends_at).getTime() - Date.now()
+  return {
+    no: s.no,
+    label: seasonLabel(s.no),
+    starts_at: s.starts_at,
+    ends_at: s.ends_at,
+    days_left: Math.max(0, Math.ceil(left / DAY)),
+    rewards: seasonRewards(s.no).map((c) => ({ rank: c.rank, id: c.id, name: c.name, frame: { style: c.style, colors: c.colors, rank: c.rank } })),
+    last: db.seasonLast || null,
+  }
 }
 const save = async () => {
   try {
@@ -386,6 +434,7 @@ export async function getMyProfile() {
     nickname: me.nickname,
     xp: me.xp,
     points: me.points,
+    crew_points: me.crew_points || 0,
     level: levelOf(me.xp),
     xp_in_level: me.xp % XP_PER_LEVEL,
     xp_for_next_level: XP_PER_LEVEL,
@@ -514,9 +563,7 @@ export async function submitProof(userId, id, before, after) {
   const crew = db.crews.find((c) => c.members.includes(me.id))
   const crewXp = crew ? xp * (r.required_members > 1 ? 2 : 1) : 0
   if (crew) {
-    crew.score += crewXp
-    crew.contrib = crew.contrib || {}
-    crew.contrib[me.id] = (crew.contrib[me.id] || 0) + crewXp
+    gainCrew(crew, me, crewXp)
     feed(crew, { type: 'complete', user: me.nickname, title: r.title, crew_xp: crewXp, points, is_crew_quest: r.required_members > 1 })
   }
   me.completed.push({ id, at: new Date().toISOString() })
@@ -553,9 +600,7 @@ export async function quickClean(userId, { before, after, placeType, issueType, 
   const crewXp = crew ? xp : 0
   const name = title || `${(PLACE[placeType] || PLACE.etc)[0]} 바로 치움`
   if (crew) {
-    crew.score += crewXp
-    crew.contrib = crew.contrib || {}
-    crew.contrib[me.id] = (crew.contrib[me.id] || 0) + crewXp
+    gainCrew(crew, me, crewXp)
     feed(crew, { type: 'complete', user: me.nickname, title: name, crew_xp: crewXp, points: 0, is_crew_quest: false })
   }
   const at = new Date().toISOString()
@@ -567,6 +612,15 @@ export async function quickClean(userId, { before, after, placeType, issueType, 
 // ── 크루 ──────────────────────────────────────────────
 // 한 사람은 크루 하나에만 가입합니다(docs/api.md 에서 아직 미정인 항목, 우선 이렇게 둠).
 // 크루 방(feed)은 사람이 쓰는 채팅이 아니라 활동이 자동으로 올라오는 알림 기록입니다.
+// 크루 경험치: 크루 레벨(전체)·시즌 순위·내 기여도에 더하고, 같은 만큼 내 크루 포인트가 쌓입니다.
+function gainCrew(crew, me, xp) {
+  crew.score += xp
+  crew.season_score = (crew.season_score || 0) + xp
+  crew.contrib = crew.contrib || {}
+  crew.contrib[me.id] = (crew.contrib[me.id] || 0) + xp
+  me.crew_points = (me.crew_points || 0) + Math.floor(xp * CREW_POINT_RATE)
+}
+
 function feed(crew, event) {
   crew.feed = crew.feed || []
   crew.feed.push({ id: `${Date.now()}-${crew.feed.length}`, at: new Date().toISOString(), ...event })
@@ -578,7 +632,8 @@ const crewView = (c, me, rank) => ({
   name: c.name,
   area: c.area,
   member_count: c.members.length,
-  score: c.score,
+  score: c.season_score || 0, // 순위는 이번 시즌 점수
+  total_score: c.score,
   level: Math.floor(c.score / CREW_XP_PER_LEVEL) + 1,
   xp_in_level: c.score % CREW_XP_PER_LEVEL,
   xp_for_next_level: CREW_XP_PER_LEVEL,
@@ -589,14 +644,14 @@ const crewView = (c, me, rank) => ({
 
 export async function getCrews() {
   const db = await load()
-  return [...db.crews].sort((a, b) => b.score - a.score || a.id - b.id).map((c, i) => crewView(c, db.user, i + 1))
+  return [...db.crews].sort((a, b) => (b.season_score || 0) - (a.season_score || 0) || a.id - b.id).map((c, i) => crewView(c, db.user, i + 1))
 }
 
 // 내 크루 상세: 크루원별 기여도와 활동 알림
 export async function getMyCrew() {
   const db = await load()
   const me = db.user
-  const ranked = [...db.crews].sort((a, b) => b.score - a.score || a.id - b.id)
+  const ranked = [...db.crews].sort((a, b) => (b.season_score || 0) - (a.season_score || 0) || a.id - b.id)
   const c = ranked.find((x) => x.members.includes(me.id))
   if (!c) return null
   c.names = c.names || {}
@@ -613,7 +668,7 @@ export async function createCrew({ name, area }) {
   if (db.crews.some((c) => c.members.includes(db.user.id))) fail('ALREADY_IN_CREW')
   if (db.crews.some((c) => c.name === name)) fail('CREW_NAME_TAKEN')
   const id = (db.crews.reduce((m, c) => Math.max(m, c.id), 0) || 0) + 1
-  const crew = { id, name, area, owner_id: db.user.id, members: [db.user.id], score: 0, contrib: {}, names: { [db.user.id]: db.user.nickname }, feed: [], created_at: new Date().toISOString() }
+  const crew = { id, name, area, owner_id: db.user.id, members: [db.user.id], score: 0, season_score: 0, contrib: {}, names: { [db.user.id]: db.user.nickname }, feed: [], created_at: new Date().toISOString() }
   feed(crew, { type: 'create', user: db.user.nickname })
   db.crews.push(crew)
   await save()
@@ -671,7 +726,7 @@ export async function getCosmetics() {
     ...c,
     // 포인트로 사는 품목은 산 뒤에, 레벨 품목은 레벨이 되면 내 것이 됩니다.
     owned: has(me, c),
-    locked: level < c.level || (!!c.feat && !owned.includes(c.id)),
+    locked: level < c.level || ((!!c.feat || !!c.season || !!c.shop) && !owned.includes(c.id)),
     equipped: look[c.kind] === c.id,
   }))
 }
@@ -681,7 +736,7 @@ export async function buyCosmetic(id) {
   const me = db.user
   const c = COSMETICS.find((x) => x.id === id)
   if (!c) fail('COSMETIC_NOT_FOUND')
-  if (levelOf(me.xp) < c.level || (c.feat && !has(me, c))) fail('LEVEL_TOO_LOW')
+  if (levelOf(me.xp) < c.level || ((c.feat || c.season || c.shop) && !has(me, c))) fail('LEVEL_TOO_LOW')
   me.cosmetics = me.cosmetics || []
   if (c.cost > 0 && !me.cosmetics.includes(id)) {
     if (me.points < c.cost) fail('NOT_ENOUGH_POINTS')
@@ -702,6 +757,44 @@ export async function equipCosmetic(id) {
   if (!mine) fail('LEVEL_TOO_LOW')
   me.look = { ...lookOf(me), [c.kind]: id }
   await save()
+}
+
+// ── 크루 상점 ─────────────────────────────────────────
+// 크루 포인트(개인)로 사는 꾸미기. 내 크루의 레벨이 품목의 crew_level 이상이어야 살 수 있습니다.
+// 크루를 나가도 산 품목과 남은 크루 포인트는 내 것으로 남고, 새로 사려면 다시 크루에 들어가야 합니다.
+const crewLevelOf = (c) => (c ? Math.floor(c.score / CREW_XP_PER_LEVEL) + 1 : 0)
+export async function getCrewShop() {
+  const db = await load()
+  const me = db.user
+  const crew = db.crews.find((c) => c.members.includes(me.id))
+  const level = crewLevelOf(crew)
+  const look = lookOf(me)
+  return {
+    crew_points: me.crew_points || 0,
+    crew_level: level,
+    in_crew: !!crew,
+    ready: true,
+    items: CREW_SHOP.map((c) => ({ ...c, owned: (me.cosmetics || []).includes(c.id), locked: level < c.crew_level, equipped: look[c.kind] === c.id })),
+  }
+}
+
+export async function buyCrewItem(id) {
+  const db = await load()
+  const me = db.user
+  const c = CREW_SHOP.find((x) => x.id === id)
+  if (!c) fail('COSMETIC_NOT_FOUND')
+  const crew = db.crews.find((x) => x.members.includes(me.id))
+  if (!crew) fail('NOT_IN_CREW')
+  if (crewLevelOf(crew) < c.crew_level) fail('CREW_LEVEL_TOO_LOW_FOR_ITEM')
+  me.cosmetics = me.cosmetics || []
+  if (!me.cosmetics.includes(id)) {
+    if ((me.crew_points || 0) < c.crew_cost) fail('NOT_ENOUGH_CREW_POINTS')
+    me.crew_points -= c.crew_cost
+    me.cosmetics.push(id)
+  }
+  me.look = { ...lookOf(me), [c.kind]: id } // 사면 바로 착용
+  await save()
+  return { crew_points: me.crew_points }
 }
 
 // ── 상태 버튼 · 해결 확인 알림 · 신고 ───────────────────

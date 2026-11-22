@@ -22,6 +22,7 @@ export const colors = {
   green: '#3DD68C',
   red: '#F04452',
   purple: '#A97CFF',
+  mint: '#5CE1C8', // 크루 포인트
 
   greenSoft: 'rgba(61,214,140,0.16)',
   redSoft: 'rgba(240,68,82,0.16)',

@@ -20,5 +20,7 @@ export const quickClean = impl.quickClean
 export const cosmeticsApi = { list: impl.getCosmetics, buy: impl.buyCosmetic, equip: impl.equipCosmetic }
 export const profileApi = { setAvatar: impl.setAvatar, setTitle: impl.setTitle, claimFeat: impl.claimFeat }
 export const claimsApi = { mine: impl.getMyClaims }
+export const seasonApi = { current: impl.getSeason }
+export const crewShopApi = { list: impl.getCrewShop, buy: impl.buyCrewItem }
 export const socialApi = { mark: impl.setMark, notices: impl.getNotices, answer: impl.answerNotice, flag: impl.reportAbuse }
 export { errorText } from './errors'

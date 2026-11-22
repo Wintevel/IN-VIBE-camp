@@ -14,7 +14,7 @@ const LINES = Array.from({ length: 16 }, (_, i) => ({
   lag: ((i * 5) % 7) / 7, // 출발 지연
   color: i % 5 === 0 ? colors.tape : i % 3 === 0 ? colors.blue : colors.fg,
 }))
-const DURATION = 620
+const DURATION = 1150 // 2026-11-22: 620ms 는 너무 짧다는 의견으로 늘림. "출동!"이 가운데 머무는 시간이 길어집니다.
 
 export default function SpeedDash() {
   const { dash, endDash } = useApp()
@@ -35,7 +35,7 @@ export default function SpeedDash() {
   if (!dash) return null
   return (
     <View style={styles.wrap} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.ink, opacity: v.interpolate({ inputRange: [0, 0.3, 0.6, 1], outputRange: [0, 0.96, 0.96, 0] }) }]} />
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.ink, opacity: v.interpolate({ inputRange: [0, 0.2, 0.75, 1], outputRange: [0, 0.96, 0.96, 0] }) }]} />
       <View style={styles.tilt}>
         {LINES.map((l, i) => (
           <Animated.View
@@ -53,7 +53,7 @@ export default function SpeedDash() {
           />
         ))}
       </View>
-      <Animated.Text style={[text.h1, styles.word, { opacity: v.interpolate({ inputRange: [0, 0.25, 0.65, 0.85], outputRange: [0, 1, 1, 0] }), transform: [{ translateX: v.interpolate({ inputRange: [0, 0.3, 0.7, 1], outputRange: [120, 0, -12, -160] }) }, { skewX: '-12deg' }] }]}>출동!</Animated.Text>
+      <Animated.Text style={[text.h1, styles.word, { opacity: v.interpolate({ inputRange: [0, 0.16, 0.74, 0.9], outputRange: [0, 1, 1, 0] }), transform: [{ translateX: v.interpolate({ inputRange: [0, 0.18, 0.74, 1], outputRange: [140, 0, -16, -180] }) }, { scale: v.interpolate({ inputRange: [0, 0.18, 0.26, 0.74], outputRange: [1.25, 0.94, 1.04, 1] , extrapolate: 'clamp' }) }, { skewX: '-12deg' }] }]}>출동!</Animated.Text>
     </View>
   )
 }

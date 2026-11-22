@@ -1,6 +1,7 @@
 import { Platform } from 'react-native'
 import * as Crypto from 'expo-crypto'
 import { File } from 'expo-file-system'
+import { CREW_SHOP, seasonRewards } from '../lib/cosmetics'
 import { supabase } from '../lib/supabase'
 import { errorText } from './errors'
 
@@ -197,7 +198,8 @@ function fromReport(x) {
 export async function getNearbyReports({ lat, lng, radiusM = 1500 }) {
   const args = { p_lat: lat, p_lng: lng, p_radius_m: radiusM }
   const [quests, reports] = await Promise.all([rpc('quests_nearby', { ...args, p_kind: null }), rpc('reports_nearby', args)])
-  return [...(quests || []).map(fromQuest), ...(reports || []).map(fromReport)].sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0))
+  // 시험용으로 넣었던 데이터(is_demo)는 첫 시즌부터 보이지 않게 뺍니다(2026-11-22). 서버에서 지우는 건 docs/backend-requests.md 9-1.
+  return [...(quests || []).map(fromQuest), ...(reports || []).map(fromReport)].filter((x) => !x.is_demo).sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0))
 }
 
 const row = (id) => known.get(id) || fail('REPORT_NOT_OPEN')
@@ -424,7 +426,8 @@ export const claimFeat = (id) => rpc('claim_feat', { p_id: id })
 // ── 크루 ──────────────────────────────────────────────
 export async function getCrews() {
   const list = (await rpc('crew_ranking')) || []
-  return list.map((c) => ({ ...c, id: c.crew_id, is_mine: !!c.mine }))
+  // 시험용 크루(is_demo)는 순위에서 빼고 순위를 다시 매깁니다.
+  return list.filter((c) => !c.is_demo).map((c, i) => ({ ...c, id: c.crew_id, is_mine: !!c.mine, rank: i + 1 }))
 }
 export async function getMyCrew() {
   const c = await rpc('my_crew')
@@ -444,6 +447,33 @@ export const redeemItem = (itemId) => rpc('redeem_item', { p_item_id: itemId })
 export const getCosmetics = async () => (await rpc('cosmetics_list')) || []
 export const buyCosmetic = (id) => rpc('buy_cosmetic', { p_id: id })
 export const equipCosmetic = (id) => rpc('equip_cosmetic', { p_id: id })
+
+// ── 시즌 · 크루 상점 (docs/backend-requests.md 9장) ───────
+// current_season 은 서버에 있습니다. 보상 테두리 목록은 앱(lib/cosmetics.js)이 갖고, 지급은 서버가 시즌이 끝날 때 합니다.
+export async function getSeason() {
+  const s = await rpc('current_season')
+  if (!s) return null
+  const no = Number(String(s.label || '').replace(/\D/g, '')) || null
+  const left = new Date(s.ends_at).getTime() - Date.now()
+  return {
+    no,
+    label: s.label,
+    starts_at: s.starts_at,
+    ends_at: s.ends_at,
+    days_left: Math.max(0, Math.ceil(left / 86400000)),
+    rewards: seasonRewards(1).map((c) => ({ rank: c.rank, id: c.id, name: c.name, frame: { style: c.style, colors: c.colors, rank: c.rank } })),
+    last: s.last || null,
+  }
+}
+// 크루 상점 RPC(crew_shop, buy_crew_item)가 아직 서버에 없으면 목록만 보여 주고 살 수는 없게 합니다.
+export async function getCrewShop() {
+  try {
+    return { ...(await rpc('crew_shop')), ready: true }
+  } catch {
+    return { crew_points: 0, crew_level: 0, in_crew: false, ready: false, items: CREW_SHOP.map((c) => ({ ...c, owned: false, locked: true, equipped: false })) }
+  }
+}
+export const buyCrewItem = (id) => rpc('buy_crew_item', { p_id: id })
 
 // ── 상태 버튼 · 해결 확인 알림 · 신고 ───────────────────
 export const setMark = (id, mark) => rpc('set_mark', { p_report_id: reportIdOf(id), p_mark: mark })

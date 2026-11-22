@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Animated, Easing, Platform, StyleSheet, Text, View } from 'react-native'
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg'
 import DailyLimits from '../components/DailyLimits'
 import FilterChips from '../components/FilterChips'
-import { Appear, PressScale } from '../components/Motion'
+import { CameraIcon, LineIcon } from '../components/Icons'
+import { Appear, ND, PressScale, reduced } from '../components/Motion'
 import ClaimStatus from '../components/ClaimStatus'
 import MyQuests from '../components/MyQuests'
 import ReportCard from '../components/ReportCard'
@@ -10,6 +12,7 @@ import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
 import { Empty, Loading, refresher } from '../components/States'
 import { isCrew, isPartner } from '../lib/format'
+import { useFrameSize } from '../lib/frame'
 import { useApp } from '../state/AppState'
 import { colors, radius, text } from '../theme'
 
@@ -31,6 +34,7 @@ const match = {
 
 export default function BoardScreen({ navigation }) {
   const app = useApp()
+  const { width } = useFrameSize()
   const [filter, setFilter] = useState('all')
   const list = app.reports.filter(match[filter])
   const going = app.reports.filter((r) => r.status === 'in_progress').length
@@ -41,7 +45,7 @@ export default function BoardScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <Screen refreshControl={refresher(app)} bottomPad={96}>
+      <Screen refreshControl={refresher(app)} bottomPad={110}>
         <ScreenHeader title="의뢰판" sub={app.located ? '내 위치 · 반경 1.5km' : '위치를 못 받아 인하대 주변을 보여줘요 · 반경 1.5km'} action="새로고침" onAction={() => app.refresh({ relocate: true })} />
         <DailyLimits profile={app.profile} />
         {waiting > 0 ? (
@@ -75,16 +79,68 @@ export default function BoardScreen({ navigation }) {
         </View>
       </Screen>
 
-      <View style={styles.fabWrap} pointerEvents="box-none">
-        <PressScale onPress={() => navigation.navigate('QuickClean')} accessibilityRole="button" accessibilityLabel="바로 치운 곳 기록하기" surface="raised" style={[styles.fab, styles.fabQuick]} to={0.94}>
-          <Text style={[text.button, { color: colors.ink }]}>바로 치웠어요</Text>
-        </PressScale>
-        <PressScale onPress={() => navigation.navigate('ReportCreate')} accessibilityRole="button" accessibilityLabel="주민 제보 올리기" surface="raised" style={styles.fab} to={0.94}>
-          <Text style={[text.button, { color: colors.onBlue }]}>＋ 제보하기</Text>
-        </PressScale>
+      {/* 아래 행동 막대: 왼쪽 "바로 치웠어요"(기록), 오른쪽 "제보하기"(주 행동). 뒤 카드와 겹쳐 보이지 않게 아래를 어둡게 덮습니다. */}
+      <View style={styles.dockWrap} pointerEvents="box-none">
+        <Svg width={width} height={110} style={styles.fade} pointerEvents="none">
+          <Defs>
+            <LinearGradient id="dockFade" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={colors.ink} stopOpacity="0" />
+              <Stop offset="0.6" stopColor={colors.ink} stopOpacity="0.92" />
+              <Stop offset="1" stopColor={colors.ink} stopOpacity="1" />
+            </LinearGradient>
+          </Defs>
+          <Rect x="0" y="0" width={width} height="110" fill="url(#dockFade)" />
+        </Svg>
+        <View style={styles.dock}>
+          <View style={{ flex: 1.2 }}>
+          <PressScale onPress={() => navigation.navigate('QuickClean')} accessibilityRole="button" accessibilityLabel="바로 치운 곳 기록하기" style={styles.quick} to={0.96}>
+            <Bouncy style={styles.quickIcon}>
+              <LineIcon name="check" size={18} color={colors.ink} />
+            </Bouncy>
+            <View style={{ flexShrink: 1 }}>
+              <Text style={[text.button, { fontSize: 15, lineHeight: 19, color: colors.fg }]} numberOfLines={1}>
+                바로 치웠어요
+              </Text>
+              <Text style={[text.caption, { fontSize: 11, lineHeight: 14 }]} numberOfLines={1}>
+                의뢰 없이 기록
+              </Text>
+            </View>
+          </PressScale>
+          </View>
+          <View style={{ flex: 1 }}>
+          <PressScale onPress={() => navigation.navigate('ReportCreate')} accessibilityRole="button" accessibilityLabel="주민 제보 올리기" surface="raised" style={styles.report} to={0.95}>
+            <View style={styles.reportSlash} />
+            <CameraIcon size={20} color={colors.onBlue} />
+            <Text style={[text.button, { fontSize: 16, color: colors.onBlue }]}>제보하기</Text>
+          </PressScale>
+          </View>
+        </View>
       </View>
     </View>
   )
+}
+
+// 초록 체크 칸이 잊을 만하면 통통 튀며 "바로 치웠어요"를 눈에 띄게 합니다(두 번 튀고 쉼).
+function Bouncy({ style, children }) {
+  const v = useRef(new Animated.Value(0)).current
+  useEffect(() => {
+    if (reduced()) return
+    const hop = (h, d) =>
+      Animated.sequence([
+        Animated.timing(v, { toValue: h, duration: d, easing: Easing.out(Easing.quad), useNativeDriver: ND }),
+        Animated.timing(v, { toValue: 0, duration: d, easing: Easing.in(Easing.quad), useNativeDriver: ND }),
+      ])
+    const a = Animated.loop(Animated.sequence([hop(1, 170), hop(0.45, 130), Animated.delay(1700)]))
+    a.start()
+    return () => a.stop()
+  }, [v])
+  const transform = [
+    { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -7] }) },
+    { rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['-6deg', '4deg'] }) },
+    { scaleX: v.interpolate({ inputRange: [0, 0.15, 1], outputRange: [1.08, 1, 0.96] }) },
+    { scaleY: v.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0.92, 1, 1.05] }) },
+  ]
+  return <Animated.View style={[style, { transform }]}>{children}</Animated.View>
 }
 
 const styles = StyleSheet.create({
@@ -92,7 +148,11 @@ const styles = StyleSheet.create({
   mark: { width: 6, height: 16, backgroundColor: colors.tape, transform: [{ skewX: '-16deg' }] },
   tally: { marginLeft: 'auto' },
   notice: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.tape, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 14 },
-  fabWrap: { position: 'absolute', right: 20, bottom: 16, flexDirection: 'row', gap: 8 },
-  fabQuick: { backgroundColor: colors.green },
-  fab: { backgroundColor: colors.blue, paddingHorizontal: 18, paddingVertical: 14, borderRadius: radius.pill },
+  dockWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 30, paddingBottom: 12 },
+  fade: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  dock: { flexDirection: 'row', alignItems: 'stretch', gap: 6, padding: 6, borderRadius: 24, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line, ...(Platform.OS === 'web' ? { boxShadow: '0 10px 28px rgba(0,0,0,0.5)' } : { elevation: 10 }) },
+  quick: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 8, paddingVertical: 8, borderRadius: 18 },
+  quickIcon: { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
+  report: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 18, backgroundColor: colors.blue, overflow: 'hidden' },
+  reportSlash: { position: 'absolute', right: 18, top: -20, bottom: -20, width: 18, backgroundColor: 'rgba(255,255,255,0.12)', transform: [{ skewX: '-18deg' }] },
 })

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, Text } from 'react-native'
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, StyleSheet, Text } from 'react-native'
 import { colors, neu } from '../theme'
 
 // 움직임 공통: 살짝 떠오르는 등장, 눌림(솟은 면 → 패인 면), 숫자 올라가기.
@@ -42,13 +42,22 @@ export function Appear({ index = 0, from = 'right', delay = 0, children, style }
 
 // 눌림 효과가 있는 Pressable.
 // surface 를 주면 뉴모피즘 면이 됩니다: 평소 양각(raised/raisedSm), 마우스 올리면 조금 더 솟고, 누르는 동안·active(선택됨)면 음각으로 패입니다.
-export function PressScale({ children, style, to = 0.97, surface, active, ...rest }) {
-  const { s, hover, down, over, props } = usePress(to)
+export function PressScale({ children, style, to = 0.95, surface, active, ...rest }) {
+  const { down, over, props, motion, sheen } = usePress(to)
+  const r = StyleSheet.flatten(style)?.borderRadius
   return (
     <Pressable {...props} {...rest}>
-      <Animated.View style={[style, surface ? [surfaceStyle(surface, { down, over, active }), SHADOW_EASE] : null, { opacity: surface ? 1 : hover, transform: [{ scale: s }] }]}>{children}</Animated.View>
+      <Animated.View style={[style, surface ? [surfaceStyle(surface, { down, over, active }), SHADOW_EASE] : null, motion]}>
+        {children}
+        <Sheen v={sheen} radius={r} />
+      </Animated.View>
     </Pressable>
   )
+}
+
+// 마우스를 올리거나 손가락이 닿으면 면 위에 얇게 밝은 막이 깔립니다(누르는 순간 조금 더 밝게).
+export function Sheen({ v, radius }) {
+  return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, backgroundColor: '#FFFFFF', opacity: v }]} />
 }
 
 // 면 상태 → 그림자. raised(큰 면)는 눌리면 inset, raisedSm(작은 면)은 insetSm.
@@ -61,37 +70,56 @@ export function surfaceStyle(kind = 'raised', { down, over, active } = {}) {
 // 웹: 그림자가 바뀔 때 끊기지 않게 이어 줍니다(네이티브는 무시).
 export const SHADOW_EASE = Platform.OS === 'web' ? { transitionProperty: 'box-shadow, background-color', transitionDuration: '180ms', transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)' } : null
 
-// 눌림(줄었다 돌아옴)·눌린 상태(down)·마우스 올림(over, 웹)을 공통으로 처리하는 훅. Button·PressScale 이 같이 씁니다.
-export function usePress(to = 0.97) {
+// 눌림·마우스 올림을 공통으로 처리하는 훅. Button·PressScale 이 같이 씁니다.
+// 마우스를 올리면(웹) 살짝 떠오르며 커지고, 누르면 쑥 들어갔다가 놓을 때 통 튀어 돌아옵니다. 손가락이 닿는 순간에는 밝은 막이 번쩍입니다.
+export function usePress(to = 0.96) {
   const s = useRef(new Animated.Value(1)).current
-  const hover = useRef(new Animated.Value(1)).current
+  const lift = useRef(new Animated.Value(0)).current
+  const sheen = useRef(new Animated.Value(0)).current
   const [down, setDown] = useState(false)
   const [over, setOver] = useState(false)
-  const go = (toValue) => Animated.spring(s, { toValue, speed: 40, bounciness: toValue === 1 ? 8 : 0, useNativeDriver: ND }).start()
-  const fade = (toValue) => Animated.timing(hover, { toValue, duration: 120, useNativeDriver: ND }).start()
+  const overRef = useRef(false)
+  // 큰 카드는 조금만, 작은 칩은 조금 더 떠오릅니다.
+  const up = Math.min(1.04, 1 + (1 - to) * 0.5)
+  const spring = (v, toValue, o) => Animated.spring(v, { toValue, useNativeDriver: ND, ...o }).start()
+  const fade = (toValue, duration) => Animated.timing(sheen, { toValue, duration, easing: Easing.out(Easing.quad), useNativeDriver: ND }).start()
   const props = {
     onPressIn: () => {
       setDown(true)
-      if (!reduce) go(to)
+      if (reduce) return
+      spring(s, to, { speed: 60, bounciness: 0 })
+      spring(lift, 0, { speed: 60, bounciness: 0 })
+      fade(0.12, 70)
     },
     onPressOut: () => {
       setDown(false)
-      go(1)
+      const on = overRef.current
+      spring(s, on ? up : 1, { speed: 14, bounciness: 14 })
+      spring(lift, on ? 1 : 0, { speed: 14, bounciness: 10 })
+      fade(on ? 0.05 : 0, 260)
     },
     ...(ND
       ? null
       : {
           onHoverIn: () => {
+            overRef.current = true
             setOver(true)
-            fade(0.92)
+            if (reduce) return
+            spring(s, up, { speed: 22, bounciness: 8 })
+            spring(lift, 1, { speed: 22, bounciness: 8 })
+            fade(0.05, 140)
           },
           onHoverOut: () => {
+            overRef.current = false
             setOver(false)
-            fade(1)
+            spring(s, 1, { speed: 22, bounciness: 4 })
+            spring(lift, 0, { speed: 22, bounciness: 4 })
+            fade(0, 180)
           },
         }),
   }
-  return { s, hover, down, over, props }
+  const motion = { transform: [{ translateY: lift.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: s }] }
+  return { s, lift, sheen, down, over, props, motion }
 }
 
 // on 이 켜질 때(하트 누름 등) 한 번 통통 튀는 아이콘 틀. 처음 그릴 때는 움직이지 않습니다.

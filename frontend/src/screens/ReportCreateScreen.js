@@ -4,6 +4,7 @@ import * as Location from 'expo-location'
 import Button from '../components/Button'
 import FilterChips from '../components/FilterChips'
 import Screen from '../components/Screen'
+import Toast from '../components/Toast'
 import { ISSUE_PICK, PLACE_PICK, pickNote, pickValue } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
@@ -52,7 +53,7 @@ export default function ReportCreateScreen({ navigation, route }) {
       issueType: pickValue(ISSUE_PICK, issueType),
       requiredMembers: members,
       shot,
-      spot: [pNote, spot.trim()].filter(Boolean).join(' · '),
+      spot: [pNote, spot.trim()].filter(Boolean).join(' · ').slice(0, 30), // 서버 상한 30자(장소 이름을 앞에 붙이면 넘칠 수 있음)
       ...where,
     })
     setBusy(false)
@@ -67,6 +68,7 @@ export default function ReportCreateScreen({ navigation, route }) {
   }
 
   return (
+    <View style={{ flex: 1 }}>
     <Screen>
       <Text style={text.h1}>{crew ? '크루 의뢰 올리기' : '제보하기'}</Text>
       <Text style={text.small}>{crew ? '여럿이 치워야 하는 곳을 사진으로 알려 주세요. 최소 2명부터예요.' : '쓰레기가 있는 곳을 사진으로 알려 주세요.'}</Text>
@@ -132,6 +134,9 @@ export default function ReportCreateScreen({ navigation, route }) {
         </Button>
       </View>
     </Screen>
+      {/* 이 화면은 모달이라 앱 공용 알림이 뒤에 가려집니다. 실패 이유가 보이도록 여기에도 둡니다(2026-11-22 "제보가 안 올라가요"). */}
+      <Toast />
+    </View>
   )
 }
 

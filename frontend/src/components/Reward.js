@@ -22,16 +22,23 @@ export function RewardIcon({ kind, size }) {
   return <I size={size} />
 }
 
-// 카드용: 아이콘 + 숫자 알약을 나란히
+// 카드용: 보상 종류를 알약 하나에 한 줄로 모읍니다(세 종류여도 줄바꿈하지 않음).
+// 종류마다 아이콘이 달라 "+" 없이도 따로 읽힙니다. 아주 좁은 폰에서도 하트 칸을 덮지 않게 알약 밖은 잘라 냅니다.
 export function RewardPills({ report, style }) {
+  const parts = rewardParts(report)
+  if (parts.length === 0) return <View style={style} />
   return (
-    <View style={[styles.pills, style]}>
-      {rewardParts(report).map((p) => (
-        <View key={p.kind} style={styles.pill} accessibilityLabel={`${p.name} ${fmt(p.value)}`}>
-          <RewardIcon kind={p.kind} size={16} />
-          <Text style={[text.num, { fontSize: 15, lineHeight: 18, color: TINT[p.kind] }]}>{fmt(p.value)}</Text>
-        </View>
-      ))}
+    <View style={[styles.pillsRow, style]}>
+      <View style={styles.pill} accessibilityLabel={parts.map((p) => `${p.name} ${fmt(p.value)}`).join(', ')}>
+        {parts.map((p) => (
+          <View key={p.kind} style={styles.part}>
+            <RewardIcon kind={p.kind} size={14} />
+            <Text style={[text.num, { fontSize: 13.5, lineHeight: 18, color: TINT[p.kind] }]} numberOfLines={1}>
+              {fmt(p.value)}
+            </Text>
+          </View>
+        ))}
+      </View>
     </View>
   )
 }
@@ -54,8 +61,9 @@ export function RewardTiles({ parts, style }) {
 }
 
 const styles = StyleSheet.create({
-  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.panel2, paddingLeft: 6, paddingRight: 9, paddingVertical: 4, borderRadius: radius.pill },
+  pillsRow: { flexDirection: 'row', minWidth: 0 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1, overflow: 'hidden', backgroundColor: colors.panel2, paddingLeft: 6, paddingRight: 8, paddingVertical: 5, borderRadius: radius.pill },
+  part: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   tiles: { flexDirection: 'row', gap: 8 },
   tile: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 6, borderRadius: radius.cardSm, backgroundColor: colors.sheetWeak, borderWidth: 1 },
 })

@@ -12,6 +12,8 @@ const ERRORS = {
   CREW_NAME_TAKEN: '같은 이름의 크루가 이미 있어요',
   CREW_NOT_FOUND: '크루를 찾지 못했어요',
   NOT_IN_CREW: '가입한 크루가 없어요',
+  NOT_ENOUGH_CREW_POINTS: '크루 포인트가 모자라요',
+  CREW_LEVEL_TOO_LOW_FOR_ITEM: '크루 레벨이 더 올라야 살 수 있어요',
   CREW_NOT_READY: '서버에 크루 기능이 아직 없어요',
   HEART_DAILY_LIMIT: '오늘 하트 10개를 다 썼어요. 내일 다시 누를 수 있어요',
   CREW_LEVEL_TOO_LOW: '크루는 레벨 3부터 만들 수 있어요',
@@ -54,6 +56,9 @@ const ERRORS = {
   'Anonymous sign-ins are disabled': '둘러보기가 꺼져 있어요. 이메일로 시작해 주세요',
   'Could not find the function public.quick_clean': '"바로 치웠어요"는 서버 준비 중이에요. 곧 열려요',
   TOO_FAR: '의뢰 장소에서 100m 안에서 찍은 사진만 인증할 수 있어요',
+  'violates check constraint': '입력한 내용이 너무 길거나 맞지 않아요. 제목·위치 설명을 줄여 주세요',
+  'row-level security': '로그인이 풀렸어요. 다시 로그인해 주세요',
+  'Payload too large': '사진이 너무 커요. 다시 찍어 주세요',
 }
 
 export function errorText(error) {
