@@ -121,7 +121,8 @@ function nextMonthStart(t) {
   const d = new Date(t + KST)
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1) - KST).toISOString()
 }
-const seasonLabel = (no) => `SEASON ${no}`
+// 첫 시즌은 Season Beta(2026-11-22 한재준 결정), 그다음부터 SEASON 1, 2 …
+const seasonLabel = (no) => (no === 1 ? 'Season Beta' : `SEASON ${no - 1}`)
 function rollSeason(db) {
   if (!db.season) {
     // 첫 시즌: 지금부터 다음 달 1일 0시까지. 이전에 쌓인 크루 점수는 레벨로만 남고 순위는 0부터 시작합니다.

@@ -44,7 +44,7 @@ export default function StylePickScreen({ navigation, route }) {
       .filter((c) => c.kind === kind)
       .map((c) => {
         const feat = c.feat && ACHIEVEMENTS.find((a) => a.id === c.feat)
-        const how = c.owned ? '보유 중' : feat ? feat.unlock : c.season ? `SEASON ${c.season} 크루 순위 ${c.rank}위 보상` : c.shop === 'crew' ? `크루 상점에서 구매 · 크루 Lv.${c.crew_level}` : c.locked ? `레벨 ${c.level} 달성 시 해제` : `${c.cost.toLocaleString()} 포인트로 구매 가능`
+        const how = c.owned ? '보유 중' : feat ? feat.unlock : c.season ? `${c.name.split(' · ')[0]} 크루 순위 ${c.rank}위 보상` : c.shop === 'crew' ? `크루 상점에서 구매 · 크루 Lv.${c.crew_level}` : c.locked ? `레벨 ${c.level} 달성 시 해제` : `${c.cost.toLocaleString()} 포인트로 구매 가능`
         return { key: c.id, label: c.name, open: c.owned, on: c.equipped, how, cost: !c.owned && !c.locked && c.cost > 0 ? c.cost : 0, item: c }
       })
   }

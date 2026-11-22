@@ -3,9 +3,9 @@
 // 시즌 보상: 시즌이 끝날 때 크루 순위 1·2·3위 크루의 크루원 모두에게 주는 테두리. 살 수 없습니다.
 // style 'crest' 는 components/AvatarFrame.js 의 시즌 테두리(날개·왕관·순위 메달). colors = [밝은 면, 본색, 그림자, 보석]
 export const SEASON_REWARDS = [
-  { id: 'frame-s1-1', kind: 'frame', season: 1, rank: 1, name: 'SEASON 1 · 골목 평정 황금 날개', style: 'crest', colors: ['#FFF6C8', '#FFD43B', '#A86B05', '#F04452'], cost: 0, level: 1 },
-  { id: 'frame-s1-2', kind: 'frame', season: 1, rank: 2, name: 'SEASON 1 · 아깝다 은빛 날개', style: 'crest', colors: ['#FFFFFF', '#C9D6E3', '#5E7185', '#7DF9FF'], cost: 0, level: 1 },
-  { id: 'frame-s1-3', kind: 'frame', season: 1, rank: 3, name: 'SEASON 1 · 동메달도 메달이다', style: 'crest', colors: ['#FFDCB8', '#E0884A', '#7A3E16', '#3DD68C'], cost: 0, level: 1 },
+  { id: 'frame-s1-1', kind: 'frame', season: 1, rank: 1, name: 'Season Beta · 황금 날개 왕관', style: 'crest', colors: ['#FFF6C8', '#FFD43B', '#A86B05', '#F04452'], cost: 0, level: 1 },
+  { id: 'frame-s1-2', kind: 'frame', season: 1, rank: 2, name: 'Season Beta · 은빛 날개 티아라', style: 'crest', colors: ['#FFFFFF', '#C9D6E3', '#5E7185', '#7DF9FF'], cost: 0, level: 1 },
+  { id: 'frame-s1-3', kind: 'frame', season: 1, rank: 3, name: 'Season Beta · 청동 월계관', style: 'crest', colors: ['#FFDCB8', '#E0884A', '#7A3E16', '#3DD68C'], cost: 0, level: 1 },
 ]
 export const seasonRewards = (no) => SEASON_REWARDS.filter((c) => c.season === no)
 

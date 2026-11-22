@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { Platform, StyleSheet, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Animated, Easing, Platform, StyleSheet, Text, View } from 'react-native'
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg'
 import DailyLimits from '../components/DailyLimits'
 import FilterChips from '../components/FilterChips'
 import { CameraIcon, LineIcon } from '../components/Icons'
-import { Appear, PressScale } from '../components/Motion'
+import { Appear, ND, PressScale, reduced } from '../components/Motion'
 import ClaimStatus from '../components/ClaimStatus'
 import MyQuests from '../components/MyQuests'
 import ReportCard from '../components/ReportCard'
@@ -94,9 +94,9 @@ export default function BoardScreen({ navigation }) {
         <View style={styles.dock}>
           <View style={{ flex: 1.2 }}>
           <PressScale onPress={() => navigation.navigate('QuickClean')} accessibilityRole="button" accessibilityLabel="바로 치운 곳 기록하기" style={styles.quick} to={0.96}>
-            <View style={styles.quickIcon}>
+            <Bouncy style={styles.quickIcon}>
               <LineIcon name="check" size={18} color={colors.ink} />
-            </View>
+            </Bouncy>
             <View style={{ flexShrink: 1 }}>
               <Text style={[text.button, { fontSize: 15, lineHeight: 19, color: colors.fg }]} numberOfLines={1}>
                 바로 치웠어요
@@ -120,6 +120,29 @@ export default function BoardScreen({ navigation }) {
   )
 }
 
+// 초록 체크 칸이 잊을 만하면 통통 튀며 "바로 치웠어요"를 눈에 띄게 합니다(두 번 튀고 쉼).
+function Bouncy({ style, children }) {
+  const v = useRef(new Animated.Value(0)).current
+  useEffect(() => {
+    if (reduced()) return
+    const hop = (h, d) =>
+      Animated.sequence([
+        Animated.timing(v, { toValue: h, duration: d, easing: Easing.out(Easing.quad), useNativeDriver: ND }),
+        Animated.timing(v, { toValue: 0, duration: d, easing: Easing.in(Easing.quad), useNativeDriver: ND }),
+      ])
+    const a = Animated.loop(Animated.sequence([hop(1, 170), hop(0.45, 130), Animated.delay(1700)]))
+    a.start()
+    return () => a.stop()
+  }, [v])
+  const transform = [
+    { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -7] }) },
+    { rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['-6deg', '4deg'] }) },
+    { scaleX: v.interpolate({ inputRange: [0, 0.15, 1], outputRange: [1.08, 1, 0.96] }) },
+    { scaleY: v.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0.92, 1, 1.05] }) },
+  ]
+  return <Animated.View style={[style, { transform }]}>{children}</Animated.View>
+}
+
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   mark: { width: 6, height: 16, backgroundColor: colors.tape, transform: [{ skewX: '-16deg' }] },
@@ -129,7 +152,7 @@ const styles = StyleSheet.create({
   fade: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   dock: { flexDirection: 'row', alignItems: 'stretch', gap: 6, padding: 6, borderRadius: 24, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line, ...(Platform.OS === 'web' ? { boxShadow: '0 10px 28px rgba(0,0,0,0.5)' } : { elevation: 10 }) },
   quick: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 8, paddingVertical: 8, borderRadius: 18 },
-  quickIcon: { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-6deg' }] },
+  quickIcon: { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
   report: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 18, backgroundColor: colors.blue, overflow: 'hidden' },
   reportSlash: { position: 'absolute', right: 18, top: -20, bottom: -20, width: 18, backgroundColor: 'rgba(255,255,255,0.12)', transform: [{ skewX: '-18deg' }] },
 })

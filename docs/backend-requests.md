@@ -248,7 +248,7 @@
   `is_demo = true` 인 `partners`·`crews`·`reports`·`quests` 와 `point_ledger.reason = 'seed'` 를 지워 주세요. 첫 시즌 순위가 실제 크루로만 매겨져야 합니다. 앱은 지금도 목록·랭킹에서 `is_demo` 를 빼고 보여 주지만, `my_crew.rank`·지도(`map_overview`)·업체 웹에는 아직 섞여 나옵니다. 지우기 전에 백업(또는 `is_demo` 행만 따로 내보내기)을 남겨 주세요.
 
 - [ ] **9-2. 첫 시즌 이름**
-  지금 진행 중인 시즌(11월, `SEASON 11`)을 첫 시즌 `SEASON 1` 로, 다음부터 `SEASON 2, 3 …` 으로 번호를 매겨 주세요(`ensure_next_season`). 앱은 `current_season().label` 을 그대로 보여 줍니다.
+  지금 진행 중인 시즌(11월, `SEASON 11`)의 이름을 `Season Beta` 로 바꾸고, 다음 시즌부터 `SEASON 1, 2 …` 로 번호를 매겨 주세요(`ensure_next_season`). 앱은 `current_season().label` 을 그대로 보여 줍니다. 보상 품목 이름도 `Season Beta · …` 입니다(`lib/cosmetics.js`).
 
 - [ ] **9-3. 시즌 순위 보상 테두리**
   `cosmetics` 에 `frame-s1-1`·`frame-s1-2`·`frame-s1-3`(`style = 'crest'`, 색 4개 = 밝은 면·본색·그림자·보석)을 넣고, 살 수 없게 해 주세요. 테두리 모양에 순위가 필요해서 `cosmetics.rank int`, `cosmetics.season int` 를 더하고 `cosmetics_list` 와 `my_profile.frame` 에 `rank` 를 함께 내려 주세요(`{ style, colors, rank }`).

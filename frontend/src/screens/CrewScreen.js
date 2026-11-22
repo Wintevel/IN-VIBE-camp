@@ -137,7 +137,6 @@ const RANK_NAME = { 1: '1위', 2: '2위', 3: '3위' }
 // 이번 시즌: 남은 기간과 1·2·3위 크루 보상(시즌 한정 프로필 테두리). 끝나면 그 크루의 크루원 모두가 받습니다.
 function SeasonCard({ season, myRank }) {
   if (!season) return null
-  const inTop = myRank && myRank <= 3
   return (
     <Appear from="bottom">
       <View style={styles.season}>
@@ -167,17 +166,14 @@ function SeasonCard({ season, myRank }) {
                   </View>
                   <Text style={[text.chip, { color: me ? colors.tape : colors.fg }]}>{RANK_NAME[rank]}</Text>
                   <Text numberOfLines={2} style={[text.caption, { fontSize: 11, lineHeight: 14, textAlign: 'center' }]}>
-                    {r.name.replace(/^SEASON \d+ · /, '')}
+                    {r.name.replace(/^[^·]+· /, '')}
                   </Text>
                 </View>
               )
             })}
           </View>
         ) : null}
-        <Text style={[text.caption, { color: inTop ? colors.tape : colors.sub }]}>
-          {myRank ? (inTop ? `지금 우리 크루 ${myRank}위! 이대로 끝나면 크루원 모두 ${RANK_NAME[myRank]} 테두리를 받아요` : `지금 우리 크루 ${myRank}위 · 3위 안에 들면 크루원 모두 시즌 테두리를 받아요`) : '시즌이 끝날 때 1·2·3위 크루의 크루원 모두가 시즌 한정 테두리를 받아요'}
-        </Text>
-        {season.last?.reward ? <Text style={[text.caption, { color: colors.tape }]}>{`${season.last.label} ${season.last.my_rank}위 보상 "${season.last.reward}"을 받았어요. 꾸미기에서 착용해 보세요`}</Text> : null}
+        {season.last?.reward ? <Text style={[text.caption, { color: colors.tape }]}>{`${season.last.label} ${season.last.my_rank}위 보상 "${season.last.reward}" 획득`}</Text> : null}
       </View>
     </Appear>
   )
