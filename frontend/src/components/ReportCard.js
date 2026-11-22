@@ -29,6 +29,7 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
           {isCrew(r) ? <Stamp type="partner">크루 {r.current_members}/{r.required_members}</Stamp> : null}
           {r.verifying ? <Stamp type="hot">확인 대기</Stamp> : r.status === 'in_progress' ? <Stamp type="hot">진행 중</Stamp> : null}
           {done ? <Stamp type="done">완료</Stamp> : null}
+          {topMark ? <Text style={[text.caption, styles.mark]}>{topMark}</Text> : null}
         </View>
         <Text style={text.cardTitle} numberOfLines={2}>
           {r.title}
@@ -38,11 +39,6 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
         </Text>
         <View style={styles.bottom}>
           <RewardPills report={r} style={{ flex: 1 }} />
-          {topMark ? (
-            <View style={styles.mark}>
-              <Text style={[text.chip, { color: colors.sub }]}>{topMark}</Text>
-            </View>
-          ) : null}
           <PressScale onPress={onHeart} hitSlop={6} to={0.9} surface="raisedSm" active={!!r.liked_by_me} accessibilityRole="button" accessibilityLabel="하트" accessibilityState={{ selected: !!r.liked_by_me }} style={[styles.heart, r.liked_by_me && styles.heartOn]}>
             <Pop on={!!r.liked_by_me}>
               <HeartIcon size={16} filled={!!r.liked_by_me} color={r.liked_by_me ? colors.red : colors.sub} />
@@ -63,9 +59,9 @@ const styles = StyleSheet.create({
   codeTag: { position: 'absolute', left: 0, bottom: 0, backgroundColor: 'rgba(17,19,23,0.72)', paddingHorizontal: 6, paddingVertical: 3, borderTopRightRadius: 8 },
   main: { flex: 1, gap: 6, paddingVertical: 2 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
-  bottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 2 },
-  heart: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.panel2 },
-  mark: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
+  bottom: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  heart: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.panel2 },
+  mark: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   heartOn: { backgroundColor: colors.redSoft },
   edge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: colors.blue },
 })

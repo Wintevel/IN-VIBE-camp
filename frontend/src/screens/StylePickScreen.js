@@ -44,7 +44,7 @@ export default function StylePickScreen({ navigation, route }) {
       .filter((c) => c.kind === kind)
       .map((c) => {
         const feat = c.feat && ACHIEVEMENTS.find((a) => a.id === c.feat)
-        const how = c.owned ? '보유 중' : feat ? feat.unlock : c.locked ? `레벨 ${c.level} 달성 시 해제` : `${c.cost.toLocaleString()} 포인트로 구매 가능`
+        const how = c.owned ? '보유 중' : feat ? feat.unlock : c.season ? `SEASON ${c.season} 크루 순위 ${c.rank}위 보상` : c.shop === 'crew' ? `크루 상점에서 구매 · 크루 Lv.${c.crew_level}` : c.locked ? `레벨 ${c.level} 달성 시 해제` : `${c.cost.toLocaleString()} 포인트로 구매 가능`
         return { key: c.id, label: c.name, open: c.owned, on: c.equipped, how, cost: !c.owned && !c.locked && c.cost > 0 ? c.cost : 0, item: c }
       })
   }
@@ -93,7 +93,9 @@ export default function StylePickScreen({ navigation, route }) {
       <Appear key={c.key} index={i} from="bottom" style={kind === 'title' ? styles.slotWide : styles.slot}>
       <PressScale onPress={() => pick(c)} accessibilityRole="button" accessibilityState={{ selected: active }} accessibilityLabel={`${c.label}${c.open ? '' : ', 잠김'}${c.on ? ', 적용 중' : ''}`} style={[styles.cell, kind === 'title' && styles.cellWide, active && styles.cellOn, !c.open && kind !== 'title' && { opacity: 0.6 }]}>
         {kind === 'frame' ? (
-          <AvatarFrame frame={c.item} size={48} letter="" />
+          <View style={c.item.style === 'crest' ? { marginVertical: 4 } : null}>
+            <AvatarFrame frame={c.item} size={48} letter="" />
+          </View>
         ) : kind === 'name' ? (
           <Text style={[text.title, { color: c.item.colors[0] }]}>가</Text>
         ) : kind === 'photo' ? (

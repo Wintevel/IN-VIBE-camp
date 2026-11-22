@@ -20,6 +20,7 @@ import MeScreen from '../screens/MeScreen'
 import ProofScreen from '../screens/ProofScreen'
 import QuickCleanScreen from '../screens/QuickCleanScreen'
 import ReportCreateScreen from '../screens/ReportCreateScreen'
+import CrewShopScreen from '../screens/CrewShopScreen'
 import ShopScreen from '../screens/ShopScreen'
 import StylePickScreen from '../screens/StylePickScreen'
 import StyleScreen from '../screens/StyleScreen'
@@ -85,6 +86,7 @@ export default function RootNavigator() {
             <Stack.Screen name="Capture" component={CaptureScreen} options={{ presentation: 'fullScreenModal' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Shop" component={ShopScreen} />
+            <Stack.Screen name="CrewShop" component={CrewShopScreen} />
             <Stack.Screen name="Style" component={StyleScreen} />
             <Stack.Screen name="StylePick" component={StylePickScreen} />
             <Stack.Screen name="Collection" component={CollectionScreen} />

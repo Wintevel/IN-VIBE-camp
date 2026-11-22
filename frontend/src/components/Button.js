@@ -1,18 +1,19 @@
 import { Animated, Pressable, StyleSheet, Text } from 'react-native'
 import { colors, radius, text } from '../theme'
-import { SHADOW_EASE, surfaceStyle, usePress } from './Motion'
+import { SHADOW_EASE, Sheen, surfaceStyle, usePress } from './Motion'
 
 // type: primary(파랑) | weak(연한 파랑) | ghost(어두운 면 위 보조)
 // compact: 내용 너비만큼만 차지하는 작은 버튼
-// 뉴모피즘 촉감: 평소 살짝 솟아 있고, 누르면 안으로 패이며 조금 줄어듭니다. 웹에서 마우스를 올리면 조금 더 솟습니다.
+// 뉴모피즘 촉감: 평소 살짝 솟아 있고, 누르면 안으로 패이며 줄었다가 놓으면 통 튀어 돌아옵니다. 웹에서 마우스를 올리면 살짝 떠오릅니다.
 export default function Button({ type = 'primary', disabled, onPress, children, style, compact }) {
   const v = disabled ? variants.disabled : variants[type] || variants.primary
-  const { s, down, over, props } = usePress(0.98)
+  const { down, over, props, motion, sheen } = usePress(0.96)
   const [outer, inner] = split(style)
   return (
     <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityState={{ disabled }} {...(disabled ? null : props)} style={[!compact && !hasFlex(outer) && styles.outer, compact && styles.compactOuter, outer]}>
-      <Animated.View style={[styles.base, { backgroundColor: v.bg }, disabled ? null : [surfaceStyle('raised', { down, over }), SHADOW_EASE], compact && styles.compact, inner, { transform: [{ scale: s }] }]}>
+      <Animated.View style={[styles.base, { backgroundColor: v.bg }, disabled ? null : [surfaceStyle('raised', { down, over }), SHADOW_EASE], compact && styles.compact, inner, disabled ? null : motion]}>
         <Text style={[text.button, { color: v.fg }]}>{children}</Text>
+        {disabled ? null : <Sheen v={sheen} radius={inner.borderRadius ?? radius.cardSm} />}
       </Animated.View>
     </Pressable>
   )

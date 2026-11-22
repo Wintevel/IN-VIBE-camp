@@ -77,6 +77,18 @@ export function CrewXpIcon({ size = 18 }) {
   )
 }
 
+// 크루 포인트(크루 상점 전용 재화): 민트색 육각 주화에 깃발
+export function CrewPointIcon({ size = 18 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M12 1 21.5 6.5v11L12 23l-9.5-5.5v-11Z" fill={colors.mint} />
+      <Path d="M12 4.2 18.7 8v8L12 19.8 5.3 16V8Z" fill="none" stroke={colors.tapeInk} strokeOpacity="0.22" strokeWidth="1.3" />
+      <Path d="M8.6 17.6V6.4" stroke={colors.tapeInk} strokeWidth="2" strokeLinecap="round" />
+      <Path d="M9.4 6.6 17 9.6l-7.6 3Z" fill={colors.tapeInk} />
+    </Svg>
+  )
+}
+
 export function GiftIcon({ size = 18, color = colors.tape }) {
   const p = { ...base, stroke: color }
   return (

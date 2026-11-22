@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Location from 'expo-location'
 import * as api from '../api'
+import { msToKstMidnight } from '../lib/format'
 
 // 앱 상태. 데이터는 전부 서버(Supabase)에서 옵니다. 예시 데이터는 없습니다.
 const Ctx = createContext(null)
@@ -25,6 +26,8 @@ export function AppStateProvider({ children }) {
   const [myCrew, setMyCrew] = useState(null)
   const [shop, setShop] = useState([])
   const [cosmetics, setCosmetics] = useState([])
+  const [season, setSeason] = useState(null)
+  const [crewShop, setCrewShop] = useState(null)
   const [notices, setNotices] = useState([])
   const [claims, setClaims] = useState([]) // 확인 대기·운영진 검토·최근 반려된 내 인증
   const [dash, setDash] = useState(null) // 속도선 전환 연출 { id, then }
@@ -87,6 +90,8 @@ export function AppStateProvider({ children }) {
       setMyCrew(await api.getMyCrew())
       setShop((await api.getShopItems()) || [])
       setCosmetics((await api.cosmeticsApi.list()) || [])
+      setSeason((await api.seasonApi.current().catch(() => null)) || null)
+      setCrewShop((await api.crewShopApi.list().catch(() => null)) || null)
       setNotices((await api.socialApi.notices()) || [])
       setClaims((await api.claimsApi.mine()) || [])
     } catch {
@@ -132,6 +137,20 @@ export function AppStateProvider({ children }) {
       setMyCrew(null)
     }
   }, [userId, refresh])
+
+  // 하루 제한(해결 3개·하트 10개)은 한국 시간 0시에 다시 채워집니다. 그 시각에 맞춰 내 정보를 새로 받습니다.
+  useEffect(() => {
+    if (!userId) return
+    let t
+    const arm = () => {
+      t = setTimeout(() => {
+        loadProfile()
+        arm()
+      }, msToKstMidnight() + 2000)
+    }
+    arm()
+    return () => clearTimeout(t)
+  }, [userId, loadProfile])
 
   // 공개를 기다리는 내 제보가 있으면 공개 시각에 맞춰 목록을 새로 받습니다.
   useEffect(() => {
@@ -181,6 +200,8 @@ export function AppStateProvider({ children }) {
       myCrew,
       shop,
       cosmetics,
+      season,
+      crewShop,
       notices,
       claims,
       social: !!api.socialApi,
@@ -331,6 +352,15 @@ export function AppStateProvider({ children }) {
           showToast(item.owned ? `${item.name}(으)로 바꿨어요` : `${item.name} 구매 완료`)
           return true
         }),
+      // 크루 상점: 크루 포인트로 사서 바로 착용합니다. 이미 산 것이면 착용만 합니다.
+      buyCrewItem: (item) =>
+        run(async () => {
+          if (item.owned) await api.cosmeticsApi.equip(item.id)
+          else await api.crewShopApi.buy(item.id)
+          await loadProfile()
+          showToast(item.owned ? `${item.name}(으)로 바꿨어요` : `${item.name} 구매 완료 · 바로 착용했어요`)
+          return true
+        }),
       saveAvatar: (uri) =>
         run(async () => {
           await api.profileApi.setAvatar(uri)
@@ -360,7 +390,7 @@ export function AppStateProvider({ children }) {
           return true
         }),
     }),
-    [session, tutorialSeen, userId, guest, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, notices, claims, dash, celebrate, photos, draftPhoto, quickPhotos, toast, sheet, showToast, refresh, run, loadProfile],
+    [session, tutorialSeen, userId, guest, coords, located, reports, loading, loadError, profile, crews, myCrew, shop, cosmetics, season, crewShop, notices, claims, dash, celebrate, photos, draftPhoto, quickPhotos, toast, sheet, showToast, refresh, run, loadProfile],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

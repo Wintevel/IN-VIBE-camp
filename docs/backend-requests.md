@@ -239,3 +239,32 @@
 
 - [ ] **8-1. 늘린 선택지와 직접 적은 말 저장 (선택)**
   `issue_type` 에 `'butt'`·`'bulky'`·`'etc'` 를, `category` 에 `'학교 앞'`·`'주차장'`·`'하천·산책로'` 를 더하고(XP 기준도 정해 주세요), `reports`·`quests`·`self_cleans` 에 `issue_note text`, `category_note text`(각 20자) 를 더해 주세요. `create_report` insert·`quick_clean`(`p_issue_note`, `p_category_note`)·목록 RPC 반환에도 넣어 주시면 앱이 카드에 "기타(담배꽁초)"처럼 보여 줄 수 있습니다. 그 전까지는 위 방식으로 보냅니다.
+
+## 9. 첫 시즌·크루 상점 (2026-11-22 한재준 요청, 프론트 반영)
+
+프론트는 기기 저장소 모드(`frontend/src/api/local.js`)에 먼저 만들었고, 서버 응답이 아래 모양이면 바로 동작합니다. 품목 id·이름·색은 `frontend/src/lib/cosmetics.js` 가 기준입니다. 가격·환율은 정해진 값이 아니니 `app_settings` 에 두세요.
+
+- [ ] **9-1. 시험용 데이터 지우기 (첫 시즌 전)**
+  `is_demo = true` 인 `partners`·`crews`·`reports`·`quests` 와 `point_ledger.reason = 'seed'` 를 지워 주세요. 첫 시즌 순위가 실제 크루로만 매겨져야 합니다. 앱은 지금도 목록·랭킹에서 `is_demo` 를 빼고 보여 주지만, `my_crew.rank`·지도(`map_overview`)·업체 웹에는 아직 섞여 나옵니다. 지우기 전에 백업(또는 `is_demo` 행만 따로 내보내기)을 남겨 주세요.
+
+- [ ] **9-2. 첫 시즌 이름**
+  지금 진행 중인 시즌(11월, `SEASON 11`)을 첫 시즌 `SEASON 1` 로, 다음부터 `SEASON 2, 3 …` 으로 번호를 매겨 주세요(`ensure_next_season`). 앱은 `current_season().label` 을 그대로 보여 줍니다.
+
+- [ ] **9-3. 시즌 순위 보상 테두리**
+  `cosmetics` 에 `frame-s1-1`·`frame-s1-2`·`frame-s1-3`(`style = 'crest'`, 색 4개 = 밝은 면·본색·그림자·보석)을 넣고, 살 수 없게 해 주세요. 테두리 모양에 순위가 필요해서 `cosmetics.rank int`, `cosmetics.season int` 를 더하고 `cosmetics_list` 와 `my_profile.frame` 에 `rank` 를 함께 내려 주세요(`{ style, colors, rank }`).
+  시즌이 끝날 때(`ensure_next_season` 이 다음 시즌을 만드는 시점이나 시즌 종료 직후 cron) 그 시즌 `crew_ranking` 1·2·3위 크루의 **그 시점 크루원 전원**에게 해당 품목을 `user_cosmetics` 로 주세요. 점수 0 크루는 제외, 같은 점수면 먼저 그 점수에 도달한 크루가 앞. 결과는 `season_results(season_id, crew_id, rank)` 같은 표에 남기고, `current_season()` 에 지난 시즌 내 결과 `last: { label, my_rank, reward }` 를 더해 주면 앱이 크루 화면에 "보상을 받았어요"를 띄웁니다.
+
+- [ ] **9-4. 크루 포인트 (크루 상점 전용 재화)**
+  크루원이 크루 경험치를 얻을 때마다 같은 양(`crew_point_rate = 1`)의 **개인** 크루 포인트가 쌓입니다(`point_ledger` 에 `crew_points int` 열 추가 또는 별도 원장). 크루를 나가도 남은 크루 포인트와 산 품목은 그대로입니다. `my_profile` 에 `crew_points` 를 더해 주세요.
+
+- [ ] **9-5. 크루 상점 RPC**
+  `cosmetics` 에 `shop text`(`'crew'`), `crew_cost int`, `crew_level int` 를 더하고 `lib/cosmetics.js` 의 `CREW_SHOP` 9개를 넣어 주세요(포인트 상점·레벨로는 열리지 않음).
+  ```js
+  supabase.rpc('crew_shop')
+  // { crew_points, crew_level, in_crew, items: [{ id, kind, name, style, colors, crew_cost, crew_level, owned, locked, equipped }] }
+  supabase.rpc('buy_crew_item', { p_id })   // 사면 바로 착용. 이미 가졌으면 착용만
+  // { crew_points }  에러: NOT_IN_CREW, CREW_LEVEL_TOO_LOW_FOR_ITEM, NOT_ENOUGH_CREW_POINTS, COSMETIC_NOT_FOUND
+  ```
+  `crew_level` 은 크루 전체 누적 경험치 기준(지금 `crew_ranking.level` 과 같은 값). 이 RPC 가 없으면 앱은 목록만 보여 주고 구매 버튼을 막습니다.
+
+- 참고: 크루 화면의 랭킹은 이번 시즌 점수(`crew_ranking.score`)로, 크루 레벨은 누적으로 보여 줍니다. 지금 서버 계산과 같습니다.

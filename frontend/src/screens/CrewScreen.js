@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import AvatarFrame from '../components/AvatarFrame'
 import Button from '../components/Button'
-import { CrewXpIcon, PointIcon } from '../components/Icons'
+import { CrewPointIcon, CrewXpIcon, PointIcon } from '../components/Icons'
 import { Card, SectionTitle } from '../components/ListRows'
-import { Appear, Bar, CountUp } from '../components/Motion'
+import { Appear, Bar, CountUp, PressScale } from '../components/Motion'
 import ReportCard from '../components/ReportCard'
 import Screen from '../components/Screen'
 import ScreenHeader from '../components/ScreenHeader'
@@ -33,7 +34,8 @@ export default function CrewScreen({ navigation }) {
         <Appear>
           <CreateCrew onCreate={app.createCrew} level={app.profile?.level || 1} />
         </Appear>
-        <SectionTitle>크루 랭킹</SectionTitle>
+        <SeasonCard season={app.season} />
+        <SectionTitle>이번 시즌 크루 랭킹</SectionTitle>
         <Ranking crews={app.crews} onJoin={app.joinCrew} />
         <LocalNote app={app} />
       </Screen>
@@ -69,8 +71,20 @@ export default function CrewScreen({ navigation }) {
               {mine.xp_in_level}/{mine.xp_for_next_level}
             </Text>
           </View>
+          <View style={styles.walletRow}>
+            <CrewPointIcon size={22} />
+            <View style={{ flex: 1 }}>
+              <Text style={[text.caption, { fontSize: 11, lineHeight: 14 }]}>내 크루 포인트</Text>
+              <CountUp value={app.crewShop?.crew_points || 0} style={[text.num, { fontSize: 17, lineHeight: 21, color: colors.mint }]} />
+            </View>
+            <PressScale onPress={() => navigation.navigate('CrewShop')} accessibilityRole="button" accessibilityLabel="크루 상점 열기" style={styles.shopBtn}>
+              <Text style={[text.chip, { color: colors.tapeInk }]}>크루 상점</Text>
+            </PressScale>
+          </View>
         </View>
       </Appear>
+
+      <SeasonCard season={app.season} myRank={mine.rank} />
 
       <View style={styles.tabs} accessibilityRole="tablist">
         {TABS.map(([key, label]) => {
@@ -111,6 +125,61 @@ export default function CrewScreen({ navigation }) {
       </View>
       <LocalNote app={app} />
     </Screen>
+  )
+}
+
+const md = (t) => {
+  const d = new Date(new Date(t).getTime() + 9 * 3600 * 1000)
+  return `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일`
+}
+const RANK_NAME = { 1: '1위', 2: '2위', 3: '3위' }
+
+// 이번 시즌: 남은 기간과 1·2·3위 크루 보상(시즌 한정 프로필 테두리). 끝나면 그 크루의 크루원 모두가 받습니다.
+function SeasonCard({ season, myRank }) {
+  if (!season) return null
+  const inTop = myRank && myRank <= 3
+  return (
+    <Appear from="bottom">
+      <View style={styles.season}>
+        <View style={styles.seasonGlow} />
+        <View style={[styles.seasonSlash, { right: 18 }]} />
+        <View style={[styles.seasonSlash, { right: 46, width: 8 }]} />
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+          <View style={{ gap: 2 }}>
+            <Text style={[text.stamp, { color: colors.tape, letterSpacing: 1 }]}>{season.label}</Text>
+            <Text style={[text.section, { fontSize: 17 }]}>시즌 순위 보상</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[text.num, { fontSize: 15, color: colors.fg }]}>{season.days_left > 0 ? `D-${season.days_left}` : '오늘 종료'}</Text>
+            <Text style={[text.caption, { fontSize: 11 }]}>{md(season.ends_at)} 0시 종료</Text>
+          </View>
+        </View>
+        {season.rewards?.length ? (
+          <View style={styles.podium}>
+            {[2, 1, 3].map((rank) => {
+              const r = season.rewards.find((x) => x.rank === rank)
+              if (!r) return null
+              const me = myRank === rank
+              return (
+                <View key={rank} style={[styles.podiumCol, rank === 1 && { marginTop: -6 }]} accessibilityLabel={`${RANK_NAME[rank]} 크루 보상, 테두리 ${r.name}`}>
+                  <View style={styles.podiumArt}>
+                    <AvatarFrame frame={r.frame} size={rank === 1 ? 68 : 58} letter="" />
+                  </View>
+                  <Text style={[text.chip, { color: me ? colors.tape : colors.fg }]}>{RANK_NAME[rank]}</Text>
+                  <Text numberOfLines={2} style={[text.caption, { fontSize: 11, lineHeight: 14, textAlign: 'center' }]}>
+                    {r.name.replace(/^SEASON \d+ · /, '')}
+                  </Text>
+                </View>
+              )
+            })}
+          </View>
+        ) : null}
+        <Text style={[text.caption, { color: inTop ? colors.tape : colors.sub }]}>
+          {myRank ? (inTop ? `지금 우리 크루 ${myRank}위! 이대로 끝나면 크루원 모두 ${RANK_NAME[myRank]} 테두리를 받아요` : `지금 우리 크루 ${myRank}위 · 3위 안에 들면 크루원 모두 시즌 테두리를 받아요`) : '시즌이 끝날 때 1·2·3위 크루의 크루원 모두가 시즌 한정 테두리를 받아요'}
+        </Text>
+        {season.last?.reward ? <Text style={[text.caption, { color: colors.tape }]}>{`${season.last.label} ${season.last.my_rank}위 보상 "${season.last.reward}"을 받았어요. 꾸미기에서 착용해 보세요`}</Text> : null}
+      </View>
+    </Appear>
   )
 }
 
@@ -305,5 +374,13 @@ const styles = StyleSheet.create({
   bubbleDone: { borderWidth: 1, borderColor: 'rgba(61,214,140,0.45)' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   sep: { borderTopWidth: 1, borderTopColor: colors.line },
+  walletRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.line },
+  shopBtn: { backgroundColor: colors.mint, paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.pill },
+  season: { gap: 12, padding: 16, borderRadius: radius.lg, backgroundColor: colors.panel, borderWidth: 1, borderColor: 'rgba(255,212,59,0.45)', overflow: 'hidden' },
+  seasonGlow: { position: 'absolute', left: -60, top: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(255,212,59,0.06)' },
+  seasonSlash: { position: 'absolute', top: -30, bottom: -30, width: 20, backgroundColor: 'rgba(255,212,59,0.07)', transform: [{ skewX: '-18deg' }] },
+  podium: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', paddingTop: 8 },
+  podiumCol: { flex: 1, alignItems: 'center', gap: 4, paddingHorizontal: 4 },
+  podiumArt: { height: 92, alignItems: 'center', justifyContent: 'center' },
   input: { backgroundColor: colors.panel2, borderRadius: radius.cardSm, color: colors.fg, ...font.body, fontSize: 15, paddingHorizontal: 16, paddingVertical: 14 },
 })

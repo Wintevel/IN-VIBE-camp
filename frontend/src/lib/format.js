@@ -104,3 +104,9 @@ export const FLAG_REASONS = [
   ['danger', '위험한 장소'],
   ['etc', '기타'],
 ]
+
+// 다음 한국 시간 0시(UTC 15시)까지 남은 밀리초. 하루 제한이 이때 다시 채워집니다.
+export function msToKstMidnight(now = Date.now()) {
+  const kst = now + 9 * 3600e3
+  return (Math.floor(kst / 86400e3) + 1) * 86400e3 - kst
+}

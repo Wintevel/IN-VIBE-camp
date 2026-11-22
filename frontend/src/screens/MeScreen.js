@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
 import AvatarFrame from "../components/AvatarFrame";
-import DailyLimits from "../components/DailyLimits";
+import DailyLimits, { ResetIn } from "../components/DailyLimits";
 import InstallApp from "../components/InstallApp";
 import {
   BackpackIcon,
@@ -68,7 +68,7 @@ export default function MeScreen({ navigation }) {
   return (
     <Screen refreshControl={refresher(app)}>
       <View style={styles.me}>
-        <View style={{ alignItems: "center", gap: 8 }}>
+        <View style={[{ alignItems: "center", gap: 8 }, p.frame?.style === "crest" && { marginTop: 10, gap: 14 }]}>
           <AvatarFrame
             frame={p.frame}
             size={64}
@@ -249,7 +249,10 @@ export default function MeScreen({ navigation }) {
         ) : null}
       </Card>
 
-      <SectionTitle>오늘 남은 횟수</SectionTitle>
+      <View style={styles.row}>
+        <SectionTitle>오늘 남은 횟수</SectionTitle>
+        <ResetIn />
+      </View>
       <DailyLimits profile={p} />
 
       {p.cleaned?.length > 0 ? (
