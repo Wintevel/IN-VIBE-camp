@@ -1,11 +1,11 @@
 // 시즌 순위 보상과 크루 상점 품목. 기기 저장소 모드(api/local.js)가 그대로 쓰고, 서버에는 같은 id 로 넣어 달라고 요청했습니다(docs/backend-requests.md 9장).
 
 // 시즌 보상: 시즌이 끝날 때 크루 순위 1·2·3위 크루의 크루원 모두에게 주는 테두리. 살 수 없습니다.
-// style 'crest' 는 components/AvatarFrame.js 의 시즌 테두리(날개·왕관·순위 메달). colors = [밝은 면, 본색, 그림자, 보석]
+// style 'crest' 는 components/AvatarFrame.js 의 시즌 테두리(파스텔 두 겹 고리 + 작은 순위 장식 + 숫자 배지). colors = [밝은 면, 본색, 선, 포인트]
 export const SEASON_REWARDS = [
-  { id: 'frame-s1-1', kind: 'frame', season: 1, rank: 1, name: 'Season Beta · 황금 날개 왕관', style: 'crest', colors: ['#FFF6C8', '#FFD43B', '#A86B05', '#F04452'], cost: 0, level: 1 },
-  { id: 'frame-s1-2', kind: 'frame', season: 1, rank: 2, name: 'Season Beta · 은빛 날개 티아라', style: 'crest', colors: ['#FFFFFF', '#C9D6E3', '#5E7185', '#7DF9FF'], cost: 0, level: 1 },
-  { id: 'frame-s1-3', kind: 'frame', season: 1, rank: 3, name: 'Season Beta · 청동 월계관', style: 'crest', colors: ['#FFDCB8', '#E0884A', '#7A3E16', '#3DD68C'], cost: 0, level: 1 },
+  { id: 'frame-s1-1', kind: 'frame', season: 1, rank: 1, name: 'Season Beta · 버터', style: 'crest', colors: ['#FFF7DC', '#F6DE9A', '#B8934F', '#F3B9B4'], cost: 0, level: 1 },
+  { id: 'frame-s1-2', kind: 'frame', season: 1, rank: 2, name: 'Season Beta · 라일락', style: 'crest', colors: ['#F5F1FF', '#D8CEF6', '#8A7FB5', '#B9E2F5'], cost: 0, level: 1 },
+  { id: 'frame-s1-3', kind: 'frame', season: 1, rank: 3, name: 'Season Beta · 피치', style: 'crest', colors: ['#FFF1EA', '#F6CDBD', '#B5806C', '#BFE5CF'], cost: 0, level: 1 },
 ]
 export const seasonRewards = (no) => SEASON_REWARDS.filter((c) => c.season === no)
 

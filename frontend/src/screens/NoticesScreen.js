@@ -18,12 +18,12 @@ export default function NoticesScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="해결 확인" sub="사진을 보고 정말 치워졌는지 알려 주세요. 절반 이상이 확인해야 보상이 지급돼요" action="닫기" onAction={() => navigation.goBack()} />
+        <ScreenHeader title="해결 확인" sub="절반 이상이 '치워졌어요'면 보상 지급" action="닫기" onAction={() => navigation.goBack()} />
         {app.notices.length === 0 ? <Empty title="확인할 알림이 없어요" sub="제보하거나 하트를 누른 의뢰에 인증이 올라오면 여기로 알려 드려요" /> : null}
         {app.notices.map((n) => (
           <Card key={n.id} style={{ gap: 12 }}>
             <View>
-              {ROLE[n.role] ? <Text style={[text.caption, { color: colors.tape, marginBottom: 2 }]}>{ROLE[n.role]}</Text> : null}
+              {ROLE[n.role] ? <Text style={[text.caption, { color: colors.tapeText, marginBottom: 2 }]}>{ROLE[n.role]}</Text> : null}
               <Text style={text.cardTitle}>{n.title}</Text>
               <Text style={[text.small, { marginTop: 2 }]}>{n.solver} 님이 해결했다고 올렸어요</Text>
             </View>
@@ -32,7 +32,7 @@ export default function NoticesScreen({ navigation }) {
                 <View key={label} style={styles.photo}>
                   {photoUrl(path) ? <Image source={{ uri: photoUrl(path) }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={`${label} 사진`} /> : null}
                   <View style={styles.tag}>
-                    <Text style={[text.chip, { color: colors.fg }]}>{label}</Text>
+                    <Text style={[text.chip, { color: colors.onBlue }]}>{label}</Text>
                   </View>
                 </View>
               ))}

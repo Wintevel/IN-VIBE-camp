@@ -15,7 +15,7 @@ export default function HelpScreen({ navigation }) {
   const app = useApp()
   return (
     <Screen>
-      <ScreenHeader title="도움말" sub="집게표를 쓰는 법과 규칙" action="닫기" onAction={() => navigation.goBack()} />
+      <ScreenHeader title="도움말" action="닫기" onAction={() => navigation.goBack()} />
       {GUIDE.map((g, i) => (
         <Appear key={g.key} index={i}>
           <Card style={{ gap: 16 }}>

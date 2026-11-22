@@ -12,7 +12,7 @@ const LINES = Array.from({ length: 16 }, (_, i) => ({
   h: 6 + ((i * 13) % 4) * 9, // 굵기
   w: 0.5 + ((i * 7) % 5) * 0.16, // 길이(화면 너비 배수)
   lag: ((i * 5) % 7) / 7, // 출발 지연
-  color: i % 5 === 0 ? colors.tape : i % 3 === 0 ? colors.blue : colors.fg,
+  color: i % 5 === 0 ? colors.tapeText : i % 3 === 0 ? colors.blue : colors.fg,
 }))
 const DURATION = 1150 // 2026-11-22: 620ms 는 너무 짧다는 의견으로 늘림. "출동!"이 가운데 머무는 시간이 길어집니다.
 
@@ -61,5 +61,5 @@ export default function SpeedDash() {
 const styles = StyleSheet.create({
   wrap: { ...StyleSheet.absoluteFillObject, zIndex: 60, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   tilt: { ...StyleSheet.absoluteFillObject, transform: [{ rotate: '-8deg' }, { scale: 1.3 }] },
-  word: { fontSize: 64, lineHeight: 76, color: colors.tape, letterSpacing: 2 },
+  word: { fontSize: 64, lineHeight: 76, color: colors.tapeText, letterSpacing: 2 },
 })

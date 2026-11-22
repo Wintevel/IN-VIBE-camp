@@ -49,12 +49,11 @@ export default function TutorialScreen() {
             ) : (
               <>
                 <Logo size={88} />
-                <Text style={[text.h1, { fontSize: 34, lineHeight: 42 }]}>집게표에 온 걸 환영해요</Text>
-                <Text style={[text.regular, { color: colors.sub }]}>이웃이 알린 쓰레기를 근처 사람이 치우는 앱이에요.</Text>
+                <Text style={[text.h1, { fontSize: 34, lineHeight: 42 }]}>집게표</Text>
+                <Text style={[text.regular, { color: colors.sub }]}>이웃이 알린 쓰레기를 근처 사람이 치워요.</Text>
                 <View style={styles.panel}>
                   <GuideVisual g={{ flow: [['camera', '이웃이 제보'], ['board', '내가 수락'], ['check', '치우고 인증'], ['point', '보상']] }} />
                 </View>
-                <Text style={[text.small, { color: colors.sub }]}>쓰는 법을 1분만 볼게요.</Text>
               </>
             )}
           </Appear>

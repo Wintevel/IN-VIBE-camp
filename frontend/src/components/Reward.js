@@ -14,7 +14,7 @@ export function rewardParts(r) {
 }
 
 const ICON = { gift: GiftIcon, point: PointIcon, xp: XpIcon, crew: CrewXpIcon }
-const TINT = { gift: colors.tape, point: colors.tape, xp: colors.blue, crew: colors.purple }
+const TINT = { gift: colors.tapeText, point: colors.tapeText, xp: colors.blue, crew: colors.purple }
 const fmt = (v) => (typeof v === 'number' ? v.toLocaleString() : v)
 
 export function RewardIcon({ kind, size }) {

@@ -17,7 +17,7 @@ export default function VaultScreen({ navigation }) {
 
   return (
     <Screen>
-      <ScreenHeader title="보관함" sub="바꾼 쿠폰과 받은 제휴 보상이 모여요" action="닫기" onAction={() => navigation.goBack()} />
+      <ScreenHeader title="보관함" action="닫기" onAction={() => navigation.goBack()} />
       {items.length === 0 ? <Empty title="아직 받은 것이 없어요" sub="포인트로 상품을 바꾸거나 제휴 의뢰를 해결해 보세요" /> : null}
       {items.map((it, i) => {
         const coupon = it.kind === '쿠폰'
@@ -37,7 +37,7 @@ export default function VaultScreen({ navigation }) {
       <Button type="weak" style={{ flex: 0 }} onPress={() => navigation.navigate('Shop')}>
         포인트 상점 가기
       </Button>
-      {app.localMode ? <Text style={text.caption}>쿠폰 번호와 제휴 보상은 예시예요. 실제 발급은 아직 연결되어 있지 않아요.</Text> : null}
+      {app.localMode ? <Text style={text.caption}>시연 모드 · 쿠폰은 실제로 발급되지 않아요</Text> : null}
     </Screen>
   )
 }

@@ -71,17 +71,12 @@ export default function ReportCreateScreen({ navigation, route }) {
     <View style={{ flex: 1 }}>
     <Screen>
       <Text style={text.h1}>{crew ? '크루 의뢰 올리기' : '제보하기'}</Text>
-      <Text style={text.small}>{crew ? '여럿이 치워야 하는 곳을 사진으로 알려 주세요. 최소 2명부터예요.' : '쓰레기가 있는 곳을 사진으로 알려 주세요.'}</Text>
+      <Text style={text.small}>{crew ? '2명 이상 함께 치울 곳' : '찍은 자리가 제보 위치가 돼요'}</Text>
 
       <Pressable onPress={() => navigation.navigate('Capture', { kind: 'report', title: '제보 사진' })} accessibilityRole="button" accessibilityLabel={shot ? '사진 다시 찍기' : '사진 찍기'} style={[styles.photo, shot && styles.photoDone]}>
         {shot ? <Image source={{ uri: shot.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <Text style={[text.chip, { color: colors.sub }]}>사진 찍기 (앱 카메라만 가능)</Text>}
       </Pressable>
       {shot ? <Text style={text.caption}>촬영한 위치가 제보 위치로 기록돼요</Text> : null}
-      {!crew ? (
-        <Text onPress={() => navigation.replace('QuickClean')} accessibilityRole="button" style={[text.caption, { color: colors.green }]}>
-          보자마자 직접 치웠다면? "바로 치웠어요"로 기록하기 →
-        </Text>
-      ) : null}
 
       <Text style={text.section}>제목</Text>
       <TextInput value={title} onChangeText={setTitle} placeholder="예) 후문 골목에 꽁초가 가득해요" placeholderTextColor={colors.disabled} style={styles.input} maxLength={40} />

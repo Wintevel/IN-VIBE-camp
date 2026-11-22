@@ -8,7 +8,7 @@ export default function PhotoSlot({ n, shot, label, onPress }) {
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={shot ? `${label} 다시 찍기` : `${label} 찍기`} style={[styles.slot, shot && styles.done]}>
       {shot ? <Image source={{ uri: shot.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <CameraIcon size={30} color={colors.blue} />}
       <View style={[styles.tag, shot && { backgroundColor: colors.blue }]}>
-        <Text style={[text.chip, { color: shot ? colors.onBlue : colors.fg }]}>{[n, label, shot ? '다시 찍기' : '찍기'].filter(Boolean).join(' ')}</Text>
+        <Text style={[text.chip, { color: colors.onBlue }]}>{[n, label, shot ? '다시 찍기' : '찍기'].filter(Boolean).join(' ')}</Text>
       </View>
     </Pressable>
   )

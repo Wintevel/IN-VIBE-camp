@@ -26,7 +26,7 @@ export default function MyQuests({ reports, photos, onOpen }) {
           return (
             <Appear key={r.id} index={i}>
               <PressScale onPress={() => onOpen(r.id)} accessibilityRole="button" accessibilityLabel={`수락한 의뢰 ${r.title}`} style={[styles.card, reports.length === 1 && { width: 320 }]}>
-                <Text style={[text.caption, { color: started ? colors.tape : colors.sub }]}>{started ? remain(r.deadline_at) : `인원 모집 중 ${r.current_members}/${r.required_members}`}</Text>
+                <Text style={[text.caption, { color: started ? colors.tapeText : colors.sub }]}>{started ? remain(r.deadline_at) : `인원 모집 중 ${r.current_members}/${r.required_members}`}</Text>
                 <Text style={text.cardTitle} numberOfLines={1}>
                   {r.title}
                 </Text>

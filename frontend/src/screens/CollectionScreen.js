@@ -28,7 +28,7 @@ export default function CollectionScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="도전과제" sub={`${feats.filter((a) => a.done).length}/${feats.length} 달성 · 달성한 이름은 칭호로 쓸 수 있어요`} action="닫기" onAction={() => navigation.goBack()} />
+        <ScreenHeader title="도전과제" sub={`${feats.filter((a) => a.done).length}/${feats.length} 달성`} action="닫기" onAction={() => navigation.goBack()} />
         {sorted.map((a, i) => (
           <Appear key={a.id} index={i}>
             <Card style={[styles.feat, a.done && !a.claimed && { borderColor: colors.purple, backgroundColor: 'rgba(169,124,255,0.10)' }]}>
@@ -60,7 +60,7 @@ export default function CollectionScreen({ navigation }) {
                 <Text style={text.caption}>보상</Text>
                 <View style={styles.reward}>
                   <PointIcon size={14} />
-                  <Text style={[text.chip, { color: colors.tape }]}>{a.points}</Text>
+                  <Text style={[text.chip, { color: colors.tapeText }]}>{a.points}</Text>
                 </View>
                 <View style={styles.reward}>
                   <XpIcon size={14} />
@@ -75,7 +75,7 @@ export default function CollectionScreen({ navigation }) {
             </Card>
           </Appear>
         ))}
-        {app.localMode ? <Text style={text.caption}>조건과 보상 숫자는 예시예요.</Text> : null}
+        {app.localMode ? <Text style={text.caption}>시연 모드 · 조건과 보상 값은 임시</Text> : null}
       </Screen>
       <Toast />
     </View>

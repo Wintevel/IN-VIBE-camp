@@ -41,7 +41,7 @@ export default function QuickCleanScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen bottomPad={32}>
-        <ScreenHeader title="바로 치웠어요" sub="의뢰가 없어도 괜찮아요. 보자마자 치운 곳을 기록해요" action="닫기" onAction={close} />
+        <ScreenHeader title="바로 치웠어요" action="닫기" onAction={close} />
         <Appear from="right" style={styles.gains}>
           <View style={[styles.gain, { borderColor: colors.blue + '55' }]} accessibilityLabel="경험치를 받아요">
             <RewardIcon kind="xp" size={24} />

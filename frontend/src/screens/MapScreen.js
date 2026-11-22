@@ -28,7 +28,7 @@ export default function MapScreen() {
   const select = (id) => (String(id).startsWith('self-') ? null : app.openSheet(id))
   return (
     <Screen refreshControl={refresher(app)}>
-      <ScreenHeader title="동네 지도" sub="핀을 누르면 의뢰를 볼 수 있어요" />
+      <ScreenHeader title="동네 지도" />
       <View style={styles.map}>{app.coords ? <MapView center={app.coords} me={app.located ? app.coords : null} markers={markers} onSelect={select} /> : null}</View>
       <View style={styles.legend}>
         {LEGEND.map(([label, color]) => (
@@ -55,6 +55,6 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  map: { aspectRatio: 1 / 1.05, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: '#15181D' },
+  map: { aspectRatio: 1 / 1.05, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.panel2 },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
 })

@@ -19,7 +19,7 @@ export default function ReportCard({ report: r, onPress, onHeart }) {
       <View style={styles.thumb}>
         {img ? <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel="제보 사진" /> : isPartner(r) ? <GiftIcon size={30} /> : <PinIcon size={28} />}
         <View style={styles.codeTag}>
-          <Text style={[text.code, { color: colors.fg }]}>{code(r.id)}</Text>
+          <Text style={[text.code, { color: colors.onBlue }]}>{code(r.id)}</Text>
         </View>
       </View>
       <View style={styles.main}>

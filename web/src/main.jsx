@@ -1,5 +1,6 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 import './styles.css'
 
 // 같은 빌드를 /partner/ 와 /dev/ 에 올립니다. 주소가 /dev 로 끝나면 운영 화면을 엽니다.

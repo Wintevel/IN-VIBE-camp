@@ -10,7 +10,7 @@ import SpeedDash from './src/components/SpeedDash'
 import Toast from './src/components/Toast'
 import RootNavigator from './src/navigation/RootNavigator'
 import { AppStateProvider } from './src/state/AppState'
-import { colors } from './src/theme'
+import { colors, theme } from './src/theme'
 
 export default function App() {
   const loaded = useAppFonts()
@@ -28,7 +28,7 @@ export default function App() {
               <SpeedDash />
               <ClearOverlay />
             </View>
-            <StatusBar style="light" />
+            <StatusBar style={theme.scheme === 'light' ? 'dark' : 'light'} />
           </AppStateProvider>
         </FrameInsets>
       </SafeAreaProvider>

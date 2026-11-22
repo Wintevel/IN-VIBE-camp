@@ -73,7 +73,7 @@ export default function ClearOverlay() {
             <Appear key={r.kind} from={i % 2 ? 'left' : 'right'} delay={520 + i * 110} style={styles.row}>
               <RewardIcon kind={r.kind} size={26} />
               <Text style={[text.section, { flex: 1 }]}>{wait ? `${r.name} · 확인 뒤 지급` : r.name}</Text>
-              {r.label ? <Text style={[text.num, { color: colors.tape }]}>{r.label}</Text> : <CountUp value={r.value} prefix={wait ? '' : '+'} delay={520 + i * 110} style={[text.point, { color: r.kind === 'point' ? colors.tape : r.kind === 'crew' ? colors.purple : colors.blue }]} />}
+              {r.label ? <Text style={[text.num, { color: colors.tapeText }]}>{r.label}</Text> : <CountUp value={r.value} prefix={wait ? '' : '+'} delay={520 + i * 110} style={[text.point, { color: r.kind === 'point' ? colors.tapeText : r.kind === 'crew' ? colors.purple : colors.blue }]} />}
             </Appear>
           ))}
         </View>

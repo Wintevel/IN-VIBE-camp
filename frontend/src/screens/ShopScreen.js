@@ -31,14 +31,14 @@ export default function ShopScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
-        <ScreenHeader title="포인트 상점" sub="모은 포인트로 상품을 바꿔요" action="닫기" onAction={() => navigation.goBack()} />
+        <ScreenHeader title="포인트 상점" action="닫기" onAction={() => navigation.goBack()} />
         <Appear from="left">
           <View style={styles.wallet}>
             <View style={styles.slash} />
             <PointIcon size={34} />
             <View style={{ flex: 1 }}>
               <Text style={text.caption}>내 포인트</Text>
-              <CountUp value={points} style={[text.h1, { color: colors.tape }]} />
+              <CountUp value={points} style={[text.h1, { color: colors.tapeText }]} />
             </View>
           </View>
         </Appear>
@@ -51,13 +51,13 @@ export default function ShopScreen({ navigation }) {
             <Appear key={it.id} index={i}>
               <Card style={[styles.item, on && { borderColor: colors.tape }]}>
                 <View style={styles.thumb}>
-                  <GiftIcon size={24} color={can ? colors.tape : colors.disabled} />
+                  <GiftIcon size={24} color={can ? colors.tapeText : colors.disabled} />
                 </View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={text.section}>{it.name}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <PointIcon size={16} />
-                    <Text style={[text.num, { fontSize: 16, color: colors.tape }]}>{it.cost.toLocaleString()}</Text>
+                    <Text style={[text.num, { fontSize: 16, color: colors.tapeText }]}>{it.cost.toLocaleString()}</Text>
                     {!can ? <Text style={text.caption}>{(it.cost - points).toLocaleString()} 부족</Text> : null}
                   </View>
                 </View>
@@ -76,7 +76,7 @@ export default function ShopScreen({ navigation }) {
             <ListRow label="보관함" value={`쿠폰·제휴 보상 ${coupons.length + (app.profile?.rewards || []).length}개`} onPress={() => navigation.navigate('Vault')} />
           </View>
         </Card>
-        {app.localMode ? <Text style={text.caption}>상품과 가격은 예시예요. 실제 쿠폰 발급은 아직 연결되어 있지 않아요.</Text> : null}
+        {app.localMode ? <Text style={text.caption}>시연 모드 · 쿠폰은 실제로 발급되지 않아요</Text> : null}
       </Screen>
       <Toast />
     </View>
