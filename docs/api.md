@@ -32,7 +32,8 @@
 
 **제보**
 - 올리고 **3분 뒤** 다른 사람에게 공개됩니다. 그 전에는 올린 사람에게만 `pending_until`(공개 시각)과 함께 보이고, 하트·수락 불가(`REPORT_PENDING`)
-- 문제 유형 `issue_type`: `litter` 쓰레기 · `dumping` 무단 투기 · `bin` 넘친 쓰레기통 · `drain` 빗물받이 막힘 · `graffiti` 낙서 (기본 `litter`, 목록 임시)
+- 문제 유형 `issue_type`: `litter` 쓰레기 · `butt` 담배꽁초 · `dumping` 무단 투기 · `bulky` 대형 폐기물 · `bin` 넘친 쓰레기통 · `drain` 빗물받이 막힘 · `graffiti` 낙서 · `etc` 기타 (기본 `litter`, 목록 임시, 8-1)
+- 장소 유형 `category`: `골목·거리` · `공원` · `버스정류장` · `학교 앞` · `주차장` · `하천·산책로` · `빗물받이` · `기타` (8-1). 기타를 직접 적은 말은 `issue_note`·`category_note`(각 20자)
 - 필요 인원 `required_members`: 1(혼자) 또는 2 이상(여럿). 2 이상이면 크루 의뢰처럼 크루 XP 배수가 붙습니다
 - 사진은 본인 폴더(`{user id}/…`)에 실제로 올라간 파일이어야 함(`INVALID_PHOTO`)
 
@@ -46,12 +47,14 @@
 
 **포인트와 XP**
 - **포인트**: 상점·꾸미기에 쓰면 줄어드는 값(`points`). 받는 곳: 의뢰 해결, 하트 누르기
-- **XP**: 쌓이기만 하는 값(`xp`). 의뢰를 해결하면 장소 유형별로 빗물받이 100 · 버스정류장 80 · 공원 150 · 골목·거리 80 · 기타 50 (임시)
+- **XP**: 쌓이기만 하는 값(`xp`). 의뢰를 해결하면 장소 유형별로 빗물받이 100 · 버스정류장 80 · 공원 150 · 골목·거리 80 · 학교 앞 80 · 주차장 80 · 하천·산책로 150 · 기타 50 (임시)
+- **크루 포인트**(9-4): 크루원이 크루 XP 를 얻을 때 같은 양(`crew_point_rate` 1)이 **개인**에게 쌓이는 크루 상점 전용 재화(`profiles.crew_points`). 크루를 나가도 남습니다. 이의로 회수되면 함께 회수
 - **개인 레벨** = XP 300마다 1레벨(임시). 칭호는 프론트가 레벨 숫자로 붙입니다
-- 크루 만들기는 레벨 제한 없음(2026-11-23 한재준 결정, `app_settings.crew_create_level = 1` 로 바꿔 달라고 요청: `docs/backend-requests.md` 10-1). 가입도 제한 없음
+- 크루 만들기는 레벨 제한 없음(2026-11-23 한재준 결정, `app_settings.crew_create_level = 1`, 10-1 반영). 가입도 제한 없음
 - 의뢰 보상 포인트: 주민 제보 = least(10 + floor(하트 수 / 3) × 5, 100) (`report_base_points` 10, 임시), 제휴 = `reward_points`, 크루 의뢰 = 50(임시)
 
 **크루**
+- 시즌 정산(9-3): 시즌이 끝나면 매일 00:05(KST) cron 이 그 시즌 크루 점수(`crew_score` 합) 1·2·3위 크루의 그 시점 크루원 전원에게 보상 테두리(`frame-s1-1~3` 등, `cosmetics.season/rank`)를 줍니다. 점수 0·시험용 크루 제외, 같은 점수면 먼저 도달한 크루가 앞. 결과는 `season_results`, 받은 사람은 `season_rewards`
 - 1인 1크루(확정 대기 ?). 바로 가입(초대·승인 없음)
 - 크루원이 의뢰를 해결하면 **크루 XP** = 그 의뢰의 XP. 크루 의뢰(`kind='crew'`)나 필요 인원 2명 이상 의뢰는 **2배**(임시)
 - 크루 레벨 = 누적 크루 XP 500마다 1레벨(임시). 시즌 랭킹 점수 = 시즌 기간의 크루 XP 합
@@ -86,7 +89,7 @@
 | 테이블 | 주요 컬럼 | 클라이언트 권한 |
 |---|---|---|
 | `profiles` | id(=auth.users.id), nickname, avatar_url, home_area, points(보유), total_earned(누적 획득), xp, frame_id, name_color_id, created_at | 전체 읽기, 본인 nickname·avatar_url·home_area 수정. 가입 시 자동 생성 |
-| `reports` | id, author_id, title, description, category(`빗물받이`/`버스정류장`/`공원`/`골목·거리`/`기타`), issue_type, required_members, photo_url, lat, lng, address, status(`open`/`promoted`/`rejected`), heart_count, est_minutes, visible_at, is_demo, created_at | 전체 읽기, insert(title, description, category, issue_type, required_members, photo_url, lat, lng, address) |
+| `reports` | id, author_id, title, description, category(위 장소 유형), issue_type, issue_note, category_note, required_members, photo_url, lat, lng, address, spot, status(`open`/`promoted`/`rejected`), heart_count, est_minutes, visible_at, is_demo, created_at | 전체 읽기, insert(title, description, category, issue_type, issue_note, category_note, required_members, photo_url, lat, lng, address, spot) |
 | `report_hearts` | report_id, user_id, created_at | 전체 읽기, 본인 insert(report_id). delete 없음 |
 | `quests` | id, kind(`partner`/`crew`/`report`), report_id, partner_id, crew_id, title, description, org_name, category, issue_type, lat, lng, address, est_minutes, time_label, goal, tools, reward_points, reward_text, reward_label, reward_value, reward_unit, proof_mode, proof_label, hot, required_members, starts_at, expires_at, status(`review`/`scheduled`/`open`/`done`/`expired`/`rejected`), is_demo, 제휴업체 입력값(place_name, reward_type, reward_amount, capacity, reject_reason, reviewed_at, created_by) | 전체 읽기(검토 중·반려는 그 업체만), 크루원만 `kind='crew'` insert. 앱 목록에는 `open` 만 나옴 |
 | `quest_claims` | id, quest_id, user_id, status(`accepted`/`approved`/`cancelled`/`expired`), accepted_at, 전·후 photo_url/lat/lng/accuracy_m/taken_at/photo_hash, points_awarded, xp_awarded, crew_xp_awarded, reward_label, approved_at | 본인 것만 읽기. 쓰기는 RPC 로만 |
@@ -132,14 +135,14 @@ if (!session) await supabase.auth.signInAnonymously()
 // 의뢰 목록 (제휴 / 내 크루 의뢰 / 승격된 주민 제보), 가까운 순
 supabase.rpc('quests_nearby', { p_lat, p_lng, p_radius_m: 1500, p_kind: null }) // p_kind: 'partner'|'crew'|'report'|null
 ```
-반환 행: `id` · `code`(Q-0012) · `kind` · `label`(제휴 의뢰/크루 의뢰/주민 제보) · `title` · `org` · `description` · `goal` · `tools` · `time_label` · `point`(해결 포인트) · `reward` · `hot` · `lat` · `lng` · `address` · `distance_m` · `dist`(320m/1.1km) · `near`(500m 이내) · `required_members` · `current_members` · `hearts`/`hearted`(report 만) · `my_status`(`accepted`/`approved`/…) · `my_claim_id`(수락 중인 내 claim) · `cleared`(내가 완료) · `status` · `expires_at` · `report_id`·`photo_url`(승격된 제보의 원래 사진, report 만) · `category` · `issue_type` · `is_mine`(내 제보에서 나온 의뢰) · `proof_mode` · `proof_label` · `reward_label`·`reward_value`·`reward_unit`(제휴 보상) · `reward_xp` · `reward_crew_xp`(내가 크루원일 때 받을 크루 XP, 아니면 0) · `is_demo`.
+반환 행: `id` · `code`(Q-0012) · `kind` · `label`(제휴 의뢰/크루 의뢰/주민 제보) · `title` · `org` · `description` · `goal` · `tools` · `time_label` · `point`(해결 포인트) · `reward` · `hot` · `lat` · `lng` · `address` · `distance_m` · `dist`(320m/1.1km) · `near`(500m 이내) · `required_members` · `current_members` · `hearts`/`hearted`(report 만) · `my_status`(`accepted`/`approved`/…) · `my_claim_id`(수락 중인 내 claim) · `cleared`(내가 완료) · `status` · `expires_at` · `report_id`·`photo_url`(승격된 제보의 원래 사진, report 만) · `category` · `issue_type` · `is_mine`(내 제보에서 나온 의뢰) · `proof_mode` · `proof_label` · `reward_label`·`reward_value`·`reward_unit`(제휴 보상) · `reward_xp` · `reward_crew_xp`(내가 크루원일 때 받을 크루 XP, 아니면 0) · `is_demo` · `issue_note` · `category_note`(8-1, 직접 적은 말).
 크루 의뢰는 내 크루 것만 내려옵니다. 내가 완료한 의뢰는 마감돼도 `cleared: true` 로 같이 내려옵니다. 승격된 제보에 하트를 더 누를 때는 `report_id` 를 씁니다.
 
 ```js
 // 주민 제보 (아직 승격 안 된 것). 공개된 것 + 내 것(공개 전 포함)
 supabase.rpc('reports_nearby', { p_lat, p_lng, p_radius_m: 1500 })
 ```
-반환: `id` · `code`(R-0003) · `title` · `author` · `description` · `category` · `issue_type` · `photo_url` · `lat` · `lng` · `address` · `distance_m` · `dist` · `near` · `time_label` · `hearts` · `point`(지금 승격되면 해결 포인트) · `reward_xp` · `required_members` · `hearted` · `mine`(내 제보면 하트 버튼 숨기기) · `pending_until`(공개 전이면 공개 시각, 아니면 null) · `is_demo` · `created_at`.
+반환: `id` · `code`(R-0003) · `title` · `author` · `description` · `category` · `issue_type` · `photo_url` · `lat` · `lng` · `address` · `distance_m` · `dist` · `near` · `time_label` · `hearts` · `point`(지금 승격되면 해결 포인트) · `reward_xp` · `required_members` · `hearted` · `mine`(내 제보면 하트 버튼 숨기기) · `pending_until`(공개 전이면 공개 시각, 아니면 null) · `is_demo` · `created_at` · `issue_note` · `category_note`.
 
 ```js
 // 상단 띠
@@ -161,7 +164,8 @@ const path = `${user.id}/${Date.now()}.jpg`
 await supabase.storage.from('report-photos').upload(path, file, { contentType: 'image/jpeg' })
 await supabase.from('reports').insert({
   title, category,                // category 는 장소 유형 한글 값 그대로
-  issue_type,                     // 'litter'|'dumping'|'bin'|'drain'|'graffiti', 생략하면 litter
+  issue_type,                     // 위 문제 유형 키, 생략하면 litter
+  issue_note, category_note,      // 선택, 각 20자: 기타를 고르고 직접 적은 말 (8-1). 승격된 의뢰에도 복사
   required_members,               // 1 또는 2 이상, 생략하면 1
   photo_url: path, lat, lng,      // 촬영 위치
   address, description,           // 선택
@@ -245,6 +249,7 @@ const { data, error } = await supabase.rpc('quick_clean', {
   p_before_photo_url, p_before_lat, p_before_lng, p_before_accuracy_m, p_before_taken_at, p_before_photo_hash,
   p_after_photo_url,  p_after_lat,  p_after_lng,  p_after_accuracy_m,  p_after_taken_at,  p_after_photo_hash,
   p_mocked, p_before_thumb, p_after_thumb,
+  p_issue_note, p_category_note,       // 선택, 각 20자 (8-1)
 })
 // { id, title, xp_gained, crew_xp_gained, level, leveled_up, daily_remaining }
 // 에러: DAILY_LIMIT, PHOTOS_TOO_FAR_APART, INVALID_TIME, TOO_FAST, NO_CHANGE, MOCK_LOCATION, INVALID_PHOTO, DUPLICATE_PHOTO, MISSING_PROOF, LOGIN_REQUIRED, CONSENT_REQUIRED
@@ -297,8 +302,8 @@ await supabase.rpc('flag_avatar', { p_user_id, p_reason: 'photo' })  // photo|pr
 ### 내 정보 / 설정
 ```js
 supabase.rpc('my_profile')
-// { id, nickname, initial, avatar_url, home_area, frame: { id, style, colors }, name_color, joined_days,
-//   points, total_earned, xp, level, xp_in_level, xp_for_next_level, crew,
+// { id, nickname, initial, avatar_url, home_area, frame: { id, style, colors, rank }, name_color, joined_days,
+//   points, total_earned, crew_points, xp, level, xp_in_level, xp_for_next_level, crew,
 //   hearts_today, hearts_limit, completes_today, completes_limit, daily_remaining,
 //   title_key, weekly: [8개 숫자, 오래된 주부터], stats: { completed, hearts, reports, rewards, places: {drain: 2, ...}, issues: {litter: 1, ...} },
 //   completed_count, streak_weeks, active_this_week,
@@ -307,7 +312,7 @@ supabase.rpc('my_profile')
 //   coupons: [{ name, code, at }],                            // 상점 쿠폰
 //   records: [[라벨, 값]] }
 supabase.rpc('my_cleaned', { p_limit: 20, p_before: null }) // 치운 곳 더 보기 (p_before 에 마지막 at 을 넣으면 다음 쪽)
-// [{ id(문자열), at, title, place_label, issue_type, kind('self' 포함), self, points, xp, lat, lng, address }]
+// [{ id(문자열), at, title, place_label, issue_type, kind('self' 포함), self, points, xp, lat, lng, address, issue_note, category_note }]
 await supabase.from('profiles').update({ nickname, home_area }).eq('id', me)
 await supabase.auth.signOut()
 ```
@@ -339,16 +344,19 @@ const { data } = await supabase.rpc('redeem_item', { p_item_id })
 ### 프로필 꾸미기
 ```js
 supabase.rpc('cosmetics_list')
-// [{ id, kind: 'frame'|'name', name, style, colors, cost, level, owned, locked, equipped }]
+// [{ id, kind: 'frame'|'name', name, style, colors, cost, level, owned, locked, equipped, feat,
+//    season, rank, shop, crew_cost, crew_level }]   // season·rank: 시즌 보상, shop 'crew': 크루 상점 품목
 await supabase.rpc('buy_cosmetic', { p_id })   // 사고 바로 착용. { points, frame, name_color }
 await supabase.rpc('equip_cosmetic', { p_id }) // 가진 것 착용
 // 에러: NOT_ENOUGH_POINTS, LEVEL_TOO_LOW, COSMETIC_NOT_FOUND
 ```
-`cost > 0` 은 포인트로 사서 보유, `cost = 0` 은 레벨이 되면 보유(살 수 없음). 품목·가격은 `frontend/src/api/local.js` 의 `COSMETICS` 와 같습니다(임시). 크루원 목록(`my_crew.members`)에도 `frame`·`name_color` 가 내려갑니다.
+`cost > 0` 은 포인트로 사서 보유, `cost = 0` 은 레벨이 되면 보유(살 수 없음). 시즌 보상(`season`)·크루 상점(`shop='crew'`)·도전과제(`feat`) 품목은 받거나 산 사람만 보유하고, `buy_cosmetic` 으로는 살 수 없습니다(`LEVEL_TOO_LOW`, 가졌으면 착용만). 테두리 `frame` 에는 `rank`(시즌 보상 순위, 아니면 null)가 같이 내려갑니다. 품목·가격은 `frontend/src/api/local.js` 의 `COSMETICS` 와 같습니다(임시). 크루원 목록(`my_crew.members`)에도 `frame`·`name_color` 가 내려갑니다.
 
 ### 크루
 ```js
-supabase.rpc('current_season')  // { label:'SEASON 11', period, note, title:'시즌 종료까지 20일', ... }
+supabase.rpc('current_season')
+// { id, label:'Season Beta', period, note, title:'시즌 종료까지 20일', starts_at, ends_at,
+//   last: null | { no, label, my_rank(1~3 또는 null), reward(받은 테두리 이름 또는 null), top:[1·2·3위 크루 이름] } }
 supabase.rpc('crew_ranking')
 // [{ rank, crew_id, name, area, meta:'용현동 · 5명', member_count, score(시즌 크루 XP),
 //    level, xp_in_level, xp_for_next_level, mine, is_demo }]
@@ -363,6 +371,12 @@ await supabase.rpc('create_crew', { p_name, p_area })  // 만든 사람이 크�
 await supabase.rpc('join_crew', { p_crew_id })
 await supabase.rpc('leave_crew')
 // 에러: CREW_NAME_TAKEN, ALREADY_IN_CREW, CREW_NOT_FOUND, NOT_IN_CREW, INVALID_NAME
+
+// 9-5 크루 상점 (크루 포인트로 사는 꾸미기, 크루 레벨이 품목 crew_level 이상이어야 함)
+supabase.rpc('crew_shop')
+// { crew_points, crew_level(미가입 0), in_crew, items: [{ id, kind, name, style, colors, crew_cost, crew_level, owned, locked, equipped }] }
+await supabase.rpc('buy_crew_item', { p_id })   // 사면 바로 착용, 이미 가졌으면 착용만. { crew_points }
+// 에러: NOT_IN_CREW, CREW_LEVEL_TOO_LOW_FOR_ITEM, NOT_ENOUGH_CREW_POINTS, COSMETIC_NOT_FOUND, LOGIN_REQUIRED, CONSENT_REQUIRED
 
 await supabase.from('quests').insert({                 // 크루 의뢰 올리기 (크루원만)
   kind: 'crew', crew_id, title, address: 모임장소, required_members, // 2 이상
