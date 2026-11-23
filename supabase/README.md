@@ -31,7 +31,7 @@ npx supabase db push     # migrations/ 를 원격에 적용
   - `20261123162834_requests_8_9_10`: 8-1(제보 선택지·직접 적은 말), 9-3(시즌 보상·정산), 9-4(크루 포인트), 9-5(크루 상점), 10-1, 10-3
 - 시연용 데이터는 `seed.sql` (원격에는 이미 넣어 둠, `is_demo = true`). 로컬은 `supabase db reset` 시 자동 실행됩니다.
 - 대시보드 인증 설정 (2026-11-16 기준)
-  - **이메일 로그인**: 켜 둠. 앱 가입·로그인은 이메일(+ 필수 동의 `save_consent`). Confirm email 은 켜져 있음(시연 기간에 끌지 결정 중. 기본 메일은 시간당 발송 수가 적음).
+  - **이메일 로그인**: 켜 둠. 앱 가입·로그인은 이메일(+ 필수 동의 `save_consent`). Confirm email 은 꺼 둠(10-2, 아이디 로그인용. 2026-11-24 확인).
   - **익명 로그인(Anonymous sign-ins)**: 켜 둠. 앱의 "둘러보기" 전용이라 읽기만 되고, 쓰기는 서버가 `LOGIN_REQUIRED` 로 막습니다(`app_settings.block_anonymous_writes`).
   - **Site URL / Redirect URLs**: `https://wintevel.github.io/IN-VIBE-camp/`, `https://wintevel.github.io/IN-VIBE-camp/**` (확인 메일 링크가 배포된 앱으로 오도록).
   - **카카오·구글 로그인**: 아직 안 켬(제공자 앱 키 필요). 켜면 프론트 담당에게 알립니다.
