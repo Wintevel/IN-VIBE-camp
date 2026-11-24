@@ -24,6 +24,7 @@ const DARK_COLORS = {
   tapeInk: '#191F28',
 
   green: '#3DD68C',
+  onGreen: '#0C2B1D', // 초록 면 위 글자
   red: '#F04452',
   purple: '#A97CFF',
   mint: '#5CE1C8', // 크루 포인트
@@ -54,6 +55,7 @@ const LIGHT_COLORS = {
   blueWeak: '#E8F3FF',
   tapeText: '#B7791F',
   green: '#0FA968',
+  onGreen: '#FFFFFF',
   red: '#E5303F',
   purple: '#7B4DFF',
   mint: '#0BA591',
