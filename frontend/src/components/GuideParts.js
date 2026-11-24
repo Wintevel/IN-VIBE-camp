@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { colors, radius, text } from '../theme'
 import { BackpackIcon, CameraIcon, GiftIcon, HeartIcon, LineIcon, LockIcon, PinIcon, PointIcon, TabIcon, XpIcon } from './Icons'
@@ -48,7 +49,7 @@ export function Flow({ steps }) {
   return (
     <View style={styles.flow} accessibilityLabel={steps.map((s) => s[1]).join(', 그다음 ')}>
       {steps.map(([icon, label], i) => (
-        <View key={label} style={styles.flowItem}>
+        <Fragment key={label}>
           {i > 0 ? <Text style={styles.arrow}>›</Text> : null}
           <View style={styles.step}>
             <View style={styles.stepIcon}>
@@ -56,7 +57,7 @@ export function Flow({ steps }) {
             </View>
             <Text style={[text.caption, styles.center, { color: colors.fg }]}>{label}</Text>
           </View>
-        </View>
+        </Fragment>
       ))}
     </View>
   )
@@ -146,8 +147,7 @@ export function GuideVisual({ g }) {
 const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   flow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center' },
-  flowItem: { flex: 1, flexDirection: 'row', alignItems: 'flex-start' },
-  arrow: { color: colors.disabled, fontSize: 22, lineHeight: 44, marginHorizontal: -2 },
+  arrow: { width: 14, textAlign: 'center', color: colors.disabled, fontSize: 22, lineHeight: 44 },
   step: { flex: 1, alignItems: 'center', gap: 6 },
   stepIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.panel2, alignItems: 'center', justifyContent: 'center' },
   facts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

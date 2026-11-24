@@ -112,14 +112,17 @@ export default function BoardScreen({ navigation }) {
         </Svg>
         <PressScale onPress={() => navigation.navigate('QuickClean')} accessibilityRole="button" accessibilityLabel="바로 치운 곳 기록하기" style={styles.quick} to={0.96}>
           <Bouncy style={styles.quickIcon}>
-            <LineIcon name="check" size={18} color={colors.ink} />
+            <LineIcon name="check" size={18} color={colors.green} />
           </Bouncy>
-          <Text style={[text.button, { fontSize: 15, lineHeight: 19, color: colors.fg }]} numberOfLines={1}>
-            바로 치웠어요
-          </Text>
-          <Text style={[text.caption, { fontSize: 12 }]} numberOfLines={1}>
-            의뢰 없이 기록
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[text.button, { fontSize: 16, lineHeight: 20, color: colors.onGreen }]} numberOfLines={1}>
+              바로 치웠어요
+            </Text>
+            <Text style={[text.caption, { fontSize: 12, lineHeight: 16, color: colors.onGreen, opacity: 0.75 }]} numberOfLines={1}>
+              의뢰 없이 바로 기록해요
+            </Text>
+          </View>
+          <LineIcon name="chev" size={18} color={colors.onGreen} />
         </PressScale>
       </View>
     </View>
@@ -159,6 +162,6 @@ const styles = StyleSheet.create({
   report: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 38, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.blue },
   dockWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingTop: 24, paddingBottom: 14 },
   fade: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  quick: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 8, paddingRight: 18, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line, ...(Platform.OS === 'web' ? { boxShadow: '0 8px 24px rgba(0,0,0,0.35)' } : { elevation: 8 }) },
-  quickIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
+  quick: { flexDirection: 'row', alignItems: 'center', gap: 12, width: 264, paddingLeft: 10, paddingRight: 16, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.green, ...(Platform.OS === 'web' ? { boxShadow: '0 8px 22px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.28)' } : { elevation: 8 }) },
+  quickIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
 })
