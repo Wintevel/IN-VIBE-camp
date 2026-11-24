@@ -237,27 +237,32 @@
 - 장소: 골목·거리·공원·버스정류장·학교 앞·주차장·하천·산책로·기타(직접 적기). 뒤의 넷은 `category = '기타'` 로 보내고 이름을 `spot` 앞에 붙임. 바로 치웠어요는 한 줄 기록이 비었으면 `p_title` 을 "학교 앞 바로 치움" 처럼 보냄
 - 빗물받이는 고르는 목록에서 뺐습니다. 값은 예전 기록 때문에 그대로 둬 주세요.
 
-- [ ] **8-1. 늘린 선택지와 직접 적은 말 저장 (선택)**
+- [x] **8-1. 늘린 선택지와 직접 적은 말 저장 (선택)**
   `issue_type` 에 `'butt'`·`'bulky'`·`'etc'` 를, `category` 에 `'학교 앞'`·`'주차장'`·`'하천·산책로'` 를 더하고(XP 기준도 정해 주세요), `reports`·`quests`·`self_cleans` 에 `issue_note text`, `category_note text`(각 20자) 를 더해 주세요. `create_report` insert·`quick_clean`(`p_issue_note`, `p_category_note`)·목록 RPC 반환에도 넣어 주시면 앱이 카드에 "기타(담배꽁초)"처럼 보여 줄 수 있습니다. 그 전까지는 위 방식으로 보냅니다.
+  > 처리 (2026-11-24, 장연우): `20261123162834_requests_8_9_10`. 새 장소 XP 는 임시로 학교 앞·주차장 80(골목·거리와 같게), 하천·산책로 150(공원과 같게). `stats.places` 키는 `school`/`parking`/`river`. 직접 적은 말은 `quests_nearby`·`reports_nearby`·`my_cleaned` 에 내려감(`my_profile.cleaned` 에는 아직 없음). 제보 insert 에 `issue_note`·`category_note` 권한 추가, 승격 의뢰에 복사.
 
 ## 9. 첫 시즌·크루 상점 (2026-11-22 한재준 요청, 프론트 반영)
 
 프론트는 기기 저장소 모드(`frontend/src/api/local.js`)에 먼저 만들었고, 서버 응답이 아래 모양이면 바로 동작합니다. 품목 id·이름·색은 `frontend/src/lib/cosmetics.js` 가 기준입니다. 가격·환율은 정해진 값이 아니니 `app_settings` 에 두세요.
 
-- [ ] **9-1. 시험용 데이터 지우기 (첫 시즌 전)**
+- [x] **9-1. 시험용 데이터 지우기 (첫 시즌 전)**
   `is_demo = true` 인 `partners`·`crews`·`reports`·`quests` 와 `point_ledger.reason = 'seed'` 를 지워 주세요. 첫 시즌 순위가 실제 크루로만 매겨져야 합니다. 앱은 지금도 목록·랭킹에서 `is_demo` 를 빼고 보여 주지만, `my_crew.rank`·지도(`map_overview`)·업체 웹에는 아직 섞여 나옵니다. 지우기 전에 백업(또는 `is_demo` 행만 따로 내보내기)을 남겨 주세요.
+  > 처리 (2026-11-24, 장연우 확인): 업체 4·제보 3·의뢰 7·시드 원장 1 삭제(시험용 크루는 이미 0). 백업 `supabase/backups/2026-11-24_demo.json`. 함께 지워진 실제 사용자 행(시험용 의뢰의 취소된 수락 2건, 하트 2건)은 개인정보라 저장소 밖에 따로 보관. 하트로 받은 1점 원장은 남김.
 
-- [ ] **9-2. 첫 시즌 이름**
+- [x] **9-2. 첫 시즌 이름**
   지금 진행 중인 시즌(11월, `SEASON 11`)의 이름을 `Season Beta` 로 바꾸고, 다음 시즌부터 `SEASON 1, 2 …` 로 번호를 매겨 주세요(`ensure_next_season`). 앱은 `current_season().label` 을 그대로 보여 줍니다. 보상 품목 이름도 `Season Beta · …` 입니다(`lib/cosmetics.js`).
+  > 서버 확인 (2026-11-24): 지금 시즌 이름이 이미 `Season Beta`, 다음 시즌 `SEASON 1` 로 만들어져 있고 `ensure_next_season` 이 번호를 이어 붙입니다.
 
-- [ ] **9-3. 시즌 순위 보상 테두리**
+- [x] **9-3. 시즌 순위 보상 테두리**
   `cosmetics` 에 `frame-s1-1`·`frame-s1-2`·`frame-s1-3`(`style = 'crest'`, 색 4개 = 밝은 면·본색·선·포인트, 이름·색은 `lib/cosmetics.js` 의 `SEASON_REWARDS` 와 같게)을 넣고, 살 수 없게 해 주세요. 테두리 모양에 순위가 필요해서 `cosmetics.rank int`, `cosmetics.season int` 를 더하고 `cosmetics_list` 와 `my_profile.frame` 에 `rank` 를 함께 내려 주세요(`{ style, colors, rank }`).
   시즌이 끝날 때(`ensure_next_season` 이 다음 시즌을 만드는 시점이나 시즌 종료 직후 cron) 그 시즌 `crew_ranking` 1·2·3위 크루의 **그 시점 크루원 전원**에게 해당 품목을 `user_cosmetics` 로 주세요. 점수 0 크루는 제외, 같은 점수면 먼저 그 점수에 도달한 크루가 앞. 결과는 `season_results(season_id, crew_id, rank)` 같은 표에 남기고, `current_season()` 에 지난 시즌 내 결과 `last: { label, my_rank, reward }` 를 더해 주면 앱이 크루 화면에 "보상을 받았어요"를 띄웁니다.
+  > 처리 (2026-11-24): 품목 3개(`cosmetics.season`·`rank`), 시즌 정산 `settle_season`(매일 00:05 `ensure_next_season` 이 끝난 시즌을 먼저 정산), 결과표 `season_results`·`season_rewards`. `current_season().last = { no, label, my_rank, reward, top }`. `look_of`·`my_profile.frame`·`cosmetics_list` 에 `rank`. Season Beta 는 12/1 00:05 에 정산됩니다.
 
-- [ ] **9-4. 크루 포인트 (크루 상점 전용 재화)**
+- [x] **9-4. 크루 포인트 (크루 상점 전용 재화)**
   크루원이 크루 경험치를 얻을 때마다 같은 양(`crew_point_rate = 1`)의 **개인** 크루 포인트가 쌓입니다(`point_ledger` 에 `crew_points int` 열 추가 또는 별도 원장). 크루를 나가도 남은 크루 포인트와 산 품목은 그대로입니다. `my_profile` 에 `crew_points` 를 더해 주세요.
+  > 처리 (2026-11-24): `profiles.crew_points`, `point_ledger.crew_points`, `app_settings.crew_point_rate`. 앞으로 얻는 크루 XP 부터 쌓임(지난 크루 XP 소급 없음). 이의로 회수되면 함께 회수. `my_profile.crew_points`.
 
-- [ ] **9-5. 크루 상점 RPC**
+- [x] **9-5. 크루 상점 RPC**
   `cosmetics` 에 `shop text`(`'crew'`), `crew_cost int`, `crew_level int` 를 더하고 `lib/cosmetics.js` 의 `CREW_SHOP` 9개를 넣어 주세요(포인트 상점·레벨로는 열리지 않음).
   ```js
   supabase.rpc('crew_shop')
@@ -266,23 +271,27 @@
   // { crew_points }  에러: NOT_IN_CREW, CREW_LEVEL_TOO_LOW_FOR_ITEM, NOT_ENOUGH_CREW_POINTS, COSMETIC_NOT_FOUND
   ```
   `crew_level` 은 크루 전체 누적 경험치 기준(지금 `crew_ranking.level` 과 같은 값). 이 RPC 가 없으면 앱은 목록만 보여 주고 구매 버튼을 막습니다.
+  > 처리 (2026-11-24): `cosmetics.shop`·`crew_cost`·`crew_level`, 품목 9개, `crew_shop`, `buy_crew_item`(원장 reason `crew_shop_buy`). 크루 상점·시즌 품목은 `buy_cosmetic` 으로 살 수 없음.
 
 - 참고: 크루 화면의 랭킹은 이번 시즌 점수(`crew_ranking.score`)로, 크루 레벨은 누적으로 보여 줍니다. 지금 서버 계산과 같습니다.
 
 ## 10. 크루 제한 해제·아이디 로그인 (2026-11-23 한재준 결정, 프론트 반영)
 
-- [ ] **10-1. 크루 만들기 레벨 제한 없애기**
+- [x] **10-1. 크루 만들기 레벨 제한 없애기**
   누구나 크루를 만들 수 있게 합니다. `create_crew` 는 `app_settings.crew_create_level` 을 보니 값만 바꾸면 됩니다(함수 수정 없음). 앱은 레벨 조건 없이 만들기 칸을 보여 주고, 서버가 아직 막으면 `CREW_LEVEL_TOO_LOW` 문구가 뜹니다.
   ```sql
   update public.app_settings set crew_create_level = 1;
   ```
   기본값도 맞추려면 새 마이그레이션에 `alter table public.app_settings alter column crew_create_level set default 1;` 를 함께 넣어 주세요.
+  > 처리 (2026-11-24): 값 1(이미 바뀌어 있었음) + 기본값 1.
 
-- [ ] **10-2. 아이디 로그인 켜기 (대시보드 설정)**
+- [x] **10-2. 아이디 로그인 켜기 (대시보드 설정)**
   앱 로그인 화면에 "아이디 / 이메일" 탭을 나눴습니다. 아이디는 `아이디@id.jipgepyo.example.com` 으로 바꿔 Supabase Auth 이메일 로그인으로 보냅니다(`frontend/src/screens/LoginScreen.js` 의 `ID_DOMAIN`). 이 주소로는 확인 메일을 받을 수 없으니 **Authentication → Sign In / Providers → Email 의 Confirm email 을 꺼** 주세요. 켜져 있으면 아이디 가입 뒤 로그인이 안 되고, 앱은 "아이디 가입은 아직 서버 설정이 필요해요"라고 안내합니다.
   끄면 이메일 가입도 확인 메일 없이 바로 로그인됩니다. 이메일 가입만 확인을 유지하려면 `auth` 훅 등 별도 처리가 필요하니, 지금은 끄는 쪽을 권합니다.
+  > 확인 (2026-11-24, 장연우): 대시보드에서 Confirm email 이 꺼져 있음.
 
-- [ ] **10-3. 아이디 가입 시 첫 닉네임 = 아이디**
+- [x] **10-3. 아이디 가입 시 첫 닉네임 = 아이디**
   앱이 아이디로 가입할 때 `signUp` 의 `options.data.nickname` 에 아이디를 넣고, 가입 직후 세션이 있으면 `profiles.nickname` 을 아이디로 바꿉니다(지금 권한으로 가능). 메일 확인이 켜져 세션이 없을 때도 맞추려면 `handle_new_user()` 에서 `coalesce(nullif(new.raw_user_meta_data ->> 'nickname', ''), '줍퀘러' || …)` 를 써 주세요. 급하지 않습니다.
+  > 처리 (2026-11-24): `handle_new_user` 가 `raw_user_meta_data.nickname`(20자까지)을 첫 닉네임으로, 없으면 예전 `줍퀘러xxxx`.
 
 - 참고: 시즌 보상 테두리 이름·색이 바뀌었습니다(9-3, `Season Beta · 버터/라일락/피치`, 파스텔). 넣을 때 `lib/cosmetics.js` 의 `SEASON_REWARDS` 를 그대로 써 주세요.

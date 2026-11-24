@@ -27,9 +27,11 @@ npx supabase db push     # migrations/ 를 원격에 적용
   - `20261114154247_verify_votes`: 인증 확인 투표·업체 확인, 5-1 ~ 5-5
   - `…172535_verify_votes_v2`, `…172619_verify_votes_v2_fix`, `…172735_verify_votes_fixed_weights`: 투표 비율 40/30/30·50% 기준, 크루장 확인, 업체 기한 없음
   - `20261118062807_requests_7`, `…115059_requests_7_fix`, `…115208_requests_7_map`: `docs/backend-requests.md` 7-1 ~ 7-4 (표본 확인·사후 이의, 기본 10점, 투표 1점, 바로 치웠어요)
+  - `20261121160000_staff_console`: 운영 웹(/dev) 운영진 권한(한재준 작성). SQL 에디터로 먼저 적용돼 있어서 2026-11-24 에 원격 기록만 맞춤
+  - `20261123162834_requests_8_9_10`: 8-1(제보 선택지·직접 적은 말), 9-3(시즌 보상·정산), 9-4(크루 포인트), 9-5(크루 상점), 10-1, 10-3
 - 시연용 데이터는 `seed.sql` (원격에는 이미 넣어 둠, `is_demo = true`). 로컬은 `supabase db reset` 시 자동 실행됩니다.
 - 대시보드 인증 설정 (2026-11-16 기준)
-  - **이메일 로그인**: 켜 둠. 앱 가입·로그인은 이메일(+ 필수 동의 `save_consent`). Confirm email 은 켜져 있음(시연 기간에 끌지 결정 중. 기본 메일은 시간당 발송 수가 적음).
+  - **이메일 로그인**: 켜 둠. 앱 가입·로그인은 이메일(+ 필수 동의 `save_consent`). Confirm email 은 꺼 둠(10-2, 아이디 로그인용. 2026-11-24 확인).
   - **익명 로그인(Anonymous sign-ins)**: 켜 둠. 앱의 "둘러보기" 전용이라 읽기만 되고, 쓰기는 서버가 `LOGIN_REQUIRED` 로 막습니다(`app_settings.block_anonymous_writes`).
   - **Site URL / Redirect URLs**: `https://wintevel.github.io/IN-VIBE-camp/`, `https://wintevel.github.io/IN-VIBE-camp/**` (확인 메일 링크가 배포된 앱으로 오도록).
   - **카카오·구글 로그인**: 아직 안 켬(제공자 앱 키 필요). 켜면 프론트 담당에게 알립니다.
