@@ -7,10 +7,12 @@ import Screen from '../components/Screen'
 import Toast from '../components/Toast'
 import { ISSUE_PICK, PLACE_PICK, pickNote, pickValue } from '../lib/format'
 import { useApp } from '../state/AppState'
+import { DEMO, DEMO_ADDRESS } from '../lib/demo'
 import { colors, font, radius, text } from '../theme'
 
 // 좌표 → 주소. 웹 등 주소를 못 구하는 환경에서는 비워 둡니다(좌표 숫자는 사람이 읽을 수 없어 보여 주지 않음).
 async function lookup(shot) {
+  if (DEMO) return DEMO_ADDRESS // 전시 시연판: 인터넷이 없어 주소를 못 구하므로 시연 장소 이름을 씁니다
   const fallback = { address: '', dong: '' }
   try {
     const [g] = await Location.reverseGeocodeAsync({ latitude: shot.lat, longitude: shot.lng })

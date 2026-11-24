@@ -1,11 +1,13 @@
 import { hasSupabase } from '../lib/supabase'
+import { DEMO } from '../lib/demo'
 import * as local from './local'
 import * as remote from './remote'
 
 // 서버 주소(.env 의 EXPO_PUBLIC_SUPABASE_URL / ANON_KEY)가 있으면 Supabase, 없으면 기기 저장소로 동작합니다.
+// 전시 시연판(EXPO_PUBLIC_DEMO=1)은 인터넷 없이 돌아야 하므로 서버 주소가 있어도 기기 저장소를 씁니다.
 // 두 구현은 같은 함수·같은 응답 모양을 가지므로 화면 코드는 바뀌지 않습니다.
-export const isLocal = !hasSupabase
-const impl = hasSupabase ? remote : local
+export const isLocal = DEMO || !hasSupabase
+const impl = isLocal ? local : remote
 
 export const { getSession, onAuthChange, signInAnonymously, signOut, getNearbyReports, toggleLike, acceptReport, cancelParticipation, getMyProfile, setNickname, photoUrl, createReport, submitProof, getCrews, getMyCrew, getShopItems, redeemItem, createCrew, joinCrew, leaveCrew } = impl
 // 기기 저장소 모드에서만 있는 기능: 이 기기의 기록 지우기

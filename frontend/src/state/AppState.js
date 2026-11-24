@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Location from 'expo-location'
 import * as api from '../api'
 import { msToKstMidnight } from '../lib/format'
+import { DEMO, DEMO_SPOT } from '../lib/demo'
 
 // 앱 상태. 데이터는 전부 서버(Supabase)에서 옵니다. 예시 데이터는 없습니다.
 const Ctx = createContext(null)
@@ -66,6 +67,13 @@ export function AppStateProvider({ children }) {
   }, [])
 
   const locate = useCallback(async () => {
+    // 전시 시연판: 위치 권한을 묻지 않고 고정된 시연 장소를 내 위치로 씁니다(인터넷 없는 PC 는 위치를 못 받는 경우가 많음).
+    if (DEMO) {
+      setLocated(true)
+      setCoords(DEMO_SPOT)
+      coordsRef.current = DEMO_SPOT
+      return DEMO_SPOT
+    }
     try {
       const perm = await Location.requestForegroundPermissionsAsync()
       if (perm.status !== 'granted') throw new Error('denied')

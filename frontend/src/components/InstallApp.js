@@ -4,6 +4,7 @@ import { APK_URL, useInstall } from '../lib/install'
 import { colors, text } from '../theme'
 import Button from './Button'
 import { Card } from './ListRows'
+import { DEMO } from '../lib/demo'
 
 const fixed = { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' } // 세로로 쌓을 때 높이가 늘어나지 않게
 
@@ -12,7 +13,7 @@ const fixed = { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' } // 세로로 쌓
 export default function InstallApp({ card }) {
   const { showInstall, showApk, ios, install } = useInstall()
   const [hint, setHint] = useState(false)
-  if (!showInstall) return null
+  if (!showInstall || DEMO) return null // 전시 시연판은 설치 안내를 숨깁니다
 
   const onInstall = async () => {
     if ((await install()) === 'manual') setHint(true)

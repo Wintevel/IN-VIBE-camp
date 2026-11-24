@@ -3,6 +3,7 @@ import { Platform } from 'react-native'
 import { errorText } from './errors'
 import { ACHIEVEMENTS, statsOf } from '../lib/achievements'
 import { CREW_POINT_RATE, CREW_SHOP, SEASON_REWARDS, seasonRewards } from '../lib/cosmetics'
+import { PROOF_GAP_MS, seedDemo } from '../lib/demo'
 
 // 기기 저장소 구현. 서버가 준비되기 전까지 앱 기능을 이 기기 안에서 실제로 동작시킵니다.
 // 응답 모양은 백엔드 API 가이드와 같게 맞췄고, 규칙은 docs/api.md 를 따릅니다
@@ -23,7 +24,7 @@ const DAILY_LIMIT = 3
 const PROOF_RADIUS_M = 100
 const REPORT_DELAY_MS = 3 * 60 * 1000 // 제보는 올리고 3분 뒤에 의뢰판에 공개됩니다(연달아 올리고 바로 수락하는 것을 막음)
 const PROOF_APART_M = 100 // 전·후 사진 촬영 위치 사이 거리 상한
-const PROOF_MIN_GAP_MS = 60 * 1000 // 임시값: 치우기 전 사진을 찍고 최소 이만큼 지나야 치운 뒤 사진을 받습니다
+const PROOF_MIN_GAP_MS = PROOF_GAP_MS // 임시값(1분, 전시 시연판 10초): 치우기 전 사진을 찍고 최소 이만큼 지나야 치운 뒤 사진을 받습니다
 const DAY = 24 * 3600 * 1000
 const HEART_DAILY_LIMIT = 10
 // 아래 세 값은 임시값입니다. 서버가 생기면 서버가 정합니다.
@@ -323,6 +324,7 @@ export async function getNearbyReports({ lat, lng, radiusM = 1500 }) {
     db.partnerSeeded = true
     db.reports.push({ ...PARTNER, id: db.nextId++, kind: 'partner', lat: lat + 0.0004, lng: lng + 0.0004, address: '내 위치 근처', dong: '', photo_path: null, status: 'open', likes: [], members: [], required_members: 1, deadline_at: null, created_at: new Date().toISOString(), reporter_id: 'partner', reporter_nickname: PARTNER.partner_name })
   }
+  seedDemo(db, { lat, lng }) // 전시 시연판에서만: 이웃 제보·크루 예시(lib/demo.js)
   sweep(db)
   await save()
   return db.reports

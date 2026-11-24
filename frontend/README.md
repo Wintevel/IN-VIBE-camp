@@ -49,3 +49,9 @@ src/api/               index.js 가 구현을 고름: remote.js(Supabase) / loca
 
 ## 지도
 지금은 키 없이 도는 Leaflet + OpenStreetMap 을 WebView(웹은 iframe)에 넣었습니다. 네이버지도(`@mj-studio/react-native-naver-map`)는 EAS 개발 빌드와 키가 필요해 그때 `src/components/MapView.native.js` 만 바꾸면 됩니다.
+
+## 전시 시연판(인터넷 없이 zip 으로 실행)
+- `node scripts/build-offline.js` 로 만듭니다. 결과는 `dist-offline/jipgepyo-offline.zip`(커밋하지 않음)이고, Windows PC 에서 압축을 풀고 `START.bat` 을 더블클릭하면 로컬 서버가 켜지고 브라우저로 `http://localhost:8723/IN-VIBE-camp/` 가 열립니다.
+- 서버는 `offline/server/` 에 있습니다. Go 가 있으면 `jipgepyo-server.exe` 를 만들어 넣고, 없거나 백신이 막으면 `START.bat` 이 Windows 기본 PowerShell 로 도는 `server.ps1` 로 넘어갑니다.
+- 앱은 `EXPO_PUBLIC_DEMO=1` 로 빌드되어 `src/lib/demo.js` 의 시연판 동작을 씁니다: 기기 저장소 모드 고정(서버 연결 안 함), 내 위치 고정(인하대 근처), 이웃 제보 6개·크루 3개·시작 포인트 200 예시, 카메라 없이 "시연용 사진"으로 촬영, 전·후 사진 간격 10초, 폰트·Leaflet 은 zip 안 파일, 지도 배경은 격자 무늬(인터넷 지도 없음).
+- 일반 빌드(웹 배포·폰 앱)는 `EXPO_PUBLIC_DEMO` 가 없어 영향이 없습니다. 관람객이 바뀔 때는 설정 > "이 기기의 기록 모두 지우기"로 처음 상태로 돌립니다.
