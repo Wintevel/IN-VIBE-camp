@@ -13,6 +13,7 @@ import Toast from '../components/Toast'
 import { code, remain } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, radius, text } from '../theme'
+import { PROOF_GAP_TOPIC } from '../lib/demo'
 
 // 의뢰 해결 인증 화면. 수락하면 바로 이 화면으로 넘어오고, 의뢰판의 "내가 수락한 의뢰"에서도 열립니다.
 export default function ProofScreen({ navigation, route }) {
@@ -44,7 +45,7 @@ export default function ProofScreen({ navigation, route }) {
   }
   const steps = single
     ? [`현장에서 ${label1}을 찍어요`, '의뢰 위치 100m 안에서만 인증돼요']
-    : ['치우기 전 모습을 먼저 찍어요', '치운 뒤 같은 자리에서 한 장 더 찍어요', '전 사진을 찍고 1분은 지나야 후 사진을 받아요']
+    : ['치우기 전 모습을 먼저 찍어요', '치운 뒤 같은 자리에서 한 장 더 찍어요', `전 사진을 찍고 ${PROOF_GAP_TOPIC} 지나야 후 사진을 받아요`]
 
   return (
     <View style={{ flex: 1 }}>

@@ -1,3 +1,4 @@
+import { PROOF_GAP_LABEL } from './demo'
 // 튜토리얼(첫 실행)과 도움말(내 정보)이 같이 쓰는 안내 내용. 규칙이 바뀌면 여기만 고칩니다.
 // 글은 한 줄에 한 가지만, 짧게 씁니다. 숫자·순서처럼 그림으로 보여 줄 수 있는 건 flow·facts·compare·dodont 로 둡니다.
 //   flow: [아이콘, 이름] 순서도 · facts: [아이콘, 큰 글자, 작은 글자] 칸 · compare: [아이콘, 이름, 설명] 두 칸
@@ -49,7 +50,7 @@ export const GUIDE = [
     ],
     facts: [
       ['pin', '100m', '의뢰 장소 안'],
-      ['clock', '1분', '전·후 사진 간격'],
+      ['clock', PROOF_GAP_LABEL, '전·후 사진 간격'],
       ['clock', '24시간', '수락 뒤 인증'],
       ['check', '3개', '하루 인증'],
     ],

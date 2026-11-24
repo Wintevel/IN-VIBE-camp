@@ -36,5 +36,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "leaflet": "^1.9.4"
+  }
 }

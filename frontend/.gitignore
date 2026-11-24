@@ -42,3 +42,6 @@ yarn-error.*
 
 # env (공개 키만 쓰지만 팀별 값이라 커밋하지 않음)
 .env
+
+# 전시 시연판 빌드 결과(scripts/build-offline.js)
+dist-offline/

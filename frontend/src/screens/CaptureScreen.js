@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Button from '../components/Button'
 import { useApp } from '../state/AppState'
 import { colors, radius, text } from '../theme'
+import { DEMO, demoShotUri } from '../lib/demo'
 
 // 앱 안 카메라로만 촬영합니다(갤러리 선택 없음). 촬영 순간의 위치·시각을 함께 남기고,
 // 서버가 의뢰 위치와의 거리·시각·사진 해시를 검증합니다(docs/api.md 악용 방지 규칙).
@@ -90,32 +91,26 @@ export default function CaptureScreen({ navigation, route }) {
     navigation.goBack()
   }
 
-  if (!camPerm) return <View style={styles.root} />
-  if (!camPerm.granted) {
-    return (
-      <View style={[styles.root, styles.center, { padding: 24 }]}>
-        <Text style={[text.sheetTitle, { color: colors.fg, textAlign: 'center' }]}>카메라 권한이 필요해요</Text>
-        <Text style={[text.small, { textAlign: 'center', marginVertical: 12 }]}>인증 사진은 앱 카메라로 찍은 것만 쓸 수 있어요.</Text>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Button type="ghost" onPress={close}>
-            닫기
-          </Button>
-          <Button onPress={requestCam}>권한 허용</Button>
-        </View>
-      </View>
-    )
-  }
-
-  const shoot = async () => {
+  // demoUri: 전시 시연판에서 카메라 대신 쓰는 그림 사진. 시연판은 위치도 묻지 않고 고정된 시연 장소(앱의 내 위치)를 씁니다.
+  const shoot = async (demoUri) => {
     if (busy) return
     setBusy(true)
     setError(null)
     try {
-      const perm = await Location.requestForegroundPermissionsAsync()
-      if (perm.status !== 'granted') throw new Error('위치 권한이 필요해요. 의뢰 장소 근처인지 확인해야 해요.')
-      const [pic, pos] = await Promise.all([camera.current.takePictureAsync({ quality: 0.7 }), Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })])
+      let pic
+      let pos
+      if (DEMO) {
+        const c = app.coords || { lat: 0, lng: 0 }
+        const j = () => (Math.random() - 0.5) * 0.00006 // 몇 m 안쪽으로 살짝 흔듦
+        pic = typeof demoUri === 'string' ? { uri: demoUri } : await camera.current.takePictureAsync({ quality: 0.7 })
+        pos = { coords: { latitude: c.lat + j(), longitude: c.lng + j(), accuracy: 10 } }
+      } else {
+        const perm = await Location.requestForegroundPermissionsAsync()
+        if (perm.status !== 'granted') throw new Error('위치 권한이 필요해요. 의뢰 장소 근처인지 확인해야 해요.')
+        ;[pic, pos] = await Promise.all([camera.current.takePictureAsync({ quality: 0.7 }), Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })])
+      }
       const shot = {
-        uri: WEB ? await cropCenter(pic.uri, factor) : pic.uri,
+        uri: WEB && typeof demoUri !== 'string' ? await cropCenter(pic.uri, factor) : pic.uri,
         takenAt: new Date().toISOString(),
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
@@ -131,6 +126,23 @@ export default function CaptureScreen({ navigation, route }) {
       setError(e.message || '촬영에 실패했어요. 다시 시도해 주세요.')
       setBusy(false)
     }
+  }
+
+  if (!camPerm) return <View style={[styles.root, styles.center, { padding: 24 }]}>{DEMO ? <DemoShot onPress={() => shoot(demoShotUri(slot))} busy={busy} error={error} /> : null}</View>
+  if (!camPerm.granted) {
+    return (
+      <View style={[styles.root, styles.center, { padding: 24 }]}>
+        <Text style={[text.sheetTitle, { color: colors.fg, textAlign: 'center' }]}>카메라 권한이 필요해요</Text>
+        <Text style={[text.small, { textAlign: 'center', marginVertical: 12 }]}>인증 사진은 앱 카메라로 찍은 것만 쓸 수 있어요.</Text>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Button type="ghost" onPress={close}>
+            닫기
+          </Button>
+          <Button onPress={requestCam}>권한 허용</Button>
+        </View>
+        {DEMO ? <DemoShot onPress={() => shoot(demoShotUri(slot))} busy={busy} error={error} /> : null}
+      </View>
+    )
   }
 
   return (
@@ -160,10 +172,23 @@ export default function CaptureScreen({ navigation, route }) {
             )
           })}
         </View>
-        <Pressable onPress={shoot} disabled={busy} accessibilityRole="button" accessibilityLabel="촬영" style={styles.shutter}>
+        <Pressable onPress={() => shoot()} disabled={busy} accessibilityRole="button" accessibilityLabel="촬영" style={styles.shutter}>
           {busy ? <ActivityIndicator color={colors.ink} /> : <View style={styles.shutterInner} />}
         </Pressable>
+        {DEMO ? <DemoShot onPress={() => shoot(demoShotUri(slot))} busy={busy} /> : null}
       </View>
+    </View>
+  )
+}
+
+// 전시 시연판 전용: 카메라가 없거나 현장이 아닐 때 그림 사진으로 촬영 단계를 넘깁니다.
+function DemoShot({ onPress, busy, error }) {
+  return (
+    <View style={{ alignItems: 'center', gap: 8, marginTop: 16 }}>
+      {error ? <Text style={[text.small, { color: colors.red, textAlign: 'center' }]}>{error}</Text> : null}
+      <Pressable onPress={onPress} disabled={busy} accessibilityRole="button" style={[styles.chip, { paddingHorizontal: 16, paddingVertical: 10 }]}>
+        <Text style={[text.chip, { color: '#fff' }]}>카메라 없이 시연용 사진으로 찍기</Text>
+      </Pressable>
     </View>
   )
 }

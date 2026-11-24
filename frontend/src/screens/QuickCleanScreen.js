@@ -12,6 +12,7 @@ import Toast from '../components/Toast'
 import { PLACE_PICK, pickNote, pickValue } from '../lib/format'
 import { useApp } from '../state/AppState'
 import { colors, font, radius, text } from '../theme'
+import { PROOF_GAP_TOPIC } from '../lib/demo'
 
 // "바로 치웠어요": 의뢰를 기다리지 않고, 보자마자 치운 것을 전·후 사진으로 기록합니다(2026-11-16 개편).
 // 포인트는 없고 경험치만 받습니다. 가짜 제보를 올려 직접 푸는 악용을 막기 위해서입니다.
@@ -36,7 +37,7 @@ export default function QuickCleanScreen({ navigation }) {
     setBusy(false)
     if (d) navigation.goBack()
   }
-  const steps = ['치우기 전 모습을 먼저 찍어요', '치우고 나서 같은 자리에서 한 장 더 찍어요', '전 사진을 찍고 1분은 지나야 후 사진을 받아요']
+  const steps = ['치우기 전 모습을 먼저 찍어요', '치우고 나서 같은 자리에서 한 장 더 찍어요', `전 사진을 찍고 ${PROOF_GAP_TOPIC} 지나야 후 사진을 받아요`]
 
   return (
     <View style={{ flex: 1 }}>
