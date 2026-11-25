@@ -42,8 +42,8 @@ self.addEventListener('fetch', (e) => {
     return
   }
 
-  // 번들·폰트·이미지: 파일 이름에 해시가 있어 내용이 안 바뀌므로 캐시 먼저
-  if (url.pathname.startsWith(BASE + '_expo/') || url.pathname.startsWith(BASE + 'assets/') || url.pathname.startsWith(BASE + 'icons/')) {
+  // 번들·폰트·이미지: 해시 이름이거나(fonts/ 는 빌드마다 캐시가 새로 만들어져) 내용이 안 바뀌므로 캐시 먼저
+  if (url.pathname.startsWith(BASE + '_expo/') || url.pathname.startsWith(BASE + 'assets/') || url.pathname.startsWith(BASE + 'icons/') || url.pathname.startsWith(BASE + 'fonts/')) {
     e.respondWith(
       caches.match(req).then(
         (hit) =>
