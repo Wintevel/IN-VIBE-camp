@@ -1,0 +1,8 @@
+/* 앱 폰트(같은 출처). scripts/make-web-fonts.py 로 만든 woff2 입니다. 구글 폰트에 기대지 않습니다. */
+@font-face{font-family:'Black Han Sans';font-weight:400;font-style:normal;font-display:swap;src:url('black-han-sans.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans KR';font-weight:400;font-style:normal;font-display:swap;src:url('noto-sans-kr-400.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans KR';font-weight:500;font-style:normal;font-display:swap;src:url('noto-sans-kr-500.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans KR';font-weight:700;font-style:normal;font-display:swap;src:url('noto-sans-kr-700.woff2') format('woff2')}
+@font-face{font-family:'Noto Sans KR';font-weight:800;font-style:normal;font-display:swap;src:url('noto-sans-kr-800.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:500;font-style:normal;font-display:swap;src:url('jetbrains-mono-500.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:700;font-style:normal;font-display:swap;src:url('jetbrains-mono-700.woff2') format('woff2')}
